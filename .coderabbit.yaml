@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit PR 리뷰 설정
+language: ko-KR
+tone_instructions: "간결하게 쓴다. 문제와 근거, 고치는 방법만 적는다."
+
+reviews:
+  profile: chill
+  # 리뷰 의견으로 머지를 막지 않는다. 머지 여부는 사람이 정한다.
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  in_progress_fortune: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!uv.lock"
+  path_instructions:
+    - path: "ontology/seed/**"
+      instructions: >-
+        정적 지식 계층의 시드 YAML이다. 다른 파일의 id를 가리키는 값이 실제로 있는지,
+        같은 시스템의 같은 scope와 area를 두 팀이 맡지 않는지,
+        고위험(risk: high) 조치에 승인권자가 있는지 확인한다.
+    - path: "packages/**"
+      instructions: >-
+        조직별 설정이다. 채널, 역할 배정처럼 조직마다 달라지는 값만 있어야 한다.
+    - path: "**/*.py"
+      instructions: >-
+        LLM이 그래프에 직접 쓰는 경로(Cypher 쓰기 쿼리 생성)나
+        고위험 조치를 승인 없이 실행하는 경로가 생기지 않는지 확인한다.
+    - path: "**"
+      instructions: >-
+        공개 저장소다. API 키, 비밀값, 실제 회사명, 내부 시스템명이 들어가지 않는지 확인한다.
+
+chat:
+  auto_reply: true
