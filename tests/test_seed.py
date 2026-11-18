@@ -22,7 +22,7 @@ EXPECTED_COUNTS = {
     "teams": 12,
     "roles": 6,
     "channels": 4,
-    "systems": 21,
+    "systems": 22,
     "symptoms": 8,
     "causes": 21,
     "evidence_checks": 15,
@@ -79,6 +79,7 @@ def test_references_exist(seed):
     for s in seed["systems"]:
         assert all(o["team"] in teams for o in s["owners"])
         assert all(d in systems and d != s["id"] for d in s["depends_on"])
+        assert all(c["team"] in teams and c["condition"] for c in s.get("collaborators", []))
     for sym in seed["symptoms"]:
         assert all(x in systems for x in sym["observed_in"])
         assert all(c["cause"] in causes for c in sym["causes"])
@@ -201,7 +202,7 @@ def test_all_teams_appear(seed):
 
 
 def test_all_systems_appear(seed):
-    """구색 금지: 21개 시스템 전원이 장애 경로에 등장한다 (설계 3단계 9-2)."""
+    """구색 금지: 22개 시스템 전원이 장애 경로에 등장한다 (설계 3단계 9-2)."""
     appearing = set()
     for sym in seed["symptoms"]:
         appearing.update(sym["observed_in"])

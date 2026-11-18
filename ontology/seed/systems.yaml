@@ -1,10 +1,11 @@
-# 시스템 21개 (설계 2단계 3-1), 의존 관계 (2단계 3-2).
+# 시스템 22개 (설계 2단계 3-1), 의존 관계 (2단계 3-2).
 # 담당 팀 배정과 의존 관계는 모두 가정이다.
 #
 # owners: OWNS 관계. scope마다 관계 하나를 만든다.
 #   scope: logic, data, config, operation, execution
 #   area: 한 시스템의 같은 scope를 여러 팀이 나눠 맡을 때의 영역 구분
 #   한 팀만 맡는 시스템은 logic, data, config, operation을 모두 그 팀에 둔다.
+# collaborators: COLLABORATES_ON 관계. 담당은 아니지만 조건에 해당할 때 협업으로 붙는 팀
 # depends_on: DEPENDS_ON 관계
 systems:
   # 공통
@@ -73,6 +74,14 @@ systems:
       - {team: TM09, scopes: [logic, data, config, operation]}
       - {team: TM10, scopes: [execution]}  # 패치 배포 실행
     depends_on: []
+  - id: SY22
+    name: 어뷰징 탐지 시스템
+    category: 공통
+    evidence_basis: [일반 가정]
+    aliases: []
+    owners:
+      - {team: TM11, scopes: [logic, data, config, operation]}  # 탐지 규칙은 config
+    depends_on: [SY11, SY03]  # 계정 활동과 로그를 읽는다
 
   # 게임. 모든 게임 시스템은 로그 수집(SY03)과 모니터링(SY04)에 의존한다.
   - id: SY09
@@ -99,7 +108,6 @@ systems:
     owners:
       - {team: TM03, scopes: [logic, data, config]}
       - {team: TM10, scopes: [operation]}  # 운영
-      - {team: TM11, scopes: [operation], area: abnormal_account_activity}  # 비정상 계정 활동
     depends_on: [SY05, SY03, SY04]
   - id: SY12
     name: 캐시 상점
@@ -124,8 +132,9 @@ systems:
     evidence_basis: [일반 가정]
     aliases: []
     owners:
-      - {team: TM03, scopes: [logic, data, operation]}
-      - {team: TM02, scopes: [config]}  # 설계 (수수료, 등록 제한 정책 등)
+      - {team: TM03, scopes: [logic, data, config, operation]}
+    collaborators:
+      - {team: TM02, condition: "수수료, 등록 제한 등 거래소 정책 판단이 필요할 때"}
     depends_on: [SY10, SY11, SY03, SY04]
   - id: SY15
     name: 이벤트 시스템

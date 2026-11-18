@@ -157,7 +157,7 @@ causes:
   - id: C14
     name: 어뷰징 (불법 프로그램, 악용)
     aliases: []
-    located_in: {system: SY11, scope: operation, area: abnormal_account_activity}
+    located_in: {system: SY22, scope: config}  # 탐지 규칙이 잡지 못한 어뷰징
     checked_by:
       - {check: E11, expect: "소수 계정에 거래와 행동이 집중돼 있다"}
       - {check: E10, expect: "재화 유통량이 평소보다 늘었다"}
