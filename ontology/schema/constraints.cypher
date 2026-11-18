@@ -1,0 +1,25 @@
+// 모든 노드 id에 유일 제약을 건다 (설계 3단계 8장).
+// 레이블은 노드 타입 이름을 그대로 쓴다 (설계 3단계 2장).
+
+// 정적 지식 계층 (10개)
+CREATE CONSTRAINT team_id IF NOT EXISTS FOR (n:Team) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT role_id IF NOT EXISTS FOR (n:Role) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT channel_id IF NOT EXISTS FOR (n:Channel) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT system_id IF NOT EXISTS FOR (n:System) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT symptom_type_id IF NOT EXISTS FOR (n:SymptomType) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT cause_id IF NOT EXISTS FOR (n:Cause) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT evidence_check_id IF NOT EXISTS FOR (n:EvidenceCheck) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT procedure_id IF NOT EXISTS FOR (n:Procedure) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT action_id IF NOT EXISTS FOR (n:Action) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT severity_id IF NOT EXISTS FOR (n:Severity) REQUIRE n.id IS UNIQUE;
+
+// 사건 계층 (5개)
+CREATE CONSTRAINT report_id IF NOT EXISTS FOR (n:Report) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT incident_id IF NOT EXISTS FOR (n:Incident) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT finding_id IF NOT EXISTS FOR (n:Finding) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT action_run_id IF NOT EXISTS FOR (n:ActionRun) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT change_id IF NOT EXISTS FOR (n:Change) REQUIRE n.id IS UNIQUE;
+
+// 지식 추출 계층 (2개)
+CREATE CONSTRAINT document_id IF NOT EXISTS FOR (n:Document) REQUIRE n.id IS UNIQUE;
+CREATE CONSTRAINT candidate_id IF NOT EXISTS FOR (n:Candidate) REQUIRE n.id IS UNIQUE;
