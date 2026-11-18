@@ -11,7 +11,7 @@ systems:
   - id: SY01
     name: 통합 계정 인증
     category: 공통
-    evidence_basis: [넥슨 확인]
+    evidence_basis: [공개 자료 확인]
     aliases: []
     owners:
       - {team: TM09, scopes: [logic, data, config, operation]}
@@ -19,7 +19,7 @@ systems:
   - id: SY02
     name: 결제 플랫폼
     category: 공통
-    evidence_basis: [넥슨 확인]
+    evidence_basis: [공개 자료 확인]
     aliases: []
     owners:
       - {team: TM09, scopes: [logic, data, config, operation]}
@@ -67,7 +67,7 @@ systems:
   - id: SY08
     name: 통합 런처(패치 서버)
     category: 공통
-    evidence_basis: [넥슨 확인]
+    evidence_basis: [공개 자료 확인]
     aliases: []
     owners:
       - {team: TM09, scopes: [logic, data, config, operation]}
@@ -183,7 +183,7 @@ systems:
   - id: SY21
     name: "확률 정보 공개, 모니터링 페이지"
     category: 운영
-    evidence_basis: [넥슨 확인]
+    evidence_basis: [공개 자료 확인]
     aliases: []
     owners:
       - {team: TM06, scopes: [logic, data, config, operation]}

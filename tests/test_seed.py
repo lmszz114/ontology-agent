@@ -109,7 +109,7 @@ def test_allowed_values(seed):
         assert ch["kind"] in {"user", "internal"}
     for s in seed["systems"]:
         assert s["category"] in {"공통", "게임", "운영"}
-        assert s["evidence_basis"] and set(s["evidence_basis"]) <= {"넥슨 확인", "경험", "일반 가정"}
+        assert s["evidence_basis"] and set(s["evidence_basis"]) <= {"공개 자료 확인", "경험", "일반 가정"}
         for o in s["owners"]:
             assert o["scopes"] and set(o["scopes"]) <= OWNS_SCOPES
     for sym in seed["symptoms"]:
@@ -221,3 +221,21 @@ def test_game_systems_depend_on_logging_and_monitoring(seed):
     for s in seed["systems"]:
         if s["category"] == "게임":
             assert {"SY03", "SY04"} <= set(s["depends_on"]), s["id"]
+
+
+def test_causes_of_same_symptom_have_distinct_conditions(seed):
+    """같은 증상의 원인 둘이 같은 확정 조건을 가지면 한 관측으로 둘 다 확정된다."""
+    causes = {c["id"]: c for c in seed["causes"]}
+    for sym in seed["symptoms"]:
+        seen = {}
+        for ref in sym["causes"]:
+            cause = causes[ref["cause"]]
+            key = frozenset((x["check"], x["expect"]) for x in cause["checked_by"])
+            assert key not in seen, (sym["id"], seen.get(key), cause["id"])
+            seen[key] = cause["id"]
+
+
+def test_every_check_has_expect(seed):
+    for c in seed["causes"]:
+        for x in c["checked_by"]:
+            assert x["expect"], (c["id"], x["check"])

@@ -1,7 +1,8 @@
 # 원인 유형 21개 (설계 3단계 5장).
 # located_in: LOCATED_IN 관계 (scope: logic, data, config, operation. area는 systems.yaml 참고)
 # checked_by: CHECKED_BY 관계. expect는 확정 조건 설명이다.
-#   설계 문서에 조건이 적힌 것만 채웠고, 나머지는 null이다.
+#   C02, C15, C16, C17은 설계 문서에 적힌 조건이다.
+#   나머지는 초안이며 검토 전이다. 검토가 끝나면 이 줄을 지운다.
 # resolved_by: RESOLVED_BY 관계. P10(원인 수정과 반영)은 모든 원인에 공통으로 연다.
 causes:
   # S1 결제 후 아이템 미지급
@@ -10,7 +11,7 @@ causes:
     aliases: []
     located_in: {system: SY02, scope: logic}
     checked_by:
-      - {check: E01, expect: null}
+      - {check: E01, expect: "결제 승인 기록이 없거나 승인 오류가 남아 있다"}
     resolved_by:
       - {procedure: P6, condition: 누락 보상}
       - {procedure: P3}
@@ -31,7 +32,7 @@ causes:
     aliases: []
     located_in: {system: SY12, scope: config}
     checked_by:
-      - {check: E07, expect: null}
+      - {check: E07, expect: "증상 시작 전에 해당 상품의 설정 변경 이력이 있다"}
     resolved_by:
       - {procedure: P6}
       - {procedure: P3}
@@ -43,7 +44,7 @@ causes:
     aliases: []
     located_in: {system: SY01, scope: operation}
     checked_by:
-      - {check: E03, expect: null}
+      - {check: E03, expect: "다른 타이틀에서도 로그인이 실패한다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -53,8 +54,8 @@ causes:
     aliases: []
     located_in: {system: SY09, scope: logic}
     checked_by:
-      - {check: E03, expect: null}
-      - {check: E04, expect: null}
+      - {check: E03, expect: "다른 타이틀 로그인은 정상이다"}
+      - {check: E04, expect: "로그인 서버에 오류 로그가 있다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -65,7 +66,7 @@ causes:
     aliases: []
     located_in: {system: SY05, scope: operation}
     checked_by:
-      - {check: E09, expect: null}
+      - {check: E09, expect: "서버 인프라의 자원 또는 네트워크 지표가 비정상이다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -77,8 +78,8 @@ causes:
     aliases: []
     located_in: {system: SY17, scope: data, area: content}
     checked_by:
-      - {check: E05, expect: null}
-      - {check: E12, expect: null}
+      - {check: E05, expect: "증상 시작 전에 해당 콘텐츠 테이블의 변경 이력이 있다"}
+      - {check: E12, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P5}
       - {procedure: P10}
@@ -87,9 +88,9 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E04, expect: null}
-      - {check: E06, expect: null}
-      - {check: E12, expect: null}
+      - {check: E04, expect: "월드 서버에 해당 콘텐츠 관련 오류 로그가 있다"}
+      - {check: E06, expect: "증상 시작 전에 서버 배포 이력이 있다"}
+      - {check: E12, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P5}
@@ -99,8 +100,8 @@ causes:
     aliases: []
     located_in: {system: SY18, scope: logic}
     checked_by:
-      - {check: E06, expect: null}
-      - {check: E12, expect: null}
+      - {check: E06, expect: "증상 시작 전에 클라이언트 패치 이력이 있다"}
+      - {check: E12, expect: "QA가 클라이언트에서 재현했다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P10}
@@ -109,7 +110,7 @@ causes:
     aliases: []
     located_in: {system: SY08, scope: operation}
     checked_by:
-      - {check: E13, expect: null}
+      - {check: E13, expect: "유저들의 클라이언트 버전이 섞여 있거나 최신이 아니다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P10}
@@ -120,7 +121,7 @@ causes:
     aliases: []
     located_in: {system: SY15, scope: config}
     checked_by:
-      - {check: E07, expect: null}
+      - {check: E07, expect: "증상 시작 전에 이벤트 설정 변경 이력이 있다"}
     resolved_by:
       - {procedure: P6, condition: 미지급}
       - {procedure: P7, condition: 과지급}
@@ -131,8 +132,8 @@ causes:
     aliases: []
     located_in: {system: SY15, scope: logic}
     checked_by:
-      - {check: E02, expect: null}
-      - {check: E04, expect: null}
+      - {check: E02, expect: "보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)"}
+      - {check: E04, expect: "이벤트 지급 처리 오류 로그가 있다"}
     resolved_by:
       - {procedure: P6, condition: 미지급}
       - {procedure: P7, condition: 과지급}
@@ -145,9 +146,9 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E12, expect: null}
-      - {check: E04, expect: null}
-      - {check: E10, expect: null}
+      - {check: E12, expect: "QA가 복사를 재현했다"}
+      - {check: E04, expect: "월드 서버에 관련 오류 로그가 있다"}
+      - {check: E10, expect: "재화 유통량이 평소보다 늘었다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P5}
@@ -158,20 +159,22 @@ causes:
     aliases: []
     located_in: {system: SY11, scope: operation, area: abnormal_account_activity}
     checked_by:
-      - {check: E11, expect: null}
-      - {check: E10, expect: null}
+      - {check: E11, expect: "소수 계정에 거래와 행동이 집중돼 있다"}
+      - {check: E10, expect: "재화 유통량이 평소보다 늘었다"}
     resolved_by:
       - {procedure: P7}
       - {procedure: P4}
       - {procedure: P10}
 
   # S6 확률형 아이템 확률 표기 불일치
+  # C15와 C16은 E08 결과가 같다. E05(테이블 변경 이력)로 가른다.
   - id: C15
     name: 공개 페이지 표기 오류
     aliases: []
     located_in: {system: SY21, scope: data}
     checked_by:
       - {check: E08, expect: "공개 수치와 테이블 수치가 다르고, 테이블 수치와 실제 결과가 같다"}
+      - {check: E05, expect: 증상 시작 전에 확률 테이블 변경 이력이 없다}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -182,7 +185,7 @@ causes:
     located_in: {system: SY17, scope: data, area: probability}
     checked_by:
       - {check: E08, expect: "테이블 수치와 공개 수치가 다르고, 실제 결과와 테이블 수치가 같다"}
-      - {check: E05, expect: null}
+      - {check: E05, expect: 증상 시작 전에 확률 테이블 변경 이력이 있다}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -193,7 +196,7 @@ causes:
     located_in: {system: SY16, scope: logic}
     checked_by:
       - {check: E08, expect: "테이블 수치와 공개 수치가 같은데, 실제 결과가 테이블 수치와 다르다"}
-      - {check: E06, expect: null}
+      - {check: E06, expect: "증상 시작 전에 확률 모듈 배포 이력이 있다"}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -206,8 +209,8 @@ causes:
     aliases: []
     located_in: {system: SY14, scope: logic}
     checked_by:
-      - {check: E04, expect: null}
-      - {check: E06, expect: null}
+      - {check: E04, expect: "거래소에 오류 로그가 있다"}
+      - {check: E06, expect: "증상 시작 전에 거래소 배포 이력이 있다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -218,7 +221,7 @@ causes:
     aliases: []
     located_in: {system: SY11, scope: operation}
     checked_by:
-      - {check: E09, expect: null}
+      - {check: E09, expect: "게임 DB의 부하 지표가 비정상이다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -230,8 +233,8 @@ causes:
     aliases: []
     located_in: {system: SY05, scope: operation}
     checked_by:
-      - {check: E09, expect: null}
-      - {check: E14, expect: null}
+      - {check: E09, expect: "서버 인프라의 자원 지표가 한계에 가깝다"}
+      - {check: E14, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -241,9 +244,9 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E09, expect: null}
-      - {check: E04, expect: null}
-      - {check: E14, expect: null}
+      - {check: E09, expect: "서버 인프라의 자원에는 여유가 있다"}
+      - {check: E04, expect: "특정 콘텐츠 처리 지연 로그가 있다"}
+      - {check: E14, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P10}
