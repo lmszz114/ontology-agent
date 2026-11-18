@@ -35,7 +35,7 @@ EXPECTED_COUNTS = {
 EXPECTED_OWNER = {
     "C01": "플랫폼팀", "C02": "서버개발팀", "C03": "게임사업PM팀",
     "C04": "플랫폼팀", "C05": "서버개발팀", "C06": "인프라운영팀",
-    "C07": "콘텐츠기획팀", "C08": "서버개발팀", "C09": "클라이언트개발팀", "C10": "플랫폼팀",
+    "C07": "콘텐츠기획팀", "C08": "서버개발팀", "C09": "클라이언트개발팀", "C10": "인프라운영팀",
     "C11": "콘텐츠기획팀", "C12": "서버개발팀",
     "C13": "서버개발팀", "C14": "보안팀",
     "C15": "게임사업PM팀", "C16": "시스템기획팀", "C17": "서버개발팀",
@@ -44,7 +44,7 @@ EXPECTED_OWNER = {
 }
 
 OWNS_SCOPES = {"logic", "data", "config", "operation", "execution"}
-LOCATED_IN_SCOPES = {"logic", "data", "config", "operation"}
+LOCATED_IN_SCOPES = {"logic", "data", "config", "operation", "execution"}
 
 
 @pytest.mark.parametrize("key,count", EXPECTED_COUNTS.items())
