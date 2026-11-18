@@ -1,0 +1,74 @@
+# 증상 유형 8개 (설계 3단계 5장).
+# observed_in: OBSERVED_IN 관계
+# causes: MAY_BE_CAUSED_BY 관계. prior는 초기 가정값이다 (높음, 중간, 낮음)
+symptoms:
+  - id: S1
+    name: 결제 후 아이템 미지급
+    aliases: [결제했는데 아이템이 안 들어옴, 캐시 차감됐는데 아이템 없음, 구매 아이템 미지급, 상점 구매가 안 돼요]
+    core_function: true
+    observed_in: [SY12, SY13]
+    causes:
+      - {cause: C01, prior: 중간}
+      - {cause: C02, prior: 높음}
+      - {cause: C03, prior: 낮음}
+  - id: S2
+    name: "로그인 불가, 접속 장애"
+    aliases: [로그인이 안 돼요, 접속이 안 됨, 서버 연결 실패, 계속 튕김]
+    core_function: true
+    observed_in: [SY01, SY09]
+    causes:
+      - {cause: C04, prior: 중간}
+      - {cause: C05, prior: 중간}
+      - {cause: C06, prior: 중간}
+  - id: S3
+    name: 업데이트 후 콘텐츠 오류
+    aliases: [던전 입장이 안 돼요, 패치 후 퀘스트 진행 불가, 업데이트 이후 오류, NPC 대화 안 됨]
+    core_function: false
+    observed_in: [SY10, SY18]
+    causes:
+      - {cause: C07, prior: 높음}
+      - {cause: C08, prior: 중간}
+      - {cause: C09, prior: 중간}
+      - {cause: C10, prior: 낮음}
+  - id: S4
+    name: "이벤트 보상 오지급, 과지급"
+    aliases: [이벤트 보상이 안 들어옴, 보상이 두 번 들어옴, 보상 수량이 이상함, 이벤트 아이템 과다 지급]
+    core_function: false
+    observed_in: [SY15, SY13]
+    causes:
+      - {cause: C11, prior: 높음}
+      - {cause: C12, prior: 중간}
+  - id: S5
+    name: "아이템 복사, 재화 비정상 증식"
+    aliases: [아이템 복사, 골드 무한, 재화가 갑자기 늘어남, 거래소에 같은 아이템이 대량 등록]
+    core_function: true
+    observed_in: [SY10, SY14, SY11]
+    causes:
+      - {cause: C13, prior: 중간}
+      - {cause: C14, prior: 중간}
+  - id: S6
+    name: 확률형 아이템 확률 표기 불일치
+    aliases: [확률이 표기랑 다름, 공개 확률과 실제 결과가 다름, 확률 정보 오류]
+    core_function: false
+    observed_in: [SY21]
+    causes:
+      - {cause: C15, prior: 중간}
+      - {cause: C16, prior: 중간}
+      - {cause: C17, prior: 낮음}
+  - id: S7
+    name: 거래소 장애
+    aliases: [거래소 등록이 안 돼요, 거래소 검색 안 됨, 구매했는데 아이템이 안 옴(거래소), 거래소 접속 오류]
+    core_function: true
+    observed_in: [SY14]
+    causes:
+      - {cause: C18, prior: 높음}
+      - {cause: C19, prior: 중간}
+      - {cause: C14, prior: 낮음}
+  - id: S8
+    name: 대규모 콘텐츠 중 서버 과부하
+    aliases: [월드보스 때 렉, 공성전 중 서버 끊김, 접속 지연, 특정 시간대 렉]
+    core_function: false
+    observed_in: [SY10, SY05]
+    causes:
+      - {cause: C20, prior: 높음}
+      - {cause: C21, prior: 중간}
