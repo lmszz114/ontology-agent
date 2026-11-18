@@ -111,7 +111,9 @@ causes:
     # 배포를 실행하다 생긴 오류다. 빌드 오류와 런처 자체의 장애는 MVP에서 다루지 않는다.
     located_in: {system: SY08, scope: execution}
     checked_by:
-      - {check: E13, expect: "유저들의 클라이언트 버전이 섞여 있거나 최신이 아니다"}
+      # 버전 분포만으로는 정상 배포 직후의 미업데이트 상태와 구분되지 않아 배포 이력을 함께 본다
+      - {check: E06, expect: "증상 시작 전에 패치 배포 이력이 있고, 그 배포가 실패했거나 일부 대상에만 적용됐다"}
+      - {check: E13, expect: "배포가 끝난 뒤에도 유저들의 클라이언트 버전이 섞여 있다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P10}
