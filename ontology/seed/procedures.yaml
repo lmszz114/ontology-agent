@@ -1,0 +1,54 @@
+# 절차 10개 (설계 2단계 4-2), 조치 연결 (3단계 7장 소속 절차).
+# led_by: LED_BY 관계. P1은 채널별 1차 처리 역할이 주관하므로 고정 팀이 없다.
+# actions: HAS_ACTION 관계. 설계에 순서가 없어 order는 조치 ID 순으로 두었다.
+procedures:
+  - id: P1
+    name: 장애 접수와 분류
+    led_by: null
+    steps: [접수 정리, 중복 판정, 심각도 판정, 담당 팀 배정]
+    actions: [A01, A02, A03, A04, A05]
+  - id: P2
+    name: 에스컬레이션
+    led_by: TM06  # 가정
+    steps: ["심각도 상향 시 팀 리드, 상위 책임자 호출"]
+    actions: [A03]
+  - id: P3
+    name: 긴급 공지
+    led_by: TM06
+    steps: [공지 초안, 검토, "인게임, 홈페이지 게시"]
+    actions: [A06, A07]
+  - id: P4
+    name: 긴급 점검
+    led_by: TM10
+    steps: [개발PM팀 일정 조율, 점검 공지, 서버 내림, 조치, 검증, 오픈]
+    actions: [A08]
+  - id: P5
+    name: 롤백
+    led_by: TM03
+    steps: [롤백 범위 결정, 데이터 백업 확인, 실행, 검증]
+    actions: [A09]
+  - id: P6
+    name: 보상 지급
+    led_by: TM06
+    steps: [대상과 보상 확정, GM 툴 지급, 지급 확인, 공지]
+    actions: [A10]
+  - id: P7
+    name: "아이템, 재화 회수와 제재"
+    led_by: TM11
+    steps: [대상 추적, 회수 범위 결정, "회수, 제재", 안내]
+    actions: [A11]
+  - id: P8
+    name: 확률 표기 정정
+    led_by: TM02
+    steps: [실제 수치 확인, 표기 수정, 법무 검토, 정정 공지]
+    actions: [A12]
+  - id: P9
+    name: 사후 리뷰와 지식 반영
+    led_by: TM05  # 가정
+    steps: [타임라인 정리, 원인, 재발 방지 작업 생성, 회고 문서 저장, 지식 후보 추출, 담당 팀 검수, 승인분 온톨로지 반영]
+    actions: [A13, A16, A17]
+  - id: P10
+    name: 원인 수정과 반영
+    led_by: TM05  # 가정
+    steps: [수정 일감 생성, "담당 팀 수정 (테이블, 설정, 코드)", QA 확인, 정기 점검 또는 긴급 점검으로 반영]
+    actions: [A14, A15]

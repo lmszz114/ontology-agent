@@ -1,0 +1,22 @@
+# 가상 회사 A의 조직 설정 (설계 2단계 2-3, 2-4).
+# 조직마다 달라지는 부분만 둔다: 접수 채널, 채널별 1차 처리 역할, 역할 배정.
+org:
+  id: org-a
+  name: 가상 회사 A
+
+# Channel 노드와 HANDLED_FIRST_BY 관계
+# source_system은 채널의 원천이 온톨로지 시스템일 때만 적는다.
+channels:
+  - {id: CH01, name: 공식 커뮤니티 게시글, kind: user, source_system: SY07, handled_first_by: RL01}
+  - {id: CH02, name: "1:1 문의, 장애 접수 시스템", kind: user, source_system: SY06, handled_first_by: RL02}
+  - {id: CH03, name: "사내 메신저, 메일", kind: internal, source_system: null, handled_first_by: RL03}
+  - {id: CH04, name: JSM 티켓, kind: internal, source_system: null, handled_first_by: RL03}
+
+# ASSIGNED_TO 관계 (Role -> Team)
+# 기술 대응 담당(RL04)은 사건마다 원인 시스템의 담당 팀이 맡고,
+# 승인권자(RL06)는 조치마다 정해지므로 고정 배정이 없다.
+role_assignments:
+  - {role: RL01, team: TM07}
+  - {role: RL02, team: TM07}
+  - {role: RL03, team: TM05}  # 가정 (설계 3단계 4-1)
+  - {role: RL05, team: TM07}

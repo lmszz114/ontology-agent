@@ -1,0 +1,15 @@
+# 팀 12개 (설계 2단계 2-1). 조직 구성은 가정이다.
+# aliases는 현장 문서를 만들 때(M4) 채운다.
+teams:
+  - {id: TM01, name: 콘텐츠기획팀, axis: project, aliases: []}
+  - {id: TM02, name: 시스템기획팀, axis: project, aliases: []}
+  - {id: TM03, name: 서버개발팀, axis: project, aliases: []}
+  - {id: TM04, name: 클라이언트개발팀, axis: project, aliases: []}
+  - {id: TM05, name: 개발PM팀, axis: project, aliases: []}
+  - {id: TM06, name: 게임사업PM팀, axis: project, aliases: []}
+  - {id: TM07, name: 게임서비스팀, axis: common, aliases: []}
+  - {id: TM08, name: QA팀, axis: common, aliases: []}
+  - {id: TM09, name: 플랫폼팀, axis: common, aliases: []}
+  - {id: TM10, name: 인프라운영팀, axis: common, aliases: []}
+  - {id: TM11, name: 보안팀, axis: common, aliases: []}
+  - {id: TM12, name: 법무팀, axis: common, aliases: []}

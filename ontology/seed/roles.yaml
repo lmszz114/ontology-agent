@@ -1,0 +1,9 @@
+# 역할 6개 (설계 2단계 2-3).
+# 역할을 어느 팀이 맡는지는 조직마다 다르므로 packages/<조직>/org.yaml에 둔다.
+roles:
+  - {id: RL01, name: CM, description: "공식 커뮤니티 제보 1차 확인과 전달"}
+  - {id: RL02, name: CS 상담, description: "1:1 문의, 장애 접수 시스템 문의 1차 확인과 전달"}
+  - {id: RL03, name: 접수 분류 담당, description: "사내 메신저, 메일, JSM 접수의 분류와 담당 팀 배정"}
+  - {id: RL04, name: 기술 대응 담당, description: "원인 분석과 수정"}
+  - {id: RL05, name: 커뮤니케이션 담당, description: "유저 공지 게시, 문의 회신"}
+  - {id: RL06, name: 승인권자, description: "고위험 조치 승인"}

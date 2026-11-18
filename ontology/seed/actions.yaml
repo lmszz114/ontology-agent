@@ -1,0 +1,104 @@
+# 조치 타입 17개 (설계 3단계 7장).
+# kind: response(대응), fix(수정), knowledge(지식)
+# risk가 high이면 승인 전에 실행하지 않는다 (R6).
+# simulated: 지식 추출(A16)과 반영(A17)만 실제 동작이고 나머지는 시뮬레이션이다.
+# executed_by: EXECUTED_BY 관계. null이면 에이전트가 실행한다.
+# approvers: REQUIRES_APPROVAL_FROM 관계. 해당 팀 리드가 승인한다.
+# executed_by_rule, approver_rule: 사건마다 달라져 고정 관계를 두지 않는 경우의 규칙 이름
+# uses_system: 조치의 실행 수단 또는 대상 시스템
+actions:
+  - {id: A01, name: 티켓 생성 또는 기존 티켓 연결, kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - {id: A02, name: 담당 팀 배정, kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - {id: A03, name: 담당자 호출, kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - {id: A04, name: 요청자 회신 (정해진 문구), kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - {id: A05, name: 판정 근거 조회 실행, kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - {id: A06, name: 공지 초안 작성, kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - id: A07
+    name: 공지 게시
+    kind: response
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: TM07
+    uses_system: SY20
+    approvers:
+      - {team: TM06}
+  - id: A08
+    name: 긴급 점검 실행
+    kind: response
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: TM10
+    approvers:
+      - {team: TM06}
+      - {team: TM10}
+  - id: A09
+    name: 롤백 실행
+    kind: response
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: TM03
+    approvers:
+      - {team: TM03}
+      - {team: TM06}
+  - id: A10
+    name: 보상 지급
+    kind: response
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: TM07
+    uses_system: SY19
+    approvers:
+      - {team: TM06}
+  - id: A11
+    name: "아이템, 재화 회수와 제재"
+    kind: response
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: TM07
+    uses_system: SY19
+    approvers:
+      - {team: TM11}
+      - {team: TM06}
+  - id: A12
+    name: 확률 표기 정정
+    kind: response
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: TM06
+    uses_system: SY21
+    approvers:
+      - {team: TM06}
+      - {team: TM12}
+  # 리뷰 확정은 개발PM팀이 한다
+  - {id: A13, name: 사후 리뷰 초안과 재발 방지 작업 생성, kind: response, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - {id: A14, name: 수정 일감 생성, kind: fix, risk: low, auto_executable: true, simulated: true, executed_by: null, approvers: []}
+  - id: A15
+    name: "원인 수정 (테이블, 설정, 코드, 탐지 규칙)"
+    kind: fix
+    risk: high
+    auto_executable: false
+    simulated: true
+    executed_by: null
+    executed_by_rule: incident_primary_team  # 사건의 1차 담당 팀 (R5)
+    # 승인은 수정 작업이 아니라 서비스 반영에 대해 받는다 (R7)
+    approvers:
+      - {team: TM05, condition: 정기 점검 반영}
+      - {team: TM06, condition: 긴급 점검 반영}
+      - {team: TM10, condition: 긴급 점검 반영}
+  # 후보로만 저장한다
+  - {id: A16, name: 문서에서 지식 후보 추출, kind: knowledge, risk: low, auto_executable: true, simulated: false, executed_by: null, approvers: []}
+  - id: A17
+    name: 승인된 지식 후보를 온톨로지에 반영
+    kind: knowledge
+    risk: high
+    auto_executable: false
+    simulated: false
+    executed_by: TM05  # 가정
+    approver_rule: candidate_system_owner  # 후보가 가리키는 시스템의 OWNS 팀 (R8)
+    approvers: []
