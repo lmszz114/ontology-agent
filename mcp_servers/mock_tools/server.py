@@ -36,7 +36,11 @@ def load_environment(seed: dict, path: str | Path | None) -> Environment:
     environment = data.get("environment")
     if not isinstance(environment, dict) or "checks" not in environment:
         raise ValueError(f"{path}: environment.checks가 없다")
-    return Environment(seed, environment["checks"] or [])
+    checks = environment["checks"]
+    # 빈 목록은 허용한다. 목록이 아닌 값(null, false, 문자열)을 빈 목록으로 바꿔 읽지 않는다
+    if not isinstance(checks, list):
+        raise ValueError(f"{path}: environment.checks가 목록이 아니다")
+    return Environment(seed, checks)
 
 
 def _describe(check: dict) -> str:

@@ -70,9 +70,11 @@ def validate_seed(seed: dict) -> None:
             require(system_id, systems, f"{check['id']}.source_systems")
     for action in seed["actions"]:
         require(action.get("uses_system"), systems, f"{action['id']}.uses_system")
+    # prior는 필수라서 비어 있어도 거부한다
     for symptom in seed["symptoms"]:
         for ref in symptom["causes"]:
-            require(ref["prior"], {"높음", "중간", "낮음"}, f"{symptom['id']}의 {ref['cause']} prior")
+            if ref.get("prior") not in {"높음", "중간", "낮음"}:
+                raise ValueError(f"{symptom['id']}의 {ref['cause']} prior: 정의되지 않은 값이다: {ref.get('prior')}")
     validate_cause_conditions(seed)
 
 

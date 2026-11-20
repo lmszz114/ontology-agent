@@ -105,9 +105,15 @@ def test_load_environment_from_file(seed, tmp_path):
     assert env.observe("E09", {"system": "SY11"}) == {"status": "resource_limit"}
     assert env.observe("E09", {"system": "SY05"}) == {"status": "normal"}
     assert load_environment(seed, None).entries == []
+    empty = tmp_path / "empty.yaml"
+    empty.write_text("environment:\n  checks: []\n", encoding="utf-8")
+    assert load_environment(seed, empty).entries == []
 
 
-@pytest.mark.parametrize("text", ["enviroment:\n  checks: []\n", "environment:\n", "environment:\n  - check: E01\n", ""])
+@pytest.mark.parametrize("text", [
+    "enviroment:\n  checks: []\n", "environment:\n", "environment:\n  - check: E01\n", "",
+    "environment:\n  checks:\n", "environment:\n  checks: false\n", "environment:\n  checks: {}\n",
+])
 def test_load_environment_rejects_files_without_checks(seed, tmp_path, text):
     """키 이름을 틀린 파일이 전부 이상 없음으로 읽히면 안 된다."""
     path = tmp_path / "env.yaml"

@@ -168,6 +168,7 @@ def test_dangling_reference_fails_and_rolls_back(driver, seed, loaded):
     (lambda s: s["evidence_checks"][9].update(judged_by_team="TM99"), "judged_by_team"),
     (lambda s: s["actions"][6].update(uses_system="SY99"), "uses_system"),
     (lambda s: s["symptoms"][0]["causes"][0].update(prior="아주 높음"), "prior"),
+    (lambda s: s["symptoms"][0]["causes"][0].update(prior=None), "prior"),
     (lambda s: s["causes"][7]["checked_by"][0].update(args={"system": "SY99"}), "SY99"),
     (lambda s: s["causes"][1]["checked_by"][0].update(when={"approval": "maybe"}), "maybe"),
 ])
