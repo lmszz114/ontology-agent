@@ -44,5 +44,7 @@ jobs:
         run: uv sync --frozen
       - name: 스키마 적용
         run: uv run python -m ontology.apply_schema
+      - name: 시드 적재
+        run: uv run python -m ontology.load
       - name: 테스트
         run: uv run pytest -v
