@@ -10,7 +10,7 @@ import pytest
 from ontology.apply_schema import apply_schema
 from ontology.load import STATIC_LABELS, STATIC_RELATIONS, build_graph, load_static
 from ontology.seed import load_seed
-from tests.test_seed import EXPECTED_OWNER
+from test_seed import EXPECTED_OWNER
 
 # 시드 키 -> 레이블
 LABEL_BY_KEY = {
