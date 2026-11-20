@@ -6,10 +6,10 @@
 import pytest
 
 from ontology.conditions import (
-    RULE_OUT, ConditionError, Environment, confirmed_causes, environment_for,
+    RULE_OUT, ConditionError, Environment, confirmed_causes, environments_for,
     evaluate_cause, implies, validate_cause_conditions,
 )
-from ontology.seed import load_seed, resolve_owner_teams
+from ontology.seed import load_seed, resolve_owner_teams, validate_seed
 
 
 @pytest.fixture(scope="module")
@@ -230,6 +230,12 @@ def test_game_systems_depend_on_logging_and_monitoring(seed):
 
 def test_cause_conditions_use_defined_fields_and_values(seed):
     validate_cause_conditions(seed)
+    validate_seed(seed)
+
+
+def test_tool_names_are_unique(seed):
+    tools = [e["tool"] for e in seed["evidence_checks"]]
+    assert len(tools) == len(set(tools))
 
 
 def test_each_cause_uses_a_check_once(seed):
@@ -275,11 +281,16 @@ def test_nothing_is_confirmed_when_everything_is_normal(seed):
 
 @pytest.mark.parametrize("cause_id", list(EXPECTED_OWNER))
 def test_cause_is_the_only_one_confirmed_by_its_own_conditions(seed, cause_id):
-    """원인의 조건만 만족하고 나머지가 이상 없으면, 같은 증상에서 그 원인만 확정된다."""
-    env = environment_for(seed, cause_id)
-    for sym in seed["symptoms"]:
-        if cause_id in [ref["cause"] for ref in sym["causes"]]:
-            assert confirmed_causes(seed, env, sym["id"]) == [cause_id], sym["id"]
+    """원인의 조건만 만족하고 나머지가 이상 없으면, 같은 증상에서 그 원인만 확정된다.
+
+    허용 값이 여럿인 조건은 모든 조합을 돌려 본다.
+    """
+    envs = environments_for(seed, cause_id)
+    assert envs
+    for env in envs:
+        for sym in seed["symptoms"]:
+            if cause_id in [ref["cause"] for ref in sym["causes"]]:
+                assert confirmed_causes(seed, env, sym["id"]) == [cause_id], (sym["id"], env.entries)
 
 
 def test_network_fault_alone_does_not_confirm_resource_shortage(seed):

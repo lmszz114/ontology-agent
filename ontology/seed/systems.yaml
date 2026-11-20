@@ -5,6 +5,7 @@
 #   scope: logic, data, config, operation, execution
 #   area: 한 시스템의 같은 scope를 여러 팀이 나눠 맡을 때의 영역 구분
 #   한 팀만 맡는 시스템은 logic, data, config, operation을 모두 그 팀에 둔다.
+#   GM 툴은 예외다. 게임서비스팀은 실행(execution)만 맡고 결정과 승인은 절차가 정한다.
 # collaborators: COLLABORATES_ON 관계. 담당은 아니지만 조건에 해당할 때 협업으로 붙는 팀
 # depends_on: DEPENDS_ON 관계
 systems:

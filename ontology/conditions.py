@@ -1,7 +1,7 @@
 """판정 근거의 관측 값과 원인의 확정 조건을 다룬다 (설계 3단계 6장, R4).
 
 Neo4j 없이 시드 dict만으로 돈다. 쓰는 곳은 셋이다.
-- 시드 검증: 조건이 정의된 필드와 값만 쓰는지, 같은 증상의 원인끼리 구분되는지
+- 시드 검증: 조건이 정의된 필드와 값만 쓰는지 (적재 전에 확인), 같은 증상의 원인끼리 구분되는지 (테스트)
 - 모의 도구: 환경(가상 데이터)을 읽어 조회 결과 문장을 만든다
 - 시나리오 검증: 환경을 조건에 대입했을 때 정답 원인만 확정되는지 (시나리오는 M2에서 만든다)
 
@@ -10,6 +10,7 @@ Neo4j 없이 시드 dict만으로 돈다. 쓰는 곳은 셋이다.
 
 import json
 from dataclasses import dataclass, field
+from itertools import product
 
 CONFIRM = "confirm"
 RULE_OUT = "rule_out"
@@ -114,10 +115,18 @@ class Environment:
         fields = check.get("observations", {})
         if not fields:
             return check["default_detail"]
-        names = {s["id"]: s["name"] for s in self.seed["systems"]}
-        system_name = names.get(args.get("system", ""), "")
         observed = self.observe(check_id, args)
-        return ". ".join(fields[name]["values"][observed[name]].format(system=system_name) for name in fields)
+        labels = self._arg_labels(check, args)
+        return ". ".join(fields[name]["values"][observed[name]].format(**labels) for name in fields)
+
+    def _arg_labels(self, check: dict, args: dict) -> dict[str, str]:
+        """응답 문장에 넣을 인자의 이름. 시스템은 시스템 이름, 그 밖은 params에 적힌 이름."""
+        systems = {s["id"]: s["name"] for s in self.seed["systems"]}
+        labels = {}
+        for name, value in args.items():
+            values = check["params"][name].get("values")
+            labels[name] = values[value] if isinstance(values, dict) else systems.get(value, value)
+        return labels
 
 
 def evaluate_cause(seed: dict, env: Environment, cause_id: str) -> str:
@@ -137,18 +146,27 @@ def confirmed_causes(seed: dict, env: Environment, symptom_id: str) -> list[str]
     return [ref["cause"] for ref in symptom["causes"] if evaluate_cause(seed, env, ref["cause"]) == CONFIRM]
 
 
-def environment_for(seed: dict, cause_id: str) -> Environment:
-    """원인의 확정 조건을 그대로 만족하고 나머지는 이상 없는 환경을 만든다."""
+def environments_for(seed: dict, cause_id: str) -> list[Environment]:
+    """원인의 확정 조건을 만족하고 나머지는 이상 없는 환경 전부.
+
+    허용 값이 여럿인 조건이 있으면 그 조합마다 환경 하나를 만든다.
+    """
     cause = next(c for c in seed["causes"] if c["id"] == cause_id)
-    entries = [
-        {
-            "check": ref["check"],
-            "args": ref.get("args"),
-            "observations": {name: allowed_values(expected)[0] for name, expected in ref["when"].items()},
-        }
-        for ref in cause["checked_by"]
+    slots = [
+        (index, name, allowed_values(expected))
+        for index, ref in enumerate(cause["checked_by"])
+        for name, expected in ref["when"].items()
     ]
-    return Environment(seed, entries)
+    environments = []
+    for choice in product(*(values for _, _, values in slots)):
+        entries = [
+            {"check": ref["check"], "args": ref.get("args"), "observations": {}}
+            for ref in cause["checked_by"]
+        ]
+        for (index, name, _), value in zip(slots, choice):
+            entries[index]["observations"][name] = value
+        environments.append(Environment(seed, entries))
+    return environments
 
 
 def implies(seed: dict, strong_id: str, weak_id: str) -> bool:

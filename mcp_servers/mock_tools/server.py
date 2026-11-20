@@ -5,7 +5,7 @@
 실제 회사 시스템 대신 환경(가상 데이터)을 읽어 조회 결과를 돌려준다.
 도구 이름과 인자는 시드의 판정 근거 정의(evidence_checks.yaml)를 그대로 따른다.
 돌려주는 것은 문장뿐이다. 환경의 필드 값은 검증에만 쓰고 에이전트에게 보여주지 않는다.
-MOCK_ENV_FILE이 없으면 모든 조회가 이상 없음으로 답한다.
+MOCK_ENV_FILE을 주지 않으면 모든 조회가 이상 없음으로 답한다.
 """
 
 import os
@@ -19,23 +19,34 @@ from ontology.conditions import ConditionError, Environment
 from ontology.seed import load_seed
 
 PARAM_HELP = {
-    "system": "조회할 시스템 ID (예: SY10)",
+    "system": "조회할 시스템 ID",
     "area": "테이블 영역",
 }
 
 
 def load_environment(seed: dict, path: str | Path | None) -> Environment:
-    """환경 파일을 읽는다. 최상위 키 environment 아래에 조회별 항목을 둔다."""
+    """환경 파일을 읽는다. environment.checks 아래에 조회별 항목을 둔다 (설계 4단계 3-4).
+
+    시나리오 파일과 같은 자리다. 키가 없으면 실패시킨다. 키 이름을 잘못 적은 파일이
+    전부 이상 없음으로 조용히 읽히면 틀린 환경으로 평가가 돈다.
+    """
     if path is None:
         return Environment(seed)
     data = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-    return Environment(seed, data.get("environment", []))
+    environment = data.get("environment")
+    if not isinstance(environment, dict) or "checks" not in environment:
+        raise ValueError(f"{path}: environment.checks가 없다")
+    checks = environment["checks"]
+    # 빈 목록은 허용한다. 목록이 아닌 값(null, false, 문자열)을 빈 목록으로 바꿔 읽지 않는다
+    if not isinstance(checks, list):
+        raise ValueError(f"{path}: environment.checks가 목록이 아니다")
+    return Environment(seed, checks)
 
 
 def _describe(check: dict) -> str:
     lines = [f"{check['name']} ({check['id']}). 조회 결과를 문장으로 돌려준다."]
     for name, spec in check.get("params", {}).items():
-        allowed = f" 허용 값: {', '.join(spec['values'])}." if "values" in spec else ""
+        allowed = f" 허용 값: {', '.join(spec['values'])}." if "values" in spec else " 예: SY10."
         lines.append(f"{name}: {PARAM_HELP[name]}.{allowed}")
     return "\n".join(lines)
 

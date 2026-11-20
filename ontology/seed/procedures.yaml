@@ -1,6 +1,6 @@
 # 절차 10개 (설계 2단계 4-2), 조치 연결 (3단계 7장 소속 절차).
 # led_by: LED_BY 관계. P1은 채널별 1차 처리 역할이 주관하므로 고정 팀이 없다.
-# actions: HAS_ACTION 관계. 설계에 순서가 없어 order는 조치 ID 순으로 두었다.
+# actions: HAS_ACTION 관계. order는 목록에 적은 순서다. 설계에 순서가 없어 조치 ID 순으로 적었다.
 procedures:
   - id: P1
     name: 장애 접수와 분류
