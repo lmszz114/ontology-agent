@@ -146,16 +146,21 @@ def test_node_properties_are_replaced_and_stale_nodes_removed(driver, seed, load
     with driver.session() as session:
         session.run("MATCH (n:Team {id: 'TM01'}) SET n.leftover = 'x'").consume()
         session.run("CREATE (:Cause {id: '__stale__'})").consume()
+        session.run("CREATE (:Cause {name: '__no_id__'})").consume()
     try:
         result = load_static(driver, seed)
         with driver.session() as session:
             team = session.run("MATCH (n:Team {id: 'TM01'}) RETURN properties(n) AS p").single()["p"]
             stale = session.run("MATCH (n:Cause {id: '__stale__'}) RETURN count(n) AS c").single()["c"]
+            no_id = session.run("MATCH (n:Cause) WHERE n.id IS NULL RETURN count(n) AS c").single()["c"]
         assert "leftover" not in team and team["name"] == "콘텐츠기획팀"
-        assert stale == 0 and result["removed_nodes"] == 1
+        # 시드에 없는 id를 가진 노드와 id가 없는 노드를 모두 지운다
+        assert stale == 0 and no_id == 0 and result["removed_nodes"] == 2
     finally:
         with driver.session() as session:
-            session.run("MATCH (n:Cause {id: '__stale__'}) DETACH DELETE n").consume()
+            session.run(
+                "MATCH (n:Cause) WHERE n.id = '__stale__' OR n.name = '__no_id__' DETACH DELETE n"
+            ).consume()
 
 
 @pytest.mark.integration

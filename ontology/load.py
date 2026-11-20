@@ -152,7 +152,8 @@ def _write(tx: ManagedTransaction, graph: Graph) -> dict:
             rows=rows,
         ).consume()
         summary = tx.run(
-            f"MATCH (n:{label}) WHERE NOT n.id IN $ids DETACH DELETE n",
+            # id가 없는 노드는 NOT IN이 null이 되어 걸리지 않으므로 따로 잡는다
+            f"MATCH (n:{label}) WHERE n.id IS NULL OR NOT n.id IN $ids DETACH DELETE n",
             ids=[row["id"] for row in rows],
         ).consume()
         removed += summary.counters.nodes_deleted
