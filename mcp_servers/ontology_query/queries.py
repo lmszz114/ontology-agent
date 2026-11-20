@@ -69,18 +69,21 @@ def rank_causes(driver: Driver, symptom_id: str, started_at: str) -> list[dict]:
     if start.tzinfo is None:
         raise ValueError(f"started_at에 시간대가 없다: {started_at}")
     _require(driver, "SymptomType", symptom_id)
+    # 양쪽 시각을 UTC로 맞춘 뒤 비교한다. datetime을 그대로 비교하면 같은 순간이라도
+    # 시간대 표기가 다를 때 경계에서 어긋난다. 소수 초를 버리지 않으려고 초 단위 정수로 바꾸지 않는다
     rows = _read(
         driver,
+        "WITH datetime({datetime: $start, timezone: 'UTC'}) AS start "
         "MATCH (:SymptomType {id: $id})-[m:MAY_BE_CAUSED_BY]->(c:Cause)-[:LOCATED_IN]->(sys:System) "
         "OPTIONAL MATCH (ch:Change)-[:CHANGED]->(sys) "
-        # 시각은 기준 시점부터의 초로 비교한다. datetime끼리 비교하면 같은 순간이라도
-        # 시간대 표기가 다를 때 경계에서 어긋난다
-        "WHERE ch.changed_at.epochSeconds <= $start_s AND ch.changed_at.epochSeconds >= $start_s - $window_s "
-        "WITH c, m, sys, ch ORDER BY ch.changed_at DESC "
+        "WHERE datetime({datetime: ch.changed_at, timezone: 'UTC'}) <= start "
+        "AND datetime({datetime: ch.changed_at, timezone: 'UTC'}) >= start - duration({hours: $window}) "
+        "WITH c, m, sys, ch, duration.inSeconds(ch.changed_at, start).minutes AS gap ORDER BY ch.changed_at DESC "
         "RETURN c.id AS cause_id, c.name AS name, m.prior AS prior, sys.id AS system_id, "
-        "[x IN collect(ch) | {id: x.id, kind: x.kind, changed_at: toString(x.changed_at), "
-        "gap_minutes: duration.inSeconds(x.changed_at, $start).minutes}] AS recent_changes",
-        id=symptom_id, start=start, start_s=int(start.timestamp()), window_s=CHANGE_WINDOW_HOURS * 3600,
+        # collect는 null을 건너뛴다. 변경 이력이 없는 후보는 빈 목록이 된다
+        "collect(CASE WHEN ch IS NULL THEN null ELSE "
+        "{id: ch.id, kind: ch.kind, changed_at: toString(ch.changed_at), gap_minutes: gap} END) AS recent_changes",
+        id=symptom_id, start=start, window=CHANGE_WINDOW_HOURS,
     )
     for row in rows:
         row["prior_score"] = PRIOR_SCORE[row["prior"]]

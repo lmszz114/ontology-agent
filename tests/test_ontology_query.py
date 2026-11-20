@@ -105,6 +105,17 @@ def test_rank_causes_window_edge_and_timezone(db, changes):
     assert top["cause_id"] == "C02" and top["recent_changes"][0]["gap_minutes"] == 24 * 60
 
 
+def test_rank_causes_keeps_fractional_seconds(db, changes):
+    """소수 초를 버리면 시작 직후의 변경이 시작 전으로 잡힌다."""
+    changes("__test_just_after", "SY12", "2026-12-03T20:14:00.500+09:00")  # 시작 0.5초 뒤
+    changes("__test_just_out", "SY02", "2026-12-02T20:13:59.500+09:00")    # 24시간 0.5초 전
+    rows = queries.rank_causes(db, "S1", STARTED_AT)
+    assert all(r["change_bonus"] == 0 for r in rows)
+    changes("__test_just_in", "SY13", "2026-12-03T11:13:59.500Z")           # 시작 0.5초 전 (UTC 표기)
+    top = queries.rank_causes(db, "S1", STARTED_AT)[0]
+    assert (top["cause_id"], top["change_bonus"]) == ("C02", 2)
+
+
 def test_rank_causes_requires_timezone(db):
     with pytest.raises(ValueError, match="시간대"):
         queries.rank_causes(db, "S1", "2026-12-03T20:14")
