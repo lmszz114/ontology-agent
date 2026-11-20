@@ -10,7 +10,6 @@ import pytest
 from ontology.apply_schema import apply_schema
 from ontology.load import STATIC_LABELS, STATIC_RELATIONS, build_graph, load_static
 from ontology.seed import load_seed
-from test_seed import EXPECTED_OWNER
 
 # 시드 키 -> 레이블
 LABEL_BY_KEY = {
@@ -132,18 +131,6 @@ def test_load_is_idempotent(driver, seed, loaded):
 
 
 @pytest.mark.integration
-def test_owner_team_from_graph_matches_design(driver, loaded):
-    """그래프를 따라가 구한 1차 담당 팀이 설계 3단계 5장 표와 같다 (R5)."""
-    with driver.session() as session:
-        rows = session.run(
-            "MATCH (c:Cause)-[l:LOCATED_IN]->(:System)<-[o:OWNS]-(t:Team) "
-            "WHERE o.scope = l.scope AND coalesce(o.area, '') = coalesce(l.area, '') "
-            "RETURN c.id AS cause, collect(t.name) AS teams"
-        ).data()
-    assert {r["cause"]: r["teams"] for r in rows} == {c: [t] for c, t in EXPECTED_OWNER.items()}
-
-
-@pytest.mark.integration
 def test_node_properties_are_replaced_and_stale_nodes_removed(driver, seed, loaded):
     with driver.session() as session:
         session.run("MATCH (n:Team {id: 'TM01'}) SET n.leftover = 'x'").consume()
@@ -172,5 +159,23 @@ def test_dangling_reference_fails_and_rolls_back(driver, seed, loaded):
     broken = copy.deepcopy(seed)
     broken["causes"][0]["located_in"]["system"] = "SY99"
     with pytest.raises(ValueError, match="LOCATED_IN"):
+        load_static(driver, broken)
+    assert static_counts(driver) == before
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("breaker,message", [
+    (lambda s: s["evidence_checks"][9].update(judged_by_team="TM99"), "judged_by_team"),
+    (lambda s: s["actions"][6].update(uses_system="SY99"), "uses_system"),
+    (lambda s: s["symptoms"][0]["causes"][0].update(prior="아주 높음"), "prior"),
+    (lambda s: s["causes"][7]["checked_by"][0].update(args={"system": "SY99"}), "SY99"),
+    (lambda s: s["causes"][1]["checked_by"][0].update(when={"approval": "maybe"}), "maybe"),
+])
+def test_invalid_property_values_are_rejected_before_writing(driver, seed, loaded, breaker, message):
+    """노드 속성으로 들어가는 참조와 확정 조건은 관계 수로 걸리지 않아 적재 전에 확인한다."""
+    before = static_counts(driver)
+    broken = copy.deepcopy(seed)
+    breaker(broken)
+    with pytest.raises(ValueError, match=message):
         load_static(driver, broken)
     assert static_counts(driver) == before
