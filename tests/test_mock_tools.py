@@ -41,7 +41,7 @@ def test_default_answers_are_normal(seed):
     )
     assert [r.content[0].text for r in results] == [
         "결제 승인 기록이 있다",
-        "월드 서버에 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
+        "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
         "같은 증상의 다른 접수 내역이 없다",
     ]
 
@@ -61,8 +61,8 @@ def test_answers_follow_environment(seed):
     )
     assert [r.content[0].text for r in results] == [
         "월드3에서 19:40 이후 지급 기록 0건",
-        "월드 서버에 오류 로그가 없다. 월드 서버에 특정 콘텐츠 처리 지연 로그가 있다",
-        "거래소에 오류 로그가 없다. 거래소에 처리 지연 로그가 없다",
+        "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 특정 콘텐츠 처리 지연 로그가 있다",
+        "거래소에 증상과 관련된 오류 로그가 없다. 거래소에 처리 지연 로그가 없다",
         "증상 시작 전에 게임 클라이언트 배포 이력이 있다. 가장 최근 배포가 일부 대상에만 적용됐다",
     ]
 
@@ -91,10 +91,10 @@ def test_load_environment_from_file(seed, tmp_path):
         "environment:\n"
         "  - check: E09\n"
         "    args: {system: SY11}\n"
-        "    observations: {status: abnormal}\n",
+        "    observations: {status: resource_limit}\n",
         encoding="utf-8",
     )
     env = load_environment(seed, path)
-    assert env.observe("E09", {"system": "SY11"}) == {"status": "abnormal"}
+    assert env.observe("E09", {"system": "SY11"}) == {"status": "resource_limit"}
     assert env.observe("E09", {"system": "SY05"}) == {"status": "normal"}
     assert load_environment(seed, None).entries == []

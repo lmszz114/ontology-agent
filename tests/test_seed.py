@@ -282,6 +282,21 @@ def test_cause_is_the_only_one_confirmed_by_its_own_conditions(seed, cause_id):
             assert confirmed_causes(seed, env, sym["id"]) == [cause_id], sym["id"]
 
 
+def test_network_fault_alone_does_not_confirm_resource_shortage(seed):
+    """네트워크만 이상하고 자원에 여유가 있으면 서버 자원 부족(C20)이 아니다."""
+    def env(status):
+        return Environment(seed, [
+            {"check": "E09", "args": {"system": "SY05"}, "observations": {"status": status}},
+            {"check": "E14", "observations": {"overlaps_large_content": "yes"}},
+        ])
+
+    assert evaluate_cause(seed, env("network_fault"), "C20") == RULE_OUT
+    assert confirmed_causes(seed, env("resource_limit"), "S8") == ["C20"]
+    # 서버 인프라 장애(C06)는 자원 한계와 네트워크 이상 어느 쪽이든 확정된다
+    assert confirmed_causes(seed, env("network_fault"), "S2") == ["C06"]
+    assert confirmed_causes(seed, env("resource_limit"), "S2") == ["C06"]
+
+
 def test_design_example_scenario(seed):
     """설계 4단계 3-4 예시: 결제 승인 기록은 있고 우편함 지급 기록이 없다."""
     env = Environment(seed, [

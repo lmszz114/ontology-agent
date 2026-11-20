@@ -59,7 +59,7 @@ causes:
     located_in: {system: SY09, scope: logic}
     checked_by:
       - {check: E03, when: {other_titles: normal}, expect: "다른 타이틀 로그인은 정상이다"}
-      - {check: E04, args: {system: SY09}, when: {error_log: present}, expect: "로그인 서버에 오류 로그가 있다"}
+      - {check: E04, args: {system: SY09}, when: {error_log: present}, expect: "로그인 서버에 증상과 관련된 오류 로그가 있다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -70,7 +70,7 @@ causes:
     aliases: []
     located_in: {system: SY05, scope: operation}
     checked_by:
-      - {check: E09, args: {system: SY05}, when: {status: abnormal}, expect: "서버 인프라의 자원 또는 네트워크 지표가 비정상이다"}
+      - {check: E09, args: {system: SY05}, when: {status: [resource_limit, network_fault]}, expect: "서버 인프라의 자원 지표가 한계에 가깝거나 넘었다, 또는 네트워크 지표가 비정상이다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -92,7 +92,7 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 해당 콘텐츠 관련 오류 로그가 있다"}
+      - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 증상과 관련된 오류 로그가 있다"}
       - {check: E06, args: {system: SY10}, when: {deployed: "yes"}, expect: "증상 시작 전에 서버 배포 이력이 있다"}
       - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
@@ -102,10 +102,12 @@ causes:
   - id: C09
     name: 클라이언트 로직 오류
     aliases: []
+    # QA 재현은 재현 여부만 알려준다. 서버와 클라이언트가 함께 배포된 업데이트에서는
+    # 판정 근거만으로 C08과 갈리지 않을 수 있다. 그때는 두 담당 팀을 함께 배정한다 (R5-4)
     located_in: {system: SY18, scope: logic}
     checked_by:
       - {check: E06, args: {system: SY18}, when: {deployed: "yes"}, expect: "증상 시작 전에 클라이언트 패치 이력이 있다"}
-      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 클라이언트에서 재현했다"}
+      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P10}
@@ -140,7 +142,7 @@ causes:
     located_in: {system: SY15, scope: logic}
     checked_by:
       - {check: E02, when: {delivery: mismatch}, expect: "보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)"}
-      - {check: E04, args: {system: SY15}, when: {error_log: present}, expect: "이벤트 지급 처리 오류 로그가 있다"}
+      - {check: E04, args: {system: SY15}, when: {error_log: present}, expect: "이벤트 시스템에 증상과 관련된 오류 로그가 있다 (지급 처리 오류)"}
     resolved_by:
       - {procedure: P6, condition: 미지급}
       - {procedure: P7, condition: 과지급}
@@ -153,8 +155,8 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 복사를 재현했다"}
-      - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 관련 오류 로그가 있다"}
+      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다 (복사 재현)"}
+      - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 증상과 관련된 오류 로그가 있다"}
       - {check: E10, when: {supply: increased}, expect: "재화 유통량이 평소보다 늘었다"}
     resolved_by:
       - {procedure: P4}
@@ -216,7 +218,7 @@ causes:
     aliases: []
     located_in: {system: SY14, scope: logic}
     checked_by:
-      - {check: E04, args: {system: SY14}, when: {error_log: present}, expect: "거래소에 오류 로그가 있다"}
+      - {check: E04, args: {system: SY14}, when: {error_log: present}, expect: "거래소에 증상과 관련된 오류 로그가 있다"}
       - {check: E06, args: {system: SY14}, when: {deployed: "yes"}, expect: "증상 시작 전에 거래소 배포 이력이 있다"}
     resolved_by:
       - {procedure: P3}
@@ -228,7 +230,7 @@ causes:
     aliases: []
     located_in: {system: SY11, scope: operation}
     checked_by:
-      - {check: E09, args: {system: SY11}, when: {status: abnormal}, expect: "게임 DB의 부하 지표가 비정상이다"}
+      - {check: E09, args: {system: SY11}, when: {status: resource_limit}, expect: "게임 DB의 자원(부하) 지표가 한계에 가깝거나 넘었다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -240,7 +242,7 @@ causes:
     aliases: []
     located_in: {system: SY05, scope: operation}
     checked_by:
-      - {check: E09, args: {system: SY05}, when: {status: abnormal}, expect: "서버 인프라의 자원 지표가 한계에 가깝다"}
+      - {check: E09, args: {system: SY05}, when: {status: resource_limit}, expect: "서버 인프라의 자원 지표가 한계에 가깝거나 넘었다"}
       - {check: E14, when: {overlaps_large_content: "yes"}, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
     resolved_by:
       - {procedure: P3}
@@ -251,7 +253,7 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E09, args: {system: SY05}, when: {status: normal}, expect: "서버 인프라의 자원에는 여유가 있다"}
+      - {check: E09, args: {system: SY05}, when: {status: [normal, network_fault]}, expect: "서버 인프라의 자원에는 여유가 있다"}
       - {check: E04, args: {system: SY10}, when: {delay_log: present}, expect: "특정 콘텐츠 처리 지연 로그가 있다"}
       - {check: E14, when: {overlaps_large_content: "yes"}, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
     resolved_by:
