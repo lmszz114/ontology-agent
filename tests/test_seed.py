@@ -5,6 +5,10 @@
 
 import pytest
 
+from ontology.conditions import (
+    RULE_OUT, ConditionError, Environment, confirmed_causes, environment_for,
+    evaluate_cause, implies, validate_cause_conditions,
+)
 from ontology.seed import load_seed, resolve_owner_teams
 
 
@@ -224,16 +228,91 @@ def test_game_systems_depend_on_logging_and_monitoring(seed):
             assert {"SY03", "SY04"} <= set(s["depends_on"]), s["id"]
 
 
-def test_causes_of_same_symptom_have_distinct_conditions(seed):
-    """같은 증상의 원인 둘이 같은 확정 조건을 가지면 한 관측으로 둘 다 확정된다."""
-    causes = {c["id"]: c for c in seed["causes"]}
+def test_cause_conditions_use_defined_fields_and_values(seed):
+    validate_cause_conditions(seed)
+
+
+def test_each_cause_uses_a_check_once(seed):
+    for c in seed["causes"]:
+        checks = [x["check"] for x in c["checked_by"]]
+        assert len(checks) == len(set(checks)), c["id"]
+
+
+def test_observation_defaults_are_defined_values(seed):
+    for e in seed["evidence_checks"]:
+        fields = e.get("observations", {})
+        assert fields or e.get("default_detail"), e["id"]
+        for name, spec in fields.items():
+            assert spec["default"] in spec["values"], (e["id"], name)
+            assert all(isinstance(text, str) and text for text in spec["values"].values())
+
+
+def test_every_observation_field_is_used_by_some_cause(seed):
+    """구색 금지: 원인 판정에 쓰이지 않는 관측 필드를 두지 않는다."""
+    used = {(x["check"], name) for c in seed["causes"] for x in c["checked_by"] for name in x["when"]}
+    defined = {(e["id"], name) for e in seed["evidence_checks"] for name in e.get("observations", {})}
+    assert defined == used
+
+
+def test_causes_of_same_symptom_are_distinguishable(seed):
+    """같은 증상의 한 원인이 확정될 때 다른 원인도 반드시 확정되면 판정 근거로 가를 수 없다.
+
+    조건이 같은 경우(이전의 C15, C16)와 한쪽 조건이 다른 쪽에 통째로 들어 있는 경우를 잡는다.
+    """
     for sym in seed["symptoms"]:
-        seen = {}
-        for ref in sym["causes"]:
-            cause = causes[ref["cause"]]
-            key = frozenset((x["check"], x["expect"]) for x in cause["checked_by"])
-            assert key not in seen, (sym["id"], seen.get(key), cause["id"])
-            seen[key] = cause["id"]
+        ids = [ref["cause"] for ref in sym["causes"]]
+        for strong in ids:
+            for weak in ids:
+                if strong != weak:
+                    assert not implies(seed, strong, weak), (sym["id"], strong, weak)
+
+
+def test_nothing_is_confirmed_when_everything_is_normal(seed):
+    env = Environment(seed)
+    for sym in seed["symptoms"]:
+        assert confirmed_causes(seed, env, sym["id"]) == [], sym["id"]
+
+
+@pytest.mark.parametrize("cause_id", list(EXPECTED_OWNER))
+def test_cause_is_the_only_one_confirmed_by_its_own_conditions(seed, cause_id):
+    """원인의 조건만 만족하고 나머지가 이상 없으면, 같은 증상에서 그 원인만 확정된다."""
+    env = environment_for(seed, cause_id)
+    for sym in seed["symptoms"]:
+        if cause_id in [ref["cause"] for ref in sym["causes"]]:
+            assert confirmed_causes(seed, env, sym["id"]) == [cause_id], sym["id"]
+
+
+def test_design_example_scenario(seed):
+    """설계 4단계 3-4 예시: 결제 승인 기록은 있고 우편함 지급 기록이 없다."""
+    env = Environment(seed, [
+        {"check": "E01", "observations": {"approval": "present"}, "detail": "두 유저 모두 결제 승인 기록 있음"},
+        {"check": "E02", "observations": {"delivery": "absent"}},
+        {"check": "E07", "args": {"system": "SY12"}, "observations": {"changed": "no"}},
+    ])
+    assert confirmed_causes(seed, env, "S1") == ["C02"]
+    assert [evaluate_cause(seed, env, c) for c in ("C01", "C03")] == [RULE_OUT, RULE_OUT]
+    assert env.detail("E01") == "두 유저 모두 결제 승인 기록 있음"
+    assert env.detail("E02") == "우편함 지급 기록이 없다"
+    assert env.detail("E07", {"system": "SY12"}) == "증상 시작 전에 캐시 상점 설정 변경 이력이 없다"
+
+
+@pytest.mark.parametrize("entry", [
+    {"check": "E99"},
+    {"check": "E01", "observations": {"approval": "maybe"}},
+    {"check": "E01", "observations": {"unknown_field": "present"}},
+    {"check": "E04", "observations": {"error_log": "present"}},                      # 인자 누락
+    {"check": "E04", "args": {"system": "SY99"}},                                   # 없는 시스템
+    {"check": "E07", "args": {"system": "SY10"}},                                   # 허용 값 밖
+    {"check": "E01", "args": {"system": "SY10"}},                                   # 인자가 없는 조회
+])
+def test_environment_rejects_undefined_entries(seed, entry):
+    with pytest.raises(ConditionError):
+        Environment(seed, [entry])
+
+
+def test_environment_rejects_duplicate_entries(seed):
+    with pytest.raises(ConditionError, match="두 번"):
+        Environment(seed, [{"check": "E01"}, {"check": "E01"}])
 
 
 def test_every_check_has_expect(seed):

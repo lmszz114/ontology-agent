@@ -130,6 +130,7 @@ def test_get_checks(db, seed):
     by_id = {r["check_id"]: r for r in queries.get_checks(db, "C13")}
     assert by_id["E10"]["judged_by_team"] == "시스템기획팀" and by_id["E10"]["tool"] == "query_currency_supply"
     assert by_id["E12"]["performed_by"] == "human" and by_id["E12"]["performed_by_team"] == "QA팀"
+    assert by_id["E04"]["args"] == {"system": "SY10"} and by_id["E10"]["args"] == {}
 
 
 @pytest.mark.parametrize("cause_id,team_name", EXPECTED_OWNER.items())

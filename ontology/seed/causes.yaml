@@ -1,6 +1,10 @@
 # 원인 유형 21개 (설계 3단계 5장).
 # located_in: LOCATED_IN 관계 (scope: logic, data, config, operation, execution. area는 systems.yaml 참고)
-# checked_by: CHECKED_BY 관계. expect는 확정 조건 설명이다.
+# checked_by: CHECKED_BY 관계
+#   args: 판정 근거를 조회할 때 넘기는 값 (evidence_checks.yaml의 params)
+#   when: 확정 조건. 판정 근거의 관측 필드가 이 값이어야 한다. 값이 목록이면 그중 하나면 된다
+#         한 원인의 when이 모두 맞으면 확정, 하나라도 다르면 배제다
+#   expect: 사람이 읽는 확정 조건 설명. when과 같은 뜻이어야 한다
 #   C02, C15, C16, C17은 설계 문서에 적힌 조건이다.
 #   나머지는 초안이며 검토 전이다. 검토가 끝나면 이 줄을 지운다.
 # resolved_by: RESOLVED_BY 관계. P10(원인 수정과 반영)은 모든 원인에 공통으로 연다.
@@ -11,7 +15,7 @@ causes:
     aliases: []
     located_in: {system: SY02, scope: logic}
     checked_by:
-      - {check: E01, expect: "결제 승인 기록이 없거나 승인 오류가 남아 있다"}
+      - {check: E01, when: {approval: [absent, error]}, expect: "결제 승인 기록이 없거나 승인 오류가 남아 있다"}
     resolved_by:
       - {procedure: P6, condition: 누락 보상}
       - {procedure: P3}
@@ -21,8 +25,8 @@ causes:
     aliases: []
     located_in: {system: SY13, scope: logic}
     checked_by:
-      - {check: E01, expect: 결제 승인 기록이 있다}
-      - {check: E02, expect: 우편함 지급 기록이 없다}
+      - {check: E01, when: {approval: present}, expect: 결제 승인 기록이 있다}
+      - {check: E02, when: {delivery: absent}, expect: 우편함 지급 기록이 없다}
     resolved_by:
       - {procedure: P6}
       - {procedure: P3}
@@ -32,7 +36,7 @@ causes:
     aliases: []
     located_in: {system: SY12, scope: config}
     checked_by:
-      - {check: E07, expect: "증상 시작 전에 해당 상품의 설정 변경 이력이 있다"}
+      - {check: E07, args: {system: SY12}, when: {changed: "yes"}, expect: "증상 시작 전에 해당 상품의 설정 변경 이력이 있다"}
     resolved_by:
       - {procedure: P6}
       - {procedure: P3}
@@ -44,7 +48,7 @@ causes:
     aliases: []
     located_in: {system: SY01, scope: operation}
     checked_by:
-      - {check: E03, expect: "다른 타이틀에서도 로그인이 실패한다"}
+      - {check: E03, when: {other_titles: failing}, expect: "다른 타이틀에서도 로그인이 실패한다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -54,8 +58,8 @@ causes:
     aliases: []
     located_in: {system: SY09, scope: logic}
     checked_by:
-      - {check: E03, expect: "다른 타이틀 로그인은 정상이다"}
-      - {check: E04, expect: "로그인 서버에 오류 로그가 있다"}
+      - {check: E03, when: {other_titles: normal}, expect: "다른 타이틀 로그인은 정상이다"}
+      - {check: E04, args: {system: SY09}, when: {error_log: present}, expect: "로그인 서버에 오류 로그가 있다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -66,7 +70,7 @@ causes:
     aliases: []
     located_in: {system: SY05, scope: operation}
     checked_by:
-      - {check: E09, expect: "서버 인프라의 자원 또는 네트워크 지표가 비정상이다"}
+      - {check: E09, args: {system: SY05}, when: {status: abnormal}, expect: "서버 인프라의 자원 또는 네트워크 지표가 비정상이다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -78,8 +82,8 @@ causes:
     aliases: []
     located_in: {system: SY17, scope: data, area: content}
     checked_by:
-      - {check: E05, expect: "증상 시작 전에 해당 콘텐츠 테이블의 변경 이력이 있다"}
-      - {check: E12, expect: "QA가 같은 조건에서 재현했다"}
+      - {check: E05, args: {area: content}, when: {changed: "yes"}, expect: "증상 시작 전에 해당 콘텐츠 테이블의 변경 이력이 있다"}
+      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P5}
       - {procedure: P10}
@@ -88,9 +92,9 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E04, expect: "월드 서버에 해당 콘텐츠 관련 오류 로그가 있다"}
-      - {check: E06, expect: "증상 시작 전에 서버 배포 이력이 있다"}
-      - {check: E12, expect: "QA가 같은 조건에서 재현했다"}
+      - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 해당 콘텐츠 관련 오류 로그가 있다"}
+      - {check: E06, args: {system: SY10}, when: {deployed: "yes"}, expect: "증상 시작 전에 서버 배포 이력이 있다"}
+      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P5}
@@ -100,8 +104,8 @@ causes:
     aliases: []
     located_in: {system: SY18, scope: logic}
     checked_by:
-      - {check: E06, expect: "증상 시작 전에 클라이언트 패치 이력이 있다"}
-      - {check: E12, expect: "QA가 클라이언트에서 재현했다"}
+      - {check: E06, args: {system: SY18}, when: {deployed: "yes"}, expect: "증상 시작 전에 클라이언트 패치 이력이 있다"}
+      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 클라이언트에서 재현했다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P10}
@@ -112,8 +116,8 @@ causes:
     located_in: {system: SY08, scope: execution}
     checked_by:
       # 버전 분포만으로는 정상 배포 직후의 미업데이트 상태와 구분되지 않아 배포 이력을 함께 본다
-      - {check: E06, expect: "증상 시작 전에 패치 배포 이력이 있고, 그 배포가 실패했거나 일부 대상에만 적용됐다"}
-      - {check: E13, expect: "배포가 끝난 뒤에도 최신 버전이 아닌 클라이언트가 남아 있다 (일부 유저 또는 전체 유저)"}
+      - {check: E06, args: {system: SY18}, when: {deployed: "yes", result: [failed, partial]}, expect: "증상 시작 전에 패치 배포 이력이 있고, 그 배포가 실패했거나 일부 대상에만 적용됐다"}
+      - {check: E13, when: {outdated_clients: present}, expect: "배포가 끝난 뒤에도 최신 버전이 아닌 클라이언트가 남아 있다 (일부 유저 또는 전체 유저)"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P10}
@@ -124,7 +128,7 @@ causes:
     aliases: []
     located_in: {system: SY15, scope: config}
     checked_by:
-      - {check: E07, expect: "증상 시작 전에 이벤트 설정 변경 이력이 있다"}
+      - {check: E07, args: {system: SY15}, when: {changed: "yes"}, expect: "증상 시작 전에 이벤트 설정 변경 이력이 있다"}
     resolved_by:
       - {procedure: P6, condition: 미지급}
       - {procedure: P7, condition: 과지급}
@@ -135,8 +139,8 @@ causes:
     aliases: []
     located_in: {system: SY15, scope: logic}
     checked_by:
-      - {check: E02, expect: "보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)"}
-      - {check: E04, expect: "이벤트 지급 처리 오류 로그가 있다"}
+      - {check: E02, when: {delivery: mismatch}, expect: "보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)"}
+      - {check: E04, args: {system: SY15}, when: {error_log: present}, expect: "이벤트 지급 처리 오류 로그가 있다"}
     resolved_by:
       - {procedure: P6, condition: 미지급}
       - {procedure: P7, condition: 과지급}
@@ -149,9 +153,9 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E12, expect: "QA가 복사를 재현했다"}
-      - {check: E04, expect: "월드 서버에 관련 오류 로그가 있다"}
-      - {check: E10, expect: "재화 유통량이 평소보다 늘었다"}
+      - {check: E12, when: {reproduced: "yes"}, expect: "QA가 복사를 재현했다"}
+      - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 관련 오류 로그가 있다"}
+      - {check: E10, when: {supply: increased}, expect: "재화 유통량이 평소보다 늘었다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P5}
@@ -162,8 +166,8 @@ causes:
     aliases: []
     located_in: {system: SY22, scope: config}  # 탐지 규칙이 잡지 못한 어뷰징
     checked_by:
-      - {check: E11, expect: "소수 계정에 거래와 행동이 집중돼 있다"}
-      - {check: E10, expect: "재화 유통량이 평소보다 늘었다"}
+      - {check: E11, when: {concentration: concentrated}, expect: "소수 계정에 거래와 행동이 집중돼 있다"}
+      - {check: E10, when: {supply: increased}, expect: "재화 유통량이 평소보다 늘었다"}
     resolved_by:
       - {procedure: P7}
       - {procedure: P4}
@@ -176,8 +180,8 @@ causes:
     aliases: []
     located_in: {system: SY21, scope: data}
     checked_by:
-      - {check: E08, expect: "공개 수치와 테이블 수치가 다르고, 테이블 수치와 실제 결과가 같다"}
-      - {check: E05, expect: 증상 시작 전에 확률 테이블 변경 이력이 없다}
+      - {check: E08, when: {public_vs_table: different, table_vs_actual: same}, expect: "공개 수치와 테이블 수치가 다르고, 테이블 수치와 실제 결과가 같다"}
+      - {check: E05, args: {area: probability}, when: {changed: "no"}, expect: 증상 시작 전에 확률 테이블 변경 이력이 없다}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -187,8 +191,8 @@ causes:
     aliases: []
     located_in: {system: SY17, scope: data, area: probability}
     checked_by:
-      - {check: E08, expect: "테이블 수치와 공개 수치가 다르고, 실제 결과와 테이블 수치가 같다"}
-      - {check: E05, expect: 증상 시작 전에 확률 테이블 변경 이력이 있다}
+      - {check: E08, when: {public_vs_table: different, table_vs_actual: same}, expect: "테이블 수치와 공개 수치가 다르고, 실제 결과와 테이블 수치가 같다"}
+      - {check: E05, args: {area: probability}, when: {changed: "yes"}, expect: 증상 시작 전에 확률 테이블 변경 이력이 있다}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -198,8 +202,8 @@ causes:
     aliases: []
     located_in: {system: SY16, scope: logic}
     checked_by:
-      - {check: E08, expect: "테이블 수치와 공개 수치가 같은데, 실제 결과가 테이블 수치와 다르다"}
-      - {check: E06, expect: "증상 시작 전에 확률 모듈 배포 이력이 있다"}
+      - {check: E08, when: {public_vs_table: same, table_vs_actual: different}, expect: "테이블 수치와 공개 수치가 같은데, 실제 결과가 테이블 수치와 다르다"}
+      - {check: E06, args: {system: SY16}, when: {deployed: "yes"}, expect: "증상 시작 전에 확률 모듈 배포 이력이 있다"}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -212,8 +216,8 @@ causes:
     aliases: []
     located_in: {system: SY14, scope: logic}
     checked_by:
-      - {check: E04, expect: "거래소에 오류 로그가 있다"}
-      - {check: E06, expect: "증상 시작 전에 거래소 배포 이력이 있다"}
+      - {check: E04, args: {system: SY14}, when: {error_log: present}, expect: "거래소에 오류 로그가 있다"}
+      - {check: E06, args: {system: SY14}, when: {deployed: "yes"}, expect: "증상 시작 전에 거래소 배포 이력이 있다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -224,7 +228,7 @@ causes:
     aliases: []
     located_in: {system: SY11, scope: operation}
     checked_by:
-      - {check: E09, expect: "게임 DB의 부하 지표가 비정상이다"}
+      - {check: E09, args: {system: SY11}, when: {status: abnormal}, expect: "게임 DB의 부하 지표가 비정상이다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -236,8 +240,8 @@ causes:
     aliases: []
     located_in: {system: SY05, scope: operation}
     checked_by:
-      - {check: E09, expect: "서버 인프라의 자원 지표가 한계에 가깝다"}
-      - {check: E14, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
+      - {check: E09, args: {system: SY05}, when: {status: abnormal}, expect: "서버 인프라의 자원 지표가 한계에 가깝다"}
+      - {check: E14, when: {overlaps_large_content: "yes"}, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}
@@ -247,9 +251,9 @@ causes:
     aliases: []
     located_in: {system: SY10, scope: logic}
     checked_by:
-      - {check: E09, expect: "서버 인프라의 자원에는 여유가 있다"}
-      - {check: E04, expect: "특정 콘텐츠 처리 지연 로그가 있다"}
-      - {check: E14, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
+      - {check: E09, args: {system: SY05}, when: {status: normal}, expect: "서버 인프라의 자원에는 여유가 있다"}
+      - {check: E04, args: {system: SY10}, when: {delay_log: present}, expect: "특정 콘텐츠 처리 지연 로그가 있다"}
+      - {check: E14, when: {overlaps_large_content: "yes"}, expect: "대규모 콘텐츠 진행 시간과 겹친다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P10}
