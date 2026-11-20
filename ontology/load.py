@@ -11,6 +11,7 @@ Neo4j는 시드 파일의 사본이다 (설계 3단계 8장). 그래서 적재�
 레이블과 관계 타입은 아래 상수에서만 나온다. 값은 모두 쿼리 매개변수로 넘긴다.
 """
 
+import json
 import sys
 from dataclasses import dataclass, field
 
@@ -104,7 +105,10 @@ def build_graph(seed: dict) -> Graph:
         loc = cause["located_in"]
         g.add_rel("LOCATED_IN", cause["id"], loc["system"], scope=loc["scope"], area=loc.get("area"))
         for ref in cause["checked_by"]:
-            g.add_rel("CHECKED_BY", cause["id"], ref["check"], expect=ref["expect"])
+            # 관계 속성에는 맵을 넣을 수 없어 인자는 JSON 문자열로 둔다.
+            # when은 시드와 시나리오 검증용이라 그래프에 넣지 않는다 (ontology/conditions.py)
+            args = json.dumps(ref["args"], ensure_ascii=False, sort_keys=True) if ref.get("args") else None
+            g.add_rel("CHECKED_BY", cause["id"], ref["check"], expect=ref["expect"], args=args)
         for ref in cause["resolved_by"]:
             g.add_rel("RESOLVED_BY", cause["id"], ref["procedure"], condition=ref.get("condition"))
 
@@ -113,6 +117,7 @@ def build_graph(seed: dict) -> Graph:
             "EvidenceCheck", check,
             ("name", "tool", "performed_by", "judged_by_team", "performed_by_team", "source_systems"),
         )
+        g.nodes["EvidenceCheck"][-1]["params"] = list(check.get("params", {}))
 
     for procedure in seed["procedures"]:
         g.add_node("Procedure", procedure, ("name", "steps"))

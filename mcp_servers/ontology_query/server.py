@@ -63,7 +63,7 @@ def build_server(driver: Driver) -> MCPServer:
     @server.tool()
     @_input_errors_as_tool_errors
     def get_checks(cause_id: str) -> list[dict]:
-        """원인(C01~C21)을 확정하거나 배제하는 판정 근거와 확정 조건, 조회 도구 이름을 돌려준다."""
+        """원인(C01~C21)을 확정하거나 배제하는 판정 근거와 확정 조건, 조회 도구 이름과 넘길 인자(args)를 돌려준다."""
         return queries.get_checks(driver, cause_id)
 
     @server.tool()

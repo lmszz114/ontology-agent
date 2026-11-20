@@ -71,6 +71,8 @@ def test_relation_properties(graph):
     assert props("LOCATED_IN", "C16", "SY17")[0]["area"] == "probability"
     assert props("MAY_BE_CAUSED_BY", "S1", "C02")[0]["prior"] == "높음"
     assert props("CHECKED_BY", "C02", "E02")[0]["expect"] == "우편함 지급 기록이 없다"
+    assert "args" not in props("CHECKED_BY", "C02", "E02")[0]
+    assert props("CHECKED_BY", "C08", "E04")[0]["args"] == '{"system": "SY10"}'
     assert props("RESOLVED_BY", "C11", "P7")[0]["condition"] == "과지급"
     assert "condition" not in props("RESOLVED_BY", "C11", "P3")[0]
     assert [p["order"] for p in props("HAS_ACTION", "P9", "A16")] == [2]

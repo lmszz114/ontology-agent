@@ -4,6 +4,7 @@
 모든 쿼리는 읽기 전용 트랜잭션에서 돈다. 정의되지 않은 ID는 오류로 돌려준다.
 """
 
+import json
 from datetime import datetime
 
 from neo4j import Driver
@@ -99,16 +100,20 @@ def rank_causes(driver: Driver, symptom_id: str, started_at: str) -> list[dict]:
 def get_checks(driver: Driver, cause_id: str) -> list[dict]:
     """원인을 확정하거나 배제하는 판정 근거와 확정 조건 (R4-4)."""
     _require(driver, "Cause", cause_id)
-    return _read(
+    rows = _read(
         driver,
         "MATCH (:Cause {id: $id})-[r:CHECKED_BY]->(e:EvidenceCheck) "
         "OPTIONAL MATCH (jt:Team {id: e.judged_by_team}) "
         "OPTIONAL MATCH (pt:Team {id: e.performed_by_team}) "
         "RETURN e.id AS check_id, e.name AS name, e.tool AS tool, e.performed_by AS performed_by, "
-        "r.expect AS expect, jt.name AS judged_by_team, pt.name AS performed_by_team "
+        "r.expect AS expect, r.args AS args, jt.name AS judged_by_team, pt.name AS performed_by_team "
         "ORDER BY check_id",
         id=cause_id,
     )
+    # args는 이 원인을 확인할 때 조회 도구에 넘길 인자다 (예: 어느 시스템의 로그인지)
+    for row in rows:
+        row["args"] = json.loads(row["args"]) if row["args"] else {}
+    return rows
 
 
 def get_owner_team(driver: Driver, cause_id: str) -> dict:
