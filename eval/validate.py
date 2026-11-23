@@ -267,7 +267,13 @@ def validate_all(seed: dict) -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
     for split in SPLITS:
-        for scenario in load_scenarios(split):
+        for path in sorted((SCENARIO_DIR / split).glob("*.yaml")):
+            # 파일을 하나씩 읽는다. 문법이 틀린 파일이 있어도 나머지 파일은 검사한다
+            try:
+                scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+                errors.append(f"{path.name}: 파일을 읽을 수 없다 ({type(exc).__name__})")
+                continue
             try:
                 errors.extend(validate_scenario(seed, scenario))
             except Exception as exc:  # noqa: BLE001

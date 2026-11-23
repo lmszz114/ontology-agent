@@ -158,6 +158,24 @@ def test_non_mapping_documents_are_reported(seed, document):
     assert validate_scenario(seed, document) == ["(id 없음): 시나리오 파일의 최상위가 키와 값의 묶음이 아니다"]
 
 
+def test_unreadable_file_does_not_stop_other_files(seed, scenarios, tmp_path, monkeypatch):
+    """문법이 틀린 파일이 있어도 나머지 파일은 검사하고, 틀린 파일은 이름과 함께 보고한다."""
+    import yaml
+
+    from eval import validate
+
+    (tmp_path / "dev").mkdir()
+    (tmp_path / "test").mkdir()
+    (tmp_path / "dev" / "a-broken.yaml").write_text("id: [닫지 않은 목록\n", encoding="utf-8")
+    wrong = broken(scenarios, "SC-S1-01", lambda s: s["expected"].update(severity="SEV1"))
+    (tmp_path / "dev" / "b-wrong.yaml").write_text(yaml.safe_dump(wrong, allow_unicode=True), encoding="utf-8")
+    monkeypatch.setattr(validate, "SCENARIO_DIR", tmp_path)
+
+    errors = validate.validate_all(seed)
+    assert any(e.startswith("a-broken.yaml: 파일을 읽을 수 없다") for e in errors), errors
+    assert any(e.startswith("SC-S1-01: severity") for e in errors), errors
+
+
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):
     scenario = broken(scenarios, "SC-S8-01", lambda s: s["expected"].update(escalated=True))
     assert any("severity는 SEV2" in e for e in validate_scenario(seed, scenario))
