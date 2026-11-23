@@ -204,7 +204,8 @@ def get_action_policy(driver: Driver, action_id: str) -> dict:
         "OPTIONAL MATCH (sys:System {id: a.uses_system}) "
         "RETURN a.id AS action_id, a.name AS name, a.kind AS kind, a.risk AS risk, "
         "a.auto_executable AS auto_executable, a.simulated AS simulated, "
-        "head([(a)-[:EXECUTED_BY]->(t:Team) | t.name]) AS executed_by, a.executed_by_rule AS executed_by_rule, "
+        "head([(a)-[:EXECUTED_BY]->(t:Team) | {team_id: t.id, name: t.name}]) AS executed_by, "
+        "a.executed_by_rule AS executed_by_rule, "
         "[(a)-[r:REQUIRES_APPROVAL_FROM]->(t:Team) | {team_id: t.id, name: t.name, condition: r.condition}] AS approvers, "
         "a.approver_rule AS approver_rule, sys.name AS uses_system",
         id=action_id,
