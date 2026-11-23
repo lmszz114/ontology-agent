@@ -3,6 +3,8 @@
 개수, 참조 무결성, 허용 값, 담당 팀 결정(R5), 구색 금지(설계 3단계 9장)를 본다.
 """
 
+import copy
+
 import pytest
 
 from ontology.conditions import (
@@ -255,7 +257,7 @@ def test_observation_defaults_are_defined_values(seed):
 
 def test_every_observation_field_is_used_by_some_cause(seed):
     """구색 금지: 원인 판정에 쓰이지 않는 관측 필드를 두지 않는다."""
-    used = {(x["check"], name) for c in seed["causes"] for x in c["checked_by"] for name in x["when"]}
+    used = {(x["check"], name) for c in seed["causes"] for x in c["checked_by"] for name in x.get("when", {})}
     defined = {(e["id"], name) for e in seed["evidence_checks"] for name in e.get("observations", {})}
     assert defined == used
 
@@ -341,7 +343,40 @@ def test_environment_rejects_duplicate_entries(seed):
         Environment(seed, [{"check": "E01"}, {"check": "E01"}])
 
 
-def test_every_check_has_expect(seed):
+def test_every_check_is_either_condition_or_reference(seed):
     for c in seed["causes"]:
         for x in c["checked_by"]:
-            assert x["expect"], (c["id"], x["check"])
+            assert bool(x.get("when") and x.get("expect")) != bool(x.get("note")), (c["id"], x["check"])
+
+
+def test_reference_checks_do_not_decide(seed):
+    """참고용 근거는 확정과 배제에 쓰지 않는다 (설계 3단계 5장 S6, S7)."""
+    reference = {(c["id"], x["check"]) for c in seed["causes"] for x in c["checked_by"] if "note" in x}
+    assert reference == {("C14", "E10"), ("C17", "E06")}
+    # 확률 모듈 로직 오류는 배포 이력이 없어도 수치 비교만으로 확정된다
+    env = Environment(seed, [{"check": "E08", "observations": {"public_vs_table": "same", "table_vs_actual": "different"}}])
+    assert confirmed_causes(seed, env, "S6") == ["C17"]
+    # 어뷰징은 재화 유통량이 늘지 않아도 계정 집중만으로 확정된다
+    env = Environment(seed, [{"check": "E11", "observations": {"concentration": "concentrated"}}])
+    assert confirmed_causes(seed, env, "S7") == ["C14"] and confirmed_causes(seed, env, "S5") == ["C14"]
+
+
+@pytest.mark.parametrize("breaker", [
+    lambda ref: ref.pop("expect"),                    # 확정 조건인데 설명이 없다
+    lambda ref: ref.update(note="참고"),              # 확정 조건과 참고용 표시가 함께 있다
+    lambda ref: (ref.pop("when"), ref.pop("expect")),  # 둘 다 없다
+    lambda ref: (ref.pop("when"), ref.update(note="참고")),  # 참고용인데 expect가 남았다
+])
+def test_malformed_check_entries_are_rejected(seed, breaker):
+    broken = copy.deepcopy(seed)
+    breaker(broken["causes"][1]["checked_by"][0])
+    with pytest.raises(ConditionError):
+        validate_cause_conditions(broken)
+
+
+def test_cause_without_conditions_is_rejected(seed):
+    broken = copy.deepcopy(seed)
+    c17 = next(c for c in broken["causes"] if c["id"] == "C17")
+    c17["checked_by"] = [x for x in c17["checked_by"] if "note" in x]
+    with pytest.raises(ConditionError, match="확정 조건이 없다"):
+        validate_cause_conditions(broken)
