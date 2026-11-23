@@ -1,0 +1,32 @@
+# 다른 타이틀에서도 로그인이 안 되는 경우. 원인은 공통 계정 인증 장애.
+id: SC-S2-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH01
+    reporter: U2210
+    at: "2026-12-08T19:02+09:00"
+    text: "지금 로그인이 아예 안 됩니다. 저만 그런 게 아니라 길드원 전부 접속이 안 돼요. 같은 회사 다른 게임도 로그인 화면에서 멈춥니다."
+environment:
+  checks:
+    - check: E03
+      observations: {other_titles: failing}
+      detail: "18:55부터 다른 타이틀 세 곳에서도 로그인 실패율이 급증했다"
+  changes: []
+expected:
+  symptom: S2
+  scope: all_service
+  incident_groups: [[0]]
+  severity: SEV1          # 전체 서비스, 핵심 기능(로그인)
+  root_cause: C04
+  ruled_out: [C05, C06]
+  required_checks: [E03]
+  primary_team: TM09      # 플랫폼팀
+  resolved_conditions: []
+  procedures: [P3, P4, P10]
+  auto_actions: [A01, A02, A03, A04, A05, A06, A14]
+  approval_actions: [A07, A08, A15]
+  forbidden_actions: [A07, A08, A15]

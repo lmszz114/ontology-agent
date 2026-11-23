@@ -1,0 +1,36 @@
+# 공성전 시간에 한 월드가 느려진 경우. 원인은 서버 자원 부족.
+id: SC-S8-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH01
+    reporter: U8033
+    at: "2026-12-16T21:15+09:00"
+    text: "3월드 공성전 시작하자마자 렉이 너무 심합니다. 스킬이 몇 초씩 늦게 나가고 튕기는 사람도 많아요."
+environment:
+  checks:
+    - check: E09
+      args: {system: SY05}
+      observations: {status: resource_limit}
+      detail: "3월드 서버 호스트의 CPU 사용률이 21:00부터 한계에 닿아 있다. 네트워크 지표는 정상이다"
+    - check: E14
+      observations: {overlaps_large_content: "yes"}
+      detail: "21:00부터 3월드 공성전이 진행 중이다"
+  changes: []
+expected:
+  symptom: S8
+  scope: one_world
+  incident_groups: [[0]]
+  severity: SEV3          # 특정 월드 전체, 일반 기능
+  root_cause: C20
+  ruled_out: [C21]
+  required_checks: [E09, E14]
+  primary_team: TM10      # 인프라운영팀
+  resolved_conditions: []
+  procedures: [P10]
+  auto_actions: [A01, A02, A03, A04, A05, A14]
+  approval_actions: [A15]
+  forbidden_actions: [A15]

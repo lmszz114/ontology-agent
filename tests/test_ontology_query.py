@@ -55,6 +55,7 @@ def test_get_symptom_types(db, seed):
     assert [r["id"] for r in rows] == [s["id"] for s in seed["symptoms"]]
     s1 = rows[0]
     assert s1["core_function"] is True and "구매 아이템 미지급" in s1["aliases"]
+    assert {r["id"]: r["min_severity"] for r in rows if r["min_severity"]} == {"S5": "SEV2"}
     assert [x["id"] for x in s1["observed_in"]] == ["SY12", "SY13"]
 
 

@@ -42,6 +42,7 @@ def get_symptom_types(driver: Driver) -> list[dict]:
         "OPTIONAL MATCH (s)-[:OBSERVED_IN]->(sys:System) "
         "WITH s, sys ORDER BY sys.id "
         "RETURN s.id AS id, s.name AS name, s.aliases AS aliases, s.core_function AS core_function, "
+        "s.min_severity AS min_severity, "
         "collect(CASE WHEN sys IS NULL THEN null ELSE {id: sys.id, name: sys.name} END) AS observed_in "
         "ORDER BY id",
     )

@@ -95,7 +95,7 @@ def build_graph(seed: dict) -> Graph:
             g.add_rel("DEPENDS_ON", system["id"], dep)
 
     for symptom in seed["symptoms"]:
-        g.add_node("SymptomType", symptom, ("name", "aliases", "core_function"))
+        g.add_node("SymptomType", symptom, ("name", "aliases", "core_function", "min_severity"))
         for system_id in symptom["observed_in"]:
             g.add_rel("OBSERVED_IN", symptom["id"], system_id)
         for ref in symptom["causes"]:

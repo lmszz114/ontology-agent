@@ -1,0 +1,37 @@
+# 확률 테이블이 바뀐 뒤 공개 수치와 실제 결과가 달라진 경우. 원인은 확률 테이블 값 오류.
+id: SC-S6-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH02
+    reporter: U6021
+    at: "2026-12-14T13:05+09:00"
+    text: "어제 점검 이후로 뽑기 확률이 공지된 수치와 너무 다릅니다. 길드원들과 합쳐서 천 번 넘게 뽑았는데 최고 등급이 한 번도 안 나왔어요."
+environment:
+  checks:
+    - check: E08
+      observations: {public_vs_table: different, table_vs_actual: same}
+      detail: "공개 수치는 1.0%, 테이블 수치는 0.1%, 최근 실제 결과는 0.1%다"
+    - check: E05
+      args: {area: probability}
+      observations: {changed: "yes"}
+      detail: "어제 14:20에 확률 테이블이 수정됐다"
+  changes:
+    - {kind: table_change, system: SY17, at: "2026-12-13T14:20+09:00"}
+expected:
+  symptom: S6
+  scope: all_service
+  incident_groups: [[0]]
+  severity: SEV2          # 전체 서비스, 일반 기능
+  root_cause: C16
+  ruled_out: [C15, C17]
+  required_checks: [E05, E08]
+  primary_team: TM02      # 시스템기획팀
+  resolved_conditions: []
+  procedures: [P3, P4, P8, P10]
+  auto_actions: [A01, A02, A03, A04, A05, A06, A14]
+  approval_actions: [A07, A08, A12, A15]
+  forbidden_actions: [A07, A08, A12, A15]

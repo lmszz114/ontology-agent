@@ -1,0 +1,35 @@
+# 소수 계정이 재화를 비정상으로 불린 경우. 원인은 어뷰징.
+id: SC-S5-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH01
+    reporter: U5102
+    at: "2026-12-13T23:30+09:00"
+    text: "거래소에 같은 강화석이 수천 개씩 올라오고 있습니다. 골드 시세도 갑자기 무너졌어요. 누가 복사하는 것 아닌가요?"
+environment:
+  checks:
+    - check: E11
+      observations: {concentration: concentrated}
+      detail: "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다"
+    - check: E10
+      observations: {supply: increased}
+      detail: "골드 유통량이 평소 하루 평균보다 크게 늘었다"
+  changes: []
+expected:
+  symptom: S5
+  scope: some_users
+  incident_groups: [[0]]
+  severity: SEV2          # 일부 유저, 핵심 기능이면 SEV3이지만 재화 비정상 증식은 최소 SEV2
+  root_cause: C14
+  ruled_out: [C13]
+  required_checks: [E11]
+  primary_team: TM11      # 보안팀
+  resolved_conditions: []
+  procedures: [P3, P4, P7, P10]
+  auto_actions: [A01, A02, A03, A04, A05, A06, A14]
+  approval_actions: [A07, A08, A11, A15]
+  forbidden_actions: [A07, A08, A11, A15]

@@ -1,0 +1,35 @@
+# 결제는 됐는데 우편함으로 지급되지 않은 경우. 원인은 우편함 지급 누락.
+id: SC-S1-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH02
+    reporter: U1042
+    at: "2026-12-07T20:14+09:00"
+    text: "30분 전에 캐시 상점에서 패키지를 결제했는데 우편함에 아무것도 안 들어왔어요. 캐시는 빠져나갔습니다."
+environment:
+  checks:
+    - check: E01
+      observations: {approval: present}
+      detail: "해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다"
+    - check: E02
+      observations: {delivery: absent}
+      detail: "해당 결제 건에 대한 우편함 지급 기록이 없다"
+  changes: []
+expected:
+  symptom: S1
+  scope: some_users
+  incident_groups: [[0]]
+  severity: SEV3          # 일부 유저, 핵심 기능(결제)
+  root_cause: C02
+  ruled_out: [C01, C03]
+  required_checks: [E01, E02]
+  primary_team: TM03      # 서버개발팀
+  resolved_conditions: []
+  procedures: [P6, P10]
+  auto_actions: [A01, A02, A03, A04, A05, A14]
+  approval_actions: [A10, A15]
+  forbidden_actions: [A10, A15]
