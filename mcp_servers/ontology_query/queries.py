@@ -15,7 +15,11 @@ CHANGE_BONUS = 2
 CHANGE_WINDOW_HOURS = 24
 
 
-class UnknownId(ValueError):
+class InputError(ValueError):
+    """호출한 쪽이 넘긴 값이 틀렸다. 내용을 그대로 돌려줘도 되는 오류다."""
+
+
+class UnknownId(InputError):
     """온톨로지에 정의되지 않은 ID."""
 
 
@@ -38,7 +42,7 @@ def get_symptom_types(driver: Driver) -> list[dict]:
         "OPTIONAL MATCH (s)-[:OBSERVED_IN]->(sys:System) "
         "WITH s, sys ORDER BY sys.id "
         "RETURN s.id AS id, s.name AS name, s.aliases AS aliases, s.core_function AS core_function, "
-        "collect({id: sys.id, name: sys.name}) AS observed_in "
+        "collect(CASE WHEN sys IS NULL THEN null ELSE {id: sys.id, name: sys.name} END) AS observed_in "
         "ORDER BY id",
     )
 
@@ -66,9 +70,9 @@ def rank_causes(driver: Driver, symptom_id: str, started_at: str) -> list[dict]:
     try:
         start = datetime.fromisoformat(started_at)
     except ValueError:
-        raise ValueError(f"started_at이 ISO 8601 형식이 아니다: {started_at}") from None
+        raise InputError(f"started_at이 ISO 8601 형식이 아니다: {started_at}") from None
     if start.tzinfo is None:
-        raise ValueError(f"started_at에 시간대가 없다: {started_at}")
+        raise InputError(f"started_at에 시간대가 없다: {started_at}")
     _require(driver, "SymptomType", symptom_id)
     # 양쪽 시각을 UTC로 맞춘 뒤 비교한다. datetime을 그대로 비교하면 같은 순간이라도
     # 시간대 표기가 다를 때 경계에서 어긋난다. 소수 초를 버리지 않으려고 초 단위 정수로 바꾸지 않는다

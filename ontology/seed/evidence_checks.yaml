@@ -6,8 +6,10 @@
 # source_systems: 데이터 출처 시스템
 #
 # params: 조회할 때 넘기는 값. kind: system이면 시스템 ID, values가 있으면 그중 하나
+#   values가 "값: 이름" 꼴이면 이름이 응답 문장의 {인자 이름} 자리에 들어간다
 # observations: 조회 결과를 나타내는 필드
 #   values: 허용 값과, 그 값일 때 모의 도구가 돌려주는 기본 문장. {system}은 시스템 이름으로 바뀐다
+#   한 판정 근거의 필드들은 서로 독립이어야 한다. 한 필드의 값에 따라 뜻이 없어지는 필드를 두지 않는다
 #   default: 시나리오가 따로 정하지 않았을 때의 값 (이상 없음)
 # 필드 값은 원인의 확정 조건(causes.yaml의 when)과 시나리오 검증에 쓴다.
 # 진단 에이전트에게는 문장만 돌려주고 필드 값은 보여주지 않는다.
@@ -72,13 +74,14 @@ evidence_checks:
     performed_by: agent
     source_systems: [SY17]
     params:
-      area: {values: [content, probability]}
+      area:
+        values: {content: 콘텐츠 영역, probability: 확률 영역}
     observations:
       changed:
         default: "no"
         values:
-          "no": 증상 시작 전에 해당 영역 테이블의 변경 이력이 없다
-          "yes": 증상 시작 전에 해당 영역 테이블의 변경 이력이 있다
+          "no": "증상 시작 전에 게임 데이터 테이블 {area}의 변경 이력이 없다"
+          "yes": "증상 시작 전에 게임 데이터 테이블 {area}의 변경 이력이 있다"
   - id: E06
     name: 배포 이력 조회
     tool: query_deploy_history
@@ -87,18 +90,14 @@ evidence_checks:
     params:
       system: {kind: system}
     observations:
-      deployed:
-        default: "no"
+      # 배포 여부와 결과를 한 필드에 둔다. 따로 두면 "이력이 없다"와 "배포가 실패했다"가 함께 나올 수 있다
+      deploy:
+        default: none
         values:
-          "no": "증상 시작 전에 {system} 배포 이력이 없다"
-          "yes": "증상 시작 전에 {system} 배포 이력이 있다"
-      # deployed가 yes일 때만 뜻이 있다
-      result:
-        default: success
-        values:
-          success: 가장 최근 배포는 정상으로 끝났다
-          partial: 가장 최근 배포가 일부 대상에만 적용됐다
-          failed: 가장 최근 배포가 실패했다
+          none: "증상 시작 전에 {system} 배포 이력이 없다"
+          success: "증상 시작 전에 {system} 배포 이력이 있다. 가장 최근 배포는 정상으로 끝났다"
+          partial: "증상 시작 전에 {system} 배포 이력이 있다. 가장 최근 배포가 일부 대상에만 적용됐다"
+          failed: "증상 시작 전에 {system} 배포 이력이 있다. 가장 최근 배포가 실패했다"
   - id: E07
     name: "설정 변경 이력 조회 (이벤트, 상품)"
     tool: query_config_change

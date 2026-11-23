@@ -2,7 +2,7 @@
 # kind: response(대응), fix(수정), knowledge(지식)
 # risk가 high이면 승인 전에 실행하지 않는다 (R6).
 # simulated: 지식 추출(A16)과 반영(A17)만 실제 동작이고 나머지는 시뮬레이션이다.
-# executed_by: EXECUTED_BY 관계. null이면 에이전트가 실행한다.
+# executed_by: EXECUTED_BY 관계. null이면 에이전트가 실행한다. 단, executed_by_rule이 있으면 그 규칙으로 정해진 팀이 실행한다.
 # approvers: REQUIRES_APPROVAL_FROM 관계. 해당 팀 리드가 승인한다.
 # executed_by_rule, approver_rule: 사건마다 달라져 고정 관계를 두지 않는 경우의 규칙 이름
 # uses_system: 조치의 실행 수단 또는 대상 시스템

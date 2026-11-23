@@ -93,7 +93,7 @@ causes:
     located_in: {system: SY10, scope: logic}
     checked_by:
       - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 증상과 관련된 오류 로그가 있다"}
-      - {check: E06, args: {system: SY10}, when: {deployed: "yes"}, expect: "증상 시작 전에 서버 배포 이력이 있다"}
+      - {check: E06, args: {system: SY10}, when: {deploy: [success, partial, failed]}, expect: "증상 시작 전에 서버 배포 이력이 있다"}
       - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P4}
@@ -106,7 +106,7 @@ causes:
     # 판정 근거만으로 C08과 갈리지 않을 수 있다. 그때는 두 담당 팀을 함께 배정한다 (R5-4)
     located_in: {system: SY18, scope: logic}
     checked_by:
-      - {check: E06, args: {system: SY18}, when: {deployed: "yes"}, expect: "증상 시작 전에 클라이언트 패치 이력이 있다"}
+      - {check: E06, args: {system: SY18}, when: {deploy: [success, partial, failed]}, expect: "증상 시작 전에 클라이언트 패치 이력이 있다"}
       - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다"}
     resolved_by:
       - {procedure: P4}
@@ -118,7 +118,7 @@ causes:
     located_in: {system: SY08, scope: execution}
     checked_by:
       # 버전 분포만으로는 정상 배포 직후의 미업데이트 상태와 구분되지 않아 배포 이력을 함께 본다
-      - {check: E06, args: {system: SY18}, when: {deployed: "yes", result: [failed, partial]}, expect: "증상 시작 전에 패치 배포 이력이 있고, 그 배포가 실패했거나 일부 대상에만 적용됐다"}
+      - {check: E06, args: {system: SY18}, when: {deploy: [failed, partial]}, expect: "증상 시작 전에 패치 배포 이력이 있고, 그 배포가 실패했거나 일부 대상에만 적용됐다"}
       - {check: E13, when: {outdated_clients: present}, expect: "배포가 끝난 뒤에도 최신 버전이 아닌 클라이언트가 남아 있다 (일부 유저 또는 전체 유저)"}
     resolved_by:
       - {procedure: P4}
@@ -205,7 +205,7 @@ causes:
     located_in: {system: SY16, scope: logic}
     checked_by:
       - {check: E08, when: {public_vs_table: same, table_vs_actual: different}, expect: "테이블 수치와 공개 수치가 같은데, 실제 결과가 테이블 수치와 다르다"}
-      - {check: E06, args: {system: SY16}, when: {deployed: "yes"}, expect: "증상 시작 전에 확률 모듈 배포 이력이 있다"}
+      - {check: E06, args: {system: SY16}, when: {deploy: [success, partial, failed]}, expect: "증상 시작 전에 확률 모듈 배포 이력이 있다"}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}
@@ -219,7 +219,7 @@ causes:
     located_in: {system: SY14, scope: logic}
     checked_by:
       - {check: E04, args: {system: SY14}, when: {error_log: present}, expect: "거래소에 증상과 관련된 오류 로그가 있다"}
-      - {check: E06, args: {system: SY14}, when: {deployed: "yes"}, expect: "증상 시작 전에 거래소 배포 이력이 있다"}
+      - {check: E06, args: {system: SY14}, when: {deploy: [success, partial, failed]}, expect: "증상 시작 전에 거래소 배포 이력이 있다"}
     resolved_by:
       - {procedure: P3}
       - {procedure: P4}

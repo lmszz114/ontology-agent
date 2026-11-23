@@ -20,13 +20,14 @@ def _input_errors_as_tool_errors(fn: Callable) -> Callable:
     """잘못된 입력(정의되지 않은 ID, 형식이 틀린 시각)의 내용을 호출한 쪽에 전달한다.
 
     SDK는 ToolError가 아닌 예외의 내용을 숨긴다. 에이전트가 무엇을 틀렸는지 알아야
-    다시 요청할 수 있으므로 입력 오류만 ToolError로 바꾼다. 그 밖의 오류는 숨긴 채로 둔다.
+    다시 요청할 수 있으므로 입력 오류(queries.InputError)만 ToolError로 바꾼다.
+    그 밖의 오류는 내부 사정이 드러나지 않게 숨긴 채로 둔다.
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except ValueError as exc:
+        except queries.InputError as exc:
             raise ToolError(str(exc)) from exc
 
     return wrapper

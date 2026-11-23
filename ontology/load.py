@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from neo4j import Driver, ManagedTransaction
 
 from ontology.db import get_driver
-from ontology.seed import load_seed
+from ontology.seed import load_seed, validate_seed
 
 # 정적 지식 계층의 노드 레이블 (설계 3단계 2-1)
 STATIC_LABELS = (
@@ -190,6 +190,7 @@ def _write(tx: ManagedTransaction, graph: Graph) -> dict:
 
 def load_static(driver: Driver, seed: dict) -> dict:
     """정적 지식 계층을 시드대로 맞춘다. 적재한 노드, 관계 수와 지운 노드 수를 돌려준다."""
+    validate_seed(seed)
     graph = build_graph(seed)
     with driver.session() as session:
         return session.execute_write(_write, graph)
