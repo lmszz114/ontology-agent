@@ -108,20 +108,47 @@ def _structure_errors(scenario) -> list[str]:
     def dicts(value) -> bool:
         return isinstance(value, list) and all(isinstance(item, dict) for item in value)
 
-    need(dicts(scenario.get("reports")), "reports는 제보 항목의 목록이어야 한다")
+    def strings(items, names: tuple[str, ...], where: str) -> None:
+        # ID와 시각 자리에 목록이나 묶음이 오면 뒤의 비교에서 예외가 난다
+        for index, item in enumerate(items):
+            for name in names:
+                need(isinstance(item.get(name), str), f"{where} {index}: {name}은 문자열이어야 한다")
+
+    reports = scenario.get("reports")
+    if dicts(reports):
+        strings(reports, ("channel", "reporter", "at", "text"), "제보")
+    else:
+        need(False, "reports는 제보 항목의 목록이어야 한다")
     environment = scenario.get("environment")
     if isinstance(environment, dict):
         need(dicts(environment.get("checks")), "environment.checks는 조회 항목의 목록이어야 한다")
-        need(dicts(environment.get("changes")), "environment.changes는 변경 항목의 목록이어야 한다")
+        if dicts(environment.get("changes")):
+            strings(environment["changes"], ("kind", "system", "at"), "변경")
+        else:
+            need(False, "environment.changes는 변경 항목의 목록이어야 한다")
     else:
         need(False, "environment가 없거나 키와 값의 묶음이 아니다")
     expected = scenario.get("expected")
     if isinstance(expected, dict):
+        for name in ("symptom", "scope", "severity", "root_cause", "primary_team"):
+            need(isinstance(expected.get(name), str), f"expected.{name}은 문자열이어야 한다")
+        # 목록의 원소 형식까지 본다. 뒤에서 정렬하고 집합으로 바꾸므로 형식이 섞이면 예외가 난다
         for name in LIST_LABELS:
-            need(isinstance(expected.get(name), list), f"expected.{name}은 목록이어야 한다")
-        groups = expected.get("incident_groups")
-        if isinstance(groups, list):
-            need(all(isinstance(g, list) for g in groups), "expected.incident_groups의 각 묶음은 목록이어야 한다")
+            value = expected.get(name)
+            if name == "incident_groups":
+                need(
+                    isinstance(value, list) and all(
+                        isinstance(group, list)
+                        and all(isinstance(i, int) and not isinstance(i, bool) for i in group)
+                        for group in value
+                    ),
+                    "expected.incident_groups는 제보 번호(정수) 묶음의 목록이어야 한다",
+                )
+            else:
+                need(
+                    isinstance(value, list) and all(isinstance(item, str) for item in value),
+                    f"expected.{name}은 문자열의 목록이어야 한다",
+                )
     else:
         need(False, "expected가 없거나 키와 값의 묶음이 아니다")
     return errors
@@ -241,8 +268,12 @@ def validate_all(seed: dict) -> list[str]:
     seen: set[str] = set()
     for split in SPLITS:
         for scenario in load_scenarios(split):
-            problems = validate_scenario(seed, scenario)
-            errors.extend(problems)
+            try:
+                errors.extend(validate_scenario(seed, scenario))
+            except Exception as exc:  # noqa: BLE001
+                # 모양 검사가 놓친 경우에도 한 파일 때문에 나머지 파일의 검사가 멈추지 않게 한다
+                name = scenario.get("id") if isinstance(scenario, dict) else None
+                errors.append(f"{name or '(id 없음)'}: 검증하다가 멈췄다 ({type(exc).__name__}: {exc})")
             # id가 없거나 모양이 틀린 파일은 위에서 보고했다. 중복과 폴더 검사는 id가 있을 때만 한다
             sid = scenario.get("id") if isinstance(scenario, dict) else None
             if not isinstance(sid, str) or not sid:

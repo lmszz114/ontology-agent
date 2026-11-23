@@ -132,6 +132,20 @@ def test_broken_scenarios_are_reported(seed, scenarios, sid, mutate, message):
     (lambda s: s["expected"].update(procedures="P10"), "expected.procedures"),
     (lambda s: s["expected"].pop("ruled_out"), "expected.ruled_out"),
     (lambda s: s["expected"].update(incident_groups=[0]), "incident_groups"),
+    # 목록의 원소 형식이 섞인 경우
+    (lambda s: s["expected"].update(incident_groups=[[0, "1"]]), "incident_groups"),
+    (lambda s: s["expected"].update(incident_groups=[[True]]), "incident_groups"),
+    (lambda s: s["expected"].update(ruled_out=["C01", None]), "expected.ruled_out"),
+    (lambda s: s["expected"].update(procedures=["P6", 10]), "expected.procedures"),
+    (lambda s: s["expected"].update(auto_actions=[["A01"]]), "expected.auto_actions"),
+    (lambda s: s["expected"].update(resolved_conditions=[{"조건": "미지급"}]), "expected.resolved_conditions"),
+    # ID나 시각 자리에 문자열이 아닌 값이 온 경우
+    (lambda s: s["reports"][0].update(channel=["CH02"]), "channel"),
+    (lambda s: s["reports"][0].update(at=None), "at"),
+    (lambda s: s["expected"].update(scope=["some_users"]), "expected.scope"),
+    (lambda s: s["expected"].update(severity={"level": 3}), "expected.severity"),
+    (lambda s: s["expected"].update(root_cause=None), "expected.root_cause"),
+    (lambda s: s["environment"].update(changes=[{"kind": ["deploy"], "system": "SY13", "at": "2026-12-07T19:00+09:00"}]), "kind"),
 ])
 def test_malformed_scenarios_are_reported_not_raised(seed, scenarios, mutate, message):
     """모양이 틀린 파일은 예외로 멈추지 않고 문제 목록으로 돌려준다."""
