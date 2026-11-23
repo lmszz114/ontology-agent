@@ -1,12 +1,15 @@
 """승인 게이트 검증 (R6). 시드를 적재한 테스트용 Neo4j에서 돈다."""
 
+import threading
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from common.gate import gate
 from common.gate.gate import GateError
-from common.writers.events import RecordError, assign_team, record_incident, reset_event_layer
+from common.writers.events import (
+    RecordError, assign_team, record_incident, reset_event_layer, transition_action_run,
+)
 from ontology.apply_schema import apply_schema
 from ontology.load import load_static
 from ontology.seed import load_seed
@@ -112,6 +115,69 @@ def test_rejected_action_cannot_run(db, incident):
     ):
         with pytest.raises(GateError):
             call()
+
+
+def test_concurrent_decisions_cannot_overwrite_each_other(db, incident):
+    """승인과 반려가 동시에 들어와도 먼저 끝난 결정이 남고, 나중 것은 거부된다.
+
+    인프라운영팀의 승인이 판단을 마치고 쓰기 직전에 멈춘 사이 게임사업PM팀이 반려한다.
+    반려는 승인이 끝날 때까지 기다렸다가, 이미 승인된 것을 보고 거부돼야 한다.
+    """
+    run_id = request(db, incident, "A08")["run_id"]
+    gate.approve(db, run_id=run_id, team_id="TM06", now=LATER)
+
+    deciding, release, order = threading.Event(), threading.Event(), []
+
+    def slow_approval(run: dict) -> dict:
+        deciding.set()
+        release.wait(timeout=10)
+        order.append("approve")
+        return {"status": "approved", "approved_by_teams": ["TM06", "TM10"], "approved_at": LATER}
+
+    def reject_late() -> None:
+        try:
+            gate.reject(db, run_id=run_id, team_id="TM06", now=LATER)
+            order.append("reject succeeded")
+        except GateError:
+            order.append("reject refused")
+
+    approving = threading.Thread(target=lambda: transition_action_run(db, run_id, slow_approval))
+    rejecting = threading.Thread(target=reject_late)
+    approving.start()
+    assert deciding.wait(timeout=10)
+    rejecting.start()
+    rejecting.join(timeout=1)
+    assert rejecting.is_alive(), "반려가 승인이 끝나기를 기다리지 않았다"
+    release.set()
+    approving.join(timeout=10)
+    rejecting.join(timeout=10)
+
+    assert order == ["approve", "reject refused"]
+    assert gate._read_run(db, run_id)["status"] == "approved"
+
+
+def test_concurrent_primary_assignments_leave_one_primary(db, incident):
+    """1차 담당 배정이 동시에 들어와도 한 팀만 남는다."""
+    record_incident(db, incident_id="INC-3", severity_id="SEV3", opened_at=NOW)
+    results = []
+
+    def assign(team_id: str) -> None:
+        try:
+            assign_team(db, incident_id="INC-3", team_id=team_id, role="primary")
+            results.append("ok")
+        except RecordError:
+            results.append("refused")
+
+    threads = [threading.Thread(target=assign, args=(team,)) for team in ("TM01", "TM02", "TM03", "TM04")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+    with db.session() as session:
+        primaries = session.run(
+            "MATCH (:Incident {id: 'INC-3'})-[:ASSIGNED_TEAM {role: 'primary'}]->(t:Team) RETURN count(t) AS c"
+        ).single()["c"]
+    assert primaries == 1 and sorted(results) == ["ok", "refused", "refused", "refused"]
 
 
 def test_pending_and_auto_done_cannot_be_marked_done(db, incident):

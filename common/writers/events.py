@@ -16,6 +16,12 @@ EVENT_LABELS = ("Report", "Incident", "Finding", "ActionRun", "Change")
 CHANGE_KINDS = {"deploy", "table_change", "event_config", "product_config", "patch"}
 
 
+# 노드에 쓰기 잠금을 거는 문장. 잠금 전용 속성에 상수를 쓴다.
+# "SET n.status = n.status"처럼 기존 값을 다시 쓰면 안 된다. 잠금을 기다리는 동안
+# 다른 트랜잭션이 바꾼 값을, 기다리기 전에 읽어 둔 옛 값으로 덮어쓴다
+LOCK = "MATCH (n:{label} {{id: $id}}) SET n._lock = true RETURN n.id"
+
+
 class RecordError(ValueError):
     """기록할 수 없는 값."""
 
@@ -99,13 +105,15 @@ def assign_team(driver: Driver, *, incident_id: str, team_id: str, role: str) ->
         raise RecordError(f"ASSIGNED_TEAM.role에 쓸 수 없는 값이다: {role}")
 
     def write(tx) -> None:
+        # 사건 노드에 쓰기 잠금을 건 뒤에 1차 담당을 읽는다. 잠금 없이 읽으면 동시에 들어온
+        # 두 배정이 모두 "1차 담당 없음"을 보고 통과해 1차 담당이 둘이 된다
+        if not tx.run(LOCK.format(label="Incident"), id=incident_id).single():
+            raise RecordError(f"없는 Incident다: {incident_id}")
         row = tx.run(
             "MATCH (i:Incident {id: $id}) "
             "RETURN [(i)-[r:ASSIGNED_TEAM {role: 'primary'}]->(t:Team) | t.id] AS primaries",
             id=incident_id,
         ).single()
-        if row is None:
-            raise RecordError(f"없는 Incident다: {incident_id}")
         if not tx.run("MATCH (t:Team {id: $id}) RETURN t.id", id=team_id).single():
             raise RecordError(f"정의되지 않은 팀이다: {team_id}")
         if role == "primary" and row["primaries"] and row["primaries"] != [team_id]:
@@ -159,25 +167,54 @@ def create_action_run(
         session.execute_write(write)
 
 
-def update_action_run(driver: Driver, *, run_id: str, **changes) -> None:
-    """조치 실행 기록의 상태와 승인 정보를 바꾼다. 승인 게이트만 부른다."""
-    allowed = {"status", "approved_by_teams", "approved_at", "rejected_by_team", "rejected_at", "done_at"}
-    if not changes or set(changes) - allowed:
-        raise RecordError(f"ActionRun에서 바꿀 수 없는 속성이다: {sorted(set(changes) - allowed)}")
-    if "status" in changes and changes["status"] not in RUN_STATUSES:
-        raise RecordError(f"ActionRun.status에 쓸 수 없는 값이다: {changes['status']}")
-    for name in ("approved_at", "rejected_at", "done_at"):
-        if name in changes:
-            _require_aware(changes[name], name)
+RUN_FIELDS = (
+    "RETURN r.id AS run_id, r.action_id AS action_id, i.id AS incident_id, r.status AS status, "
+    "r.actor AS actor, r.requested_mode AS requested_mode, r.gate_blocked AS gate_blocked, "
+    "r.required_approver_teams AS required_approver_teams, r.approved_by_teams AS approved_by_teams, "
+    "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team"
+)
 
+
+def read_action_run(driver: Driver, run_id: str) -> dict | None:
+    """조치 실행 기록 하나를 읽는다. 없으면 None."""
     with driver.session() as session:
-        updated = session.execute_write(
+        row = session.execute_read(
             lambda tx: tx.run(
-                "MATCH (r:ActionRun {id: $id}) SET r += $changes RETURN r.id", id=run_id, changes=changes
+                "MATCH (r:ActionRun {id: $id})-[:FOR]->(i:Incident) " + RUN_FIELDS, id=run_id
             ).single()
         )
-    if updated is None:
-        raise RecordError(f"없는 ActionRun이다: {run_id}")
+    return dict(row) if row else None
+
+
+def transition_action_run(driver: Driver, run_id: str, decide) -> dict:
+    """조치 실행 기록의 상태를 바꾼다. 읽기, 판단, 쓰기를 잠금을 건 한 트랜잭션에서 한다.
+
+    decide는 현재 기록을 받아 바꿀 속성을 돌려주거나, 바꿀 수 없으면 예외를 낸다.
+    따로 읽고 따로 쓰면 동시에 들어온 승인과 반려가 서로를 덮어쓴다.
+    예를 들어 반려된 기록이 뒤늦게 도착한 승인으로 승인 상태가 될 수 있다.
+    승인 게이트만 부른다.
+    """
+    allowed = {"status", "approved_by_teams", "approved_at", "rejected_by_team", "rejected_at", "done_at"}
+
+    def write(tx) -> dict:
+        # 실행 기록 노드에 쓰기 잠금을 건다. 같은 기록을 바꾸려는 다른 트랜잭션은 여기서 기다린다
+        if not tx.run(LOCK.format(label="ActionRun"), id=run_id).single():
+            raise RecordError(f"없는 ActionRun이다: {run_id}")
+        # 잠금을 얻은 뒤에 현재 값을 읽는다
+        read = "MATCH (r:ActionRun {id: $id})-[:FOR]->(i:Incident) " + RUN_FIELDS
+        changes = decide(dict(tx.run(read, id=run_id).single()))
+        if not changes or set(changes) - allowed:
+            raise RecordError(f"ActionRun에서 바꿀 수 없는 속성이다: {sorted(set(changes) - allowed)}")
+        if "status" in changes and changes["status"] not in RUN_STATUSES:
+            raise RecordError(f"ActionRun.status에 쓸 수 없는 값이다: {changes['status']}")
+        for name in ("approved_at", "rejected_at", "done_at"):
+            if name in changes:
+                _require_aware(changes[name], name)
+        tx.run("MATCH (r:ActionRun {id: $id}) SET r += $changes", id=run_id, changes=changes).consume()
+        return dict(tx.run(read, id=run_id).single())
+
+    with driver.session() as session:
+        return session.execute_write(write)
 
 
 def reset_event_layer(driver: Driver) -> int:

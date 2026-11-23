@@ -14,7 +14,7 @@ from datetime import datetime
 
 from neo4j import Driver
 
-from common.writers.events import create_action_run, update_action_run
+from common.writers.events import RecordError, create_action_run, read_action_run, transition_action_run
 from mcp_servers.ontology_query import queries
 
 REQUESTED_MODES = {"auto", "approval"}
@@ -25,21 +25,25 @@ class GateError(ValueError):
 
 
 def _read_run(driver: Driver, run_id: str) -> dict:
-    with driver.session() as session:
-        row = session.execute_read(
-            lambda tx: tx.run(
-                "MATCH (r:ActionRun {id: $id})-[:FOR]->(i:Incident) "
-                "RETURN r.id AS run_id, r.action_id AS action_id, i.id AS incident_id, r.status AS status, "
-                "r.actor AS actor, r.requested_mode AS requested_mode, r.gate_blocked AS gate_blocked, "
-                "r.required_approver_teams AS required_approver_teams, "
-                "r.approved_by_teams AS approved_by_teams, r.rejected_by_team AS rejected_by_team, "
-                "r.executed_by_team AS executed_by_team",
-                id=run_id,
-            ).single()
-        )
-    if row is None:
+    run = read_action_run(driver, run_id)
+    if run is None:
         raise GateError(f"없는 실행 기록이다: {run_id}")
-    return dict(row)
+    return run
+
+
+def _transition(driver: Driver, run_id: str, decide) -> dict:
+    """상태 확인과 변경을 잠금을 건 한 트랜잭션에서 한다. 판단은 decide가 잠금 뒤에 읽은 값으로 한다."""
+    try:
+        return transition_action_run(driver, run_id, decide)
+    except RecordError as exc:
+        raise GateError(str(exc)) from exc
+
+
+def _require_pending_approver(run: dict, team_id: str) -> None:
+    if run["status"] != "pending_approval":
+        raise GateError(f"{run['run_id']}: 승인 대기 상태가 아니다: {run['status']}")
+    if team_id not in run["required_approver_teams"]:
+        raise GateError(f"{run['run_id']}: {team_id}은 이 조치의 승인권자가 아니다")
 
 
 def _primary_team(driver: Driver, incident_id: str) -> str | None:
@@ -124,34 +128,31 @@ def request_action(
 
 def approve(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
     """승인권자 한 팀의 승인을 기록한다. 전원이 승인하면 approved가 된다."""
-    run = _read_run(driver, run_id)
-    if run["status"] != "pending_approval":
-        raise GateError(f"{run_id}: 승인 대기 상태가 아니다: {run['status']}")
-    if team_id not in run["required_approver_teams"]:
-        raise GateError(f"{run_id}: {team_id}은 이 조치의 승인권자가 아니다")
-    approved = sorted(set(run["approved_by_teams"]) | {team_id})
-    changes = {"approved_by_teams": approved}
-    if set(approved) == set(run["required_approver_teams"]):
-        changes |= {"status": "approved", "approved_at": now}
-    update_action_run(driver, run_id=run_id, **changes)
-    return _read_run(driver, run_id)
+    def decide(run: dict) -> dict:
+        _require_pending_approver(run, team_id)
+        approved = sorted(set(run["approved_by_teams"]) | {team_id})
+        changes = {"approved_by_teams": approved}
+        if set(approved) == set(run["required_approver_teams"]):
+            changes |= {"status": "approved", "approved_at": now}
+        return changes
+
+    return _transition(driver, run_id, decide)
 
 
 def reject(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
     """승인권자 한 팀이 반려하면 실행하지 않는다. 다른 절차를 다시 고르는 것은 에이전트 몫이다 (R6)."""
-    run = _read_run(driver, run_id)
-    if run["status"] != "pending_approval":
-        raise GateError(f"{run_id}: 승인 대기 상태가 아니다: {run['status']}")
-    if team_id not in run["required_approver_teams"]:
-        raise GateError(f"{run_id}: {team_id}은 이 조치의 승인권자가 아니다")
-    update_action_run(driver, run_id=run_id, status="rejected", rejected_by_team=team_id, rejected_at=now)
-    return _read_run(driver, run_id)
+    def decide(run: dict) -> dict:
+        _require_pending_approver(run, team_id)
+        return {"status": "rejected", "rejected_by_team": team_id, "rejected_at": now}
+
+    return _transition(driver, run_id, decide)
 
 
 def mark_done(driver: Driver, *, run_id: str, now: datetime) -> dict:
     """승인된 조치의 실행 완료를 기록한다 (시뮬레이션). 승인되지 않은 조치는 완료할 수 없다."""
-    run = _read_run(driver, run_id)
-    if run["status"] != "approved":
-        raise GateError(f"{run_id}: 승인된 조치만 실행할 수 있다: {run['status']}")
-    update_action_run(driver, run_id=run_id, status="done", done_at=now)
-    return _read_run(driver, run_id)
+    def decide(run: dict) -> dict:
+        if run["status"] != "approved":
+            raise GateError(f"{run_id}: 승인된 조치만 실행할 수 있다: {run['status']}")
+        return {"status": "done", "done_at": now}
+
+    return _transition(driver, run_id, decide)
