@@ -85,10 +85,11 @@ def validate_cause_conditions(seed: dict) -> None:
             validate_args(seed, ref["check"], ref.get("args"))
             where = f"{cause['id']}의 {ref['check']}"
             if not is_required(ref):
-                if not ref.get("note") or ref.get("expect"):
+                # 금지된 필드는 값이 비어 있어도 거부한다. 있는지 자체를 본다
+                if not ref.get("note") or "expect" in ref:
                     raise ConditionError(f"{where}: 참고용 근거는 note만 적는다")
                 continue
-            if not ref["when"] or not ref.get("expect") or ref.get("note"):
+            if not ref["when"] or not ref.get("expect") or "note" in ref:
                 raise ConditionError(f"{where}: 확정 조건은 when과 expect를 적는다")
             for name, expected in ref["when"].items():
                 for value in allowed_values(expected):

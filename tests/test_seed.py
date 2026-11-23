@@ -366,6 +366,9 @@ def test_reference_checks_do_not_decide(seed):
     lambda ref: ref.update(note="참고"),              # 확정 조건과 참고용 표시가 함께 있다
     lambda ref: (ref.pop("when"), ref.pop("expect")),  # 둘 다 없다
     lambda ref: (ref.pop("when"), ref.update(note="참고")),  # 참고용인데 expect가 남았다
+    lambda ref: ref.update(note=""),                                       # 금지된 필드는 빈 값이어도 안 된다
+    lambda ref: (ref.pop("when"), ref.update(note="참고", expect="")),     # 참고용에 빈 expect
+    lambda ref: (ref.pop("when"), ref.pop("expect"), ref.update(note="")),  # 참고용인데 쓰임이 비었다
 ])
 def test_malformed_check_entries_are_rejected(seed, breaker):
     broken = copy.deepcopy(seed)
