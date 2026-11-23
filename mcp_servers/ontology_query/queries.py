@@ -102,7 +102,11 @@ def rank_causes(driver: Driver, symptom_id: str, started_at: str) -> list[dict]:
 
 
 def get_checks(driver: Driver, cause_id: str) -> list[dict]:
-    """원인을 확정하거나 배제하는 판정 근거와 확정 조건 (R4-4)."""
+    """원인의 판정 근거 (R4-4).
+
+    required가 참이면 확정 조건이다. expect대로 나와야 확정이고 다르게 나오면 배제다.
+    required가 거짓이면 참고용이다. 확정과 배제에 쓰지 않고 note에 적힌 용도로 본다.
+    """
     _require(driver, "Cause", cause_id)
     rows = _read(
         driver,
@@ -110,7 +114,8 @@ def get_checks(driver: Driver, cause_id: str) -> list[dict]:
         "OPTIONAL MATCH (jt:Team {id: e.judged_by_team}) "
         "OPTIONAL MATCH (pt:Team {id: e.performed_by_team}) "
         "RETURN e.id AS check_id, e.name AS name, e.tool AS tool, e.performed_by AS performed_by, "
-        "r.expect AS expect, r.args AS args, jt.name AS judged_by_team, pt.name AS performed_by_team "
+        "r.required AS required, r.expect AS expect, r.note AS note, r.args AS args, "
+        "jt.name AS judged_by_team, pt.name AS performed_by_team "
         "ORDER BY check_id",
         id=cause_id,
     )

@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from neo4j import Driver, ManagedTransaction
 
 from ontology.db import get_driver
+from ontology.conditions import is_required
 from ontology.seed import load_seed, validate_seed
 
 # 정적 지식 계층의 노드 레이블 (설계 3단계 2-1)
@@ -108,7 +109,11 @@ def build_graph(seed: dict) -> Graph:
             # 관계 속성에는 맵을 넣을 수 없어 인자는 JSON 문자열로 둔다.
             # when은 시드와 시나리오 검증용이라 그래프에 넣지 않는다 (ontology/conditions.py)
             args = json.dumps(ref["args"], ensure_ascii=False, sort_keys=True) if ref.get("args") else None
-            g.add_rel("CHECKED_BY", cause["id"], ref["check"], expect=ref["expect"], args=args)
+            # required가 false면 참고용 근거다. 확정 조건 설명(expect) 대신 쓰임(note)을 가진다
+            g.add_rel(
+                "CHECKED_BY", cause["id"], ref["check"],
+                required=is_required(ref), expect=ref.get("expect"), note=ref.get("note"), args=args,
+            )
         for ref in cause["resolved_by"]:
             g.add_rel("RESOLVED_BY", cause["id"], ref["procedure"], condition=ref.get("condition"))
 

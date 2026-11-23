@@ -5,6 +5,8 @@
 #   when: 확정 조건. 판정 근거의 관측 필드가 이 값이어야 한다. 값이 목록이면 그중 하나면 된다
 #         한 원인의 when이 모두 맞으면 확정, 하나라도 다르면 배제다
 #   expect: 사람이 읽는 확정 조건 설명. when과 같은 뜻이어야 한다
+#   note: 참고용 판정 근거라는 표시와 그 쓰임. when 대신 note가 있으면 확정과 배제에 쓰지 않는다.
+#         원인을 살필 때 함께 보는 근거다 (예: 규모 산정, 먼저 살필 곳). 원인마다 확정 조건이 하나 이상 있어야 한다
 #   C02, C15, C16, C17은 설계 문서에 적힌 조건이다.
 #   나머지는 초안이며 검토 전이다. 검토가 끝나면 이 줄을 지운다.
 # resolved_by: RESOLVED_BY 관계. P10(원인 수정과 반영)은 모든 원인에 공통으로 연다.
@@ -169,7 +171,8 @@ causes:
     located_in: {system: SY22, scope: config}  # 탐지 규칙이 잡지 못한 어뷰징
     checked_by:
       - {check: E11, when: {concentration: concentrated}, expect: "소수 계정에 거래와 행동이 집중돼 있다"}
-      - {check: E10, when: {supply: increased}, expect: "재화 유통량이 평소보다 늘었다"}
+      # 재화 유통량은 규모를 재는 근거다. 거래소 장애(S7)로 들어온 어뷰징은 유통량이 늘지 않아도 확정된다
+      - {check: E10, note: "회수 범위를 정할 때 재화 유통량의 증가 규모를 본다"}
     resolved_by:
       - {procedure: P7}
       - {procedure: P4}
@@ -205,7 +208,8 @@ causes:
     located_in: {system: SY16, scope: logic}
     checked_by:
       - {check: E08, when: {public_vs_table: same, table_vs_actual: different}, expect: "테이블 수치와 공개 수치가 같은데, 실제 결과가 테이블 수치와 다르다"}
-      - {check: E06, args: {system: SY16}, when: {deploy: [success, partial, failed]}, expect: "증상 시작 전에 확률 모듈 배포 이력이 있다"}
+      # 설계는 E08만으로 판정한다. 배포 이력이 없어도 모듈 오류일 수 있어 확정 조건으로 두지 않는다
+      - {check: E06, args: {system: SY16}, note: "증상 시작 전에 확률 모듈 배포 이력이 있으면 그 배포를 먼저 살핀다"}
     resolved_by:
       - {procedure: P8}
       - {procedure: P3}

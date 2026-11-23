@@ -64,7 +64,11 @@ def build_server(driver: Driver) -> MCPServer:
     @server.tool()
     @_input_errors_as_tool_errors
     def get_checks(cause_id: str) -> list[dict]:
-        """원인(C01~C21)을 확정하거나 배제하는 판정 근거와 확정 조건, 조회 도구 이름과 넘길 인자(args)를 돌려준다."""
+        """원인(C01~C21)의 판정 근거, 조회 도구 이름과 넘길 인자(args)를 돌려준다.
+
+        required가 true인 근거는 확정 조건이다. 모두 expect대로 나와야 원인이 확정되고, 하나라도 다르면 배제된다.
+        required가 false인 근거는 참고용이다. 확정과 배제에 쓰지 않고 note에 적힌 용도로만 본다.
+        """
         return queries.get_checks(driver, cause_id)
 
     @server.tool()

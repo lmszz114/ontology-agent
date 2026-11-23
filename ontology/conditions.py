@@ -64,13 +64,33 @@ def allowed_values(expected) -> list:
     return list(expected) if isinstance(expected, list) else [expected]
 
 
+def is_required(ref: dict) -> bool:
+    """확정과 배제에 쓰는 판정 근거면 참. when 대신 note가 있으면 참고용이다."""
+    return "when" in ref
+
+
+def required_checks(cause: dict) -> list[dict]:
+    return [ref for ref in cause["checked_by"] if is_required(ref)]
+
+
 def validate_cause_conditions(seed: dict) -> None:
-    """모든 원인의 args와 when이 판정 근거 정의에 맞는지 확인한다."""
+    """모든 원인의 args와 when이 판정 근거 정의에 맞는지 확인한다.
+
+    판정 근거 연결은 확정 조건(when, expect)이거나 참고용(note) 둘 중 하나여야 한다.
+    """
     for cause in seed["causes"]:
+        if not required_checks(cause):
+            raise ConditionError(f"{cause['id']}에 확정 조건이 없다")
         for ref in cause["checked_by"]:
             validate_args(seed, ref["check"], ref.get("args"))
-            if not ref.get("when"):
-                raise ConditionError(f"{cause['id']}의 {ref['check']}에 when이 없다")
+            where = f"{cause['id']}의 {ref['check']}"
+            if not is_required(ref):
+                # 금지된 필드는 값이 비어 있어도 거부한다. 있는지 자체를 본다
+                if not ref.get("note") or "expect" in ref:
+                    raise ConditionError(f"{where}: 참고용 근거는 note만 적는다")
+                continue
+            if not ref["when"] or not ref.get("expect") or "note" in ref:
+                raise ConditionError(f"{where}: 확정 조건은 when과 expect를 적는다")
             for name, expected in ref["when"].items():
                 for value in allowed_values(expected):
                     validate_observations(seed, ref["check"], {name: value})
@@ -132,7 +152,7 @@ class Environment:
 def evaluate_cause(seed: dict, env: Environment, cause_id: str) -> str:
     """환경을 원인의 확정 조건에 대입한다. 모두 맞으면 확정, 하나라도 다르면 배제."""
     cause = next(c for c in seed["causes"] if c["id"] == cause_id)
-    for ref in cause["checked_by"]:
+    for ref in required_checks(cause):
         observed = env.observe(ref["check"], ref.get("args"))
         for name, expected in ref["when"].items():
             if observed[name] not in allowed_values(expected):
@@ -152,16 +172,17 @@ def environments_for(seed: dict, cause_id: str) -> list[Environment]:
     허용 값이 여럿인 조건이 있으면 그 조합마다 환경 하나를 만든다.
     """
     cause = next(c for c in seed["causes"] if c["id"] == cause_id)
+    checks = required_checks(cause)
     slots = [
         (index, name, allowed_values(expected))
-        for index, ref in enumerate(cause["checked_by"])
+        for index, ref in enumerate(checks)
         for name, expected in ref["when"].items()
     ]
     environments = []
     for choice in product(*(values for _, _, values in slots)):
         entries = [
             {"check": ref["check"], "args": ref.get("args"), "observations": {}}
-            for ref in cause["checked_by"]
+            for ref in checks
         ]
         for (index, name, _), value in zip(slots, choice):
             entries[index]["observations"][name] = value
@@ -179,7 +200,7 @@ def implies(seed: dict, strong_id: str, weak_id: str) -> bool:
         cause = next(c for c in seed["causes"] if c["id"] == cause_id)
         return {
             (ref["check"], args_key(ref.get("args")), name): set(allowed_values(expected))
-            for ref in cause["checked_by"]
+            for ref in required_checks(cause)
             for name, expected in ref["when"].items()
         }
 

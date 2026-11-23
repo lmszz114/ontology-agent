@@ -126,11 +126,15 @@ def test_rank_causes_requires_timezone(db):
 def test_get_checks(db, seed):
     for cause in seed["causes"]:
         rows = queries.get_checks(db, cause["id"])
-        assert {r["check_id"]: r["expect"] for r in rows} == {c["check"]: c["expect"] for c in cause["checked_by"]}
+        assert {r["check_id"]: r["expect"] for r in rows} == {c["check"]: c.get("expect") for c in cause["checked_by"]}
+        assert {r["check_id"]: r["required"] for r in rows} == {c["check"]: "when" in c for c in cause["checked_by"]}
     by_id = {r["check_id"]: r for r in queries.get_checks(db, "C13")}
     assert by_id["E10"]["judged_by_team"] == "시스템기획팀" and by_id["E10"]["tool"] == "query_currency_supply"
     assert by_id["E12"]["performed_by"] == "human" and by_id["E12"]["performed_by_team"] == "QA팀"
     assert by_id["E04"]["args"] == {"system": "SY10"} and by_id["E10"]["args"] == {}
+    c17 = {r["check_id"]: r for r in queries.get_checks(db, "C17")}
+    assert c17["E08"]["required"] is True and c17["E08"]["note"] is None
+    assert c17["E06"]["required"] is False and c17["E06"]["expect"] is None and "배포" in c17["E06"]["note"]
 
 
 @pytest.mark.parametrize("cause_id,team_name", EXPECTED_OWNER.items())
