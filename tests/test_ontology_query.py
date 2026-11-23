@@ -171,7 +171,7 @@ def test_get_action_policy(db, seed):
         assert policy["risk"] == action["risk"] and policy["auto_executable"] == action["auto_executable"]
         assert [t["team_id"] for t in policy["approvers"]] == sorted(a["team"] for a in action["approvers"])
     a10 = queries.get_action_policy(db, "A10")
-    assert (a10["executed_by"], a10["uses_system"]) == ("게임서비스팀", "GM 툴")
+    assert a10["executed_by"] == {"team_id": "TM07", "name": "게임서비스팀"} and a10["uses_system"] == "GM 툴"
     a15 = queries.get_action_policy(db, "A15")
     assert a15["executed_by"] is None and a15["executed_by_rule"] == "incident_primary_team"
     assert {t["name"]: t["condition"] for t in a15["approvers"]} == {
