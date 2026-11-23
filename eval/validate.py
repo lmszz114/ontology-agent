@@ -13,7 +13,7 @@
 """
 
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -32,9 +32,8 @@ SOURCES = {"설계", "경험"}
 INTAKE_PROCEDURE = "P1"
 # 원인 수정과 반영(P10)은 원인이 확정되면 항상 연다 (R7)
 FIX_PROCEDURE = "P10"
-URGENT_NOTICE, URGENT_MAINTENANCE, ROLLBACK = "P3", "P4", "P5"
+URGENT_NOTICE, URGENT_MAINTENANCE = "P3", "P4"
 URGENT_LEVELS = {"SEV1", "SEV2"}
-CHANGE_WINDOW = timedelta(hours=24)
 
 
 def load_scenarios(split: str) -> list[dict]:
@@ -62,32 +61,27 @@ def expected_procedures(seed: dict, scenario: dict) -> set[str]:
     """정답 원인, 심각도, 환경으로 열어야 할 절차를 계산한다.
 
     설계에 적힌 것: P10은 항상 (R7), SEV1과 SEV2는 긴급 공지 P3 (R3 TRIGGERS)와 긴급 점검 P4 후보 (R7).
-    아래는 설계에 규칙이 없어 정한 초안이다 (검토 전).
-    - 원인에 P3, P4가 연결돼 있어도 SEV3, SEV4에서는 열지 않는다
-    - 롤백(P5)은 원인에 연결돼 있고, 원인 위치 시스템에 증상 시작 전 24시간 안의 변경 이력이 있을 때 연다
-    - 조건이 붙은 절차(미지급이면 P6, 과지급이면 P7)는 시나리오의 resolved_conditions에 그 조건이 있을 때 연다
+    아래는 설계에 규칙이 없어 정한 것이다 (2026-11-23 검토).
+    - 원인에 P3, P4가 연결돼 있어도 SEV3, SEV4에서는 열지 않는다.
+      가정이다. 일부 유저의 범위(한두 명인지 여러 명인지)를 가르는 기준이 없다.
+      접수가 늘어 등급이 상향되면 SEV2가 되어 열린다
+    - 사람만 여는 절차(human_only, 롤백 P5)는 원인에 연결돼 있어도 열지 않는다
+    - 그 밖의 절차(보상 P6, 회수 P7, 확률 표기 정정 P8)는 원인에 연결돼 있으면 연다.
+      조건이 붙어 있으면(미지급이면 P6, 과지급이면 P7) 시나리오의 resolved_conditions에 그 조건이 있을 때만 연다
     """
     expected = scenario["expected"]
     cause = next(c for c in seed["causes"] if c["id"] == expected["root_cause"])
     severity = next(s for s in seed["severities"] if s["id"] == expected["severity"])
-    start = started_at(scenario)
-    recently_changed = any(
-        change["system"] == cause["located_in"]["system"]
-        and timedelta(0) <= start - _aware(change["at"]) <= CHANGE_WINDOW
-        for change in scenario["environment"].get("changes", [])
-    )
+    human_only = {p["id"] for p in seed["procedures"] if p.get("human_only")}
 
     procedures = {FIX_PROCEDURE} | set(severity["triggers"])
     if expected["severity"] in URGENT_LEVELS:
         procedures.add(URGENT_MAINTENANCE)
     for ref in cause["resolved_by"]:
         procedure, condition = ref["procedure"], ref.get("condition")
-        if procedure in (URGENT_NOTICE, URGENT_MAINTENANCE):
+        if procedure in (URGENT_NOTICE, URGENT_MAINTENANCE) or procedure in human_only:
             continue
-        if procedure == ROLLBACK:
-            if recently_changed:
-                procedures.add(procedure)
-        elif condition is None or condition in expected.get("resolved_conditions", []):
+        if condition is None or condition in expected.get("resolved_conditions", []):
             procedures.add(procedure)
     return procedures
 

@@ -165,6 +165,8 @@ def get_procedures(driver: Driver, cause_id: str, severity_id: str | None = None
     _require(driver, "Cause", cause_id)
     fields = (
         "p.id AS procedure_id, p.name AS name, p.steps AS steps, "
+        # human_only가 참인 절차는 에이전트가 열지 않는다. 사람이 결정한다
+        "coalesce(p.human_only, false) AS human_only, "
         "head([(p)-[:LED_BY]->(t:Team) | t.name]) AS led_by, actions "
     )
     # 조치는 HAS_ACTION.order 순서로 돌려준다

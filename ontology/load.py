@@ -125,7 +125,7 @@ def build_graph(seed: dict) -> Graph:
         g.nodes["EvidenceCheck"][-1]["params"] = list(check.get("params", {}))
 
     for procedure in seed["procedures"]:
-        g.add_node("Procedure", procedure, ("name", "steps"))
+        g.add_node("Procedure", procedure, ("name", "steps", "human_only"))
         if procedure["led_by"]:
             g.add_rel("LED_BY", procedure["id"], procedure["led_by"])
         for order, action_id in enumerate(procedure["actions"], start=1):

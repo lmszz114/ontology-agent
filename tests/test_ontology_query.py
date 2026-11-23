@@ -162,6 +162,9 @@ def test_get_procedures(db):
     assert p10["led_by"] == "개발PM팀"
     assert [(a["action_id"], a["risk"]) for a in p10["actions"]] == [("A14", "low"), ("A15", "high")]
     assert [p["procedure_id"] for p in result["triggered_by_severity"]] == ["P3"]
+    assert all(p["human_only"] is False for p in result["resolved_by"])
+    c18 = {p["procedure_id"]: p["human_only"] for p in queries.get_procedures(db, "C18")["resolved_by"]}
+    assert c18 == {"P3": False, "P4": False, "P5": True, "P10": False}  # 롤백은 사람만 연다
     assert queries.get_procedures(db, "C11", "SEV3")["triggered_by_severity"] == []
     assert "triggered_by_severity" not in queries.get_procedures(db, "C11")
 

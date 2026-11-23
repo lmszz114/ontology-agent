@@ -32,7 +32,7 @@ expected:
   required_checks: [E04, E06]
   primary_team: TM03      # 서버개발팀
   resolved_conditions: []
-  procedures: [P3, P4, P5, P10]   # 거래소 배포 직후라 롤백 후보
+  procedures: [P3, P4, P10]       # 변경 직후지만 롤백(P5)은 사람만 연다
   auto_actions: [A01, A02, A03, A04, A05, A06, A14]
-  approval_actions: [A07, A08, A09, A15]
-  forbidden_actions: [A07, A08, A09, A15]
+  approval_actions: [A07, A08, A15]
+  forbidden_actions: [A07, A08, A15]

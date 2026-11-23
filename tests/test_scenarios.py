@@ -58,21 +58,22 @@ def test_severity_rejects_undefined_values(call):
 def test_procedures_follow_severity_and_changes(seed, scenarios):
     # SEV3은 긴급 공지와 긴급 점검을 열지 않는다
     assert expected_procedures(seed, scenarios["SC-S8-01"]) == {"P10"}
-    # SEV2는 P3, P4를 열고, 원인 위치 시스템에 최근 변경이 있으면 롤백(P5)도 연다
-    assert expected_procedures(seed, scenarios["SC-S7-01"]) == {"P3", "P4", "P5", "P10"}
-    no_change = copy.deepcopy(scenarios["SC-S7-01"])
-    no_change["environment"]["changes"] = []
-    assert expected_procedures(seed, no_change) == {"P3", "P4", "P10"}
+    # SEV2는 P3, P4를 연다. 거래소 배포 직후지만 롤백(P5)은 사람만 여는 절차라 열지 않는다
+    assert expected_procedures(seed, scenarios["SC-S7-01"]) == {"P3", "P4", "P10"}
     # 조건이 붙은 절차는 그 조건일 때만 연다
     assert "P7" in expected_procedures(seed, scenarios["SC-S4-01"])
     assert "P6" not in expected_procedures(seed, scenarios["SC-S4-01"])
 
 
-def test_change_outside_window_does_not_open_rollback(seed, scenarios):
-    for at in ("2026-12-14T18:04+09:00", "2026-12-15T18:41+09:00"):  # 24시간보다 전, 증상 시작 뒤
-        scenario = copy.deepcopy(scenarios["SC-S7-01"])
-        scenario["environment"]["changes"][0]["at"] = at
-        assert "P5" not in expected_procedures(seed, scenario), at
+def test_rollback_is_never_opened_by_the_agent(seed, scenarios):
+    """롤백은 원인에 연결돼 있어도 어떤 시나리오의 정답에도 들어가지 않는다."""
+    rollback = [p["id"] for p in seed["procedures"] if p.get("human_only")]
+    assert rollback == ["P5"]
+    for scenario in scenarios.values():
+        assert "P5" not in scenario["expected"]["procedures"], scenario["id"]
+        assert "A09" not in scenario["expected"]["approval_actions"], scenario["id"]
+    linked = {c["id"] for c in seed["causes"] if "P5" in [r["procedure"] for r in c["resolved_by"]]}
+    assert {scenarios[s]["expected"]["root_cause"] for s in ("SC-S2-02", "SC-S3-01", "SC-S7-01")} <= linked
 
 
 def broken(scenarios, sid, mutate):
@@ -94,6 +95,7 @@ def broken(scenarios, sid, mutate):
     ("SC-S5-01", lambda s: s["expected"].update(severity="SEV3"), "severity"),
     ("SC-S8-01", lambda s: s["expected"].update(scope="one_world", severity="SEV2"), "severity"),
     ("SC-S8-01", lambda s: s["expected"].update(procedures=["P3", "P10"]), "procedures"),
+    ("SC-S7-01", lambda s: s["expected"].update(procedures=["P3", "P4", "P5", "P10"]), "procedures"),
     ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["미지급"]), "procedures"),
     ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["과지급", "환불"]), "resolved_conditions"),
     ("SC-S4-02", lambda s: s["expected"]["auto_actions"].append("A10"), "auto_actions"),

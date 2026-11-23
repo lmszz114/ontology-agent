@@ -80,7 +80,10 @@ def build_server(driver: Driver) -> MCPServer:
     @server.tool()
     @_input_errors_as_tool_errors
     def get_procedures(cause_id: str, severity_id: str | None = None) -> dict:
-        """원인이 확정됐을 때 여는 절차와 조치를 돌려준다. severity_id(SEV1~SEV4)를 주면 그 등급이 여는 절차도 함께 준다."""
+        """원인이 확정됐을 때 여는 절차와 조치를 돌려준다. severity_id(SEV1~SEV4)를 주면 그 등급이 여는 절차도 함께 준다.
+
+        human_only가 true인 절차(롤백)는 사람만 연다. 조치 요청에 넣지 않는다.
+        """
         return queries.get_procedures(driver, cause_id, severity_id)
 
     @server.tool()

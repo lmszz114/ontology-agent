@@ -15,8 +15,7 @@ environment:
     - check: E11
       observations: {concentration: concentrated}
       detail: "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다"
-    - check: E10
-      observations: {supply: increased}
+    - check: E10      # 규모를 재는 근거. 원인 판정에는 쓰지 않는다
       detail: "골드 유통량이 평소 하루 평균보다 크게 늘었다"
   changes: []
 expected:
