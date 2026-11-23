@@ -1,11 +1,13 @@
 """온톨로지 조회 도구 검증. 시드를 적재한 Neo4j에서 돈다."""
 
 import asyncio
+from datetime import datetime
 
 import pytest
 from mcp import Client
 from neo4j.exceptions import ClientError
 
+from common.writers.events import record_change, reset_event_layer
 from mcp_servers.ontology_query import queries
 from mcp_servers.ontology_query.server import build_server
 from ontology.apply_schema import apply_schema
@@ -36,18 +38,16 @@ def db(driver, seed):
 
 @pytest.fixture
 def changes(db):
-    """변경 이력을 넣는 함수를 준다. 테스트가 끝나면 지운다."""
+    """변경 이력을 넣는 함수를 준다. 운영 코드와 같은 기록 함수로 넣는다."""
     def add(change_id: str, system_id: str, changed_at: str, kind: str = "deploy") -> None:
-        with db.session() as session:
-            session.run(
-                "MATCH (sys:System {id: $system}) "
-                "CREATE (:Change {id: $id, kind: $kind, changed_at: datetime($at)})-[:CHANGED]->(sys)",
-                id=change_id, system=system_id, at=changed_at, kind=kind,
-            ).consume()
+        record_change(
+            db, change_id=change_id, kind=kind, system_id=system_id,
+            changed_at=datetime.fromisoformat(changed_at),
+        )
 
+    reset_event_layer(db)
     yield add
-    with db.session() as session:
-        session.run("MATCH (n:Change) WHERE n.id STARTS WITH '__test_' DETACH DELETE n").consume()
+    reset_event_layer(db)
 
 
 def test_get_symptom_types(db, seed):
