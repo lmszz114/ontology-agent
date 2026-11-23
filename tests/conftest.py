@@ -6,6 +6,14 @@ from neo4j.exceptions import ServiceUnavailable
 from ontology.db import get_driver
 
 
+def test_db_uri() -> str:
+    """테스트용 DB 주소. 값이 비어 있을 때도 테스트용 기본값을 쓴다.
+
+    빈 값을 그대로 넘기면 get_driver가 개발용 DB(NEO4J_URI)로 연결한다.
+    """
+    return os.environ.get("NEO4J_TEST_URI") or "bolt://localhost:7688"
+
+
 @pytest.fixture(scope="session")
 def driver():
     """테스트용 Neo4j에 연결한다.
@@ -15,7 +23,7 @@ def driver():
     연결할 수 없으면 integration 테스트를 건너뛴다.
     REQUIRE_NEO4J=1이면 (CI) 건너뛰지 않고 실패시킨다.
     """
-    drv = get_driver(os.environ.get("NEO4J_TEST_URI", "bolt://localhost:7688"))
+    drv = get_driver(test_db_uri())
     try:
         drv.verify_connectivity()
     except ServiceUnavailable:

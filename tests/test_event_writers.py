@@ -1,6 +1,6 @@
 """사건 계층 기록 함수 검증. 시드를 적재한 테스트용 Neo4j에서 돈다."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 
 import pytest
 
@@ -57,7 +57,34 @@ def test_record_change_accepts_other_timezones(db):
     assert top["recent_changes"][0]["gap_minutes"] == 34
 
 
+class NoOffset(tzinfo):
+    """tzinfo는 있지만 오프셋을 주지 않는 시간대."""
+
+    def utcoffset(self, dt):
+        return None
+
+    def dst(self, dt):
+        return None
+
+    def tzname(self, dt):
+        return None
+
+
+@pytest.mark.parametrize("value", ["", None])
+def test_test_db_uri_never_falls_back_to_dev_db(monkeypatch, value):
+    """테스트용 주소가 비어 있거나 없어도 개발용 DB(NEO4J_URI)로 넘어가지 않는다."""
+    from conftest import test_db_uri
+
+    monkeypatch.setenv("NEO4J_URI", "bolt://dev-db.invalid:7687")
+    if value is None:
+        monkeypatch.delenv("NEO4J_TEST_URI", raising=False)
+    else:
+        monkeypatch.setenv("NEO4J_TEST_URI", value)
+    assert test_db_uri() == "bolt://localhost:7688"
+
+
 @pytest.mark.parametrize("override,message", [
+    ({"changed_at": datetime(2026, 12, 3, 19, 40, tzinfo=NoOffset())}, "시간대"),
     ({"kind": "hotfix"}, "kind"),
     ({"system_id": "SY99"}, "시스템"),
     ({"changed_by_team": "TM99"}, "팀"),

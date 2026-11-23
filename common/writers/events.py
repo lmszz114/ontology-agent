@@ -23,7 +23,8 @@ class RecordError(ValueError):
 def _require_aware(value: datetime, name: str) -> None:
     # 시각은 시간대가 붙은 datetime만 받는다. 문자열이나 시간대 없는 시각이 섞이면
     # 변경 가중(R4)의 시간 비교가 실패하거나 9시간 어긋난다
-    if not isinstance(value, datetime) or value.tzinfo is None:
+    # tzinfo가 있어도 utcoffset()이 None이면 시간대가 없는 값이다
+    if not isinstance(value, datetime) or value.utcoffset() is None:
         raise RecordError(f"{name}은 시간대가 붙은 datetime이어야 한다: {value!r}")
 
 
