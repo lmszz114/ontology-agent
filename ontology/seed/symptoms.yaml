@@ -1,6 +1,7 @@
 # 증상 유형 8개 (설계 3단계 5장).
 # observed_in: OBSERVED_IN 관계
 # causes: MAY_BE_CAUSED_BY 관계. prior는 초기 가정값이다 (높음, 중간, 낮음)
+# min_severity: 영향 범위와 상관없이 이 등급 아래로 내려가지 않는다 (없을 수 있다)
 symptoms:
   - id: S1
     name: 결제 후 아이템 미지급
@@ -42,6 +43,7 @@ symptoms:
     name: "아이템 복사, 재화 비정상 증식"
     aliases: [아이템 복사, 골드 무한, 재화가 갑자기 늘어남, 거래소에 같은 아이템이 대량 등록]
     core_function: true
+    min_severity: SEV2  # 규모를 확인하기 전까지 최소 SEV2로 시작한다 (R3)
     observed_in: [SY10, SY14, SY11]
     causes:
       - {cause: C13, prior: 중간}

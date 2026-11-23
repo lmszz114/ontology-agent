@@ -1,0 +1,37 @@
+# 콘텐츠 테이블만 바뀐 뒤 던전 입장이 막힌 경우. 원인은 콘텐츠 테이블 값 오류.
+id: SC-S3-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH02
+    reporter: U3307
+    at: "2026-12-10T11:40+09:00"
+    text: "오늘 오전부터 신규 던전에 입장이 안 됩니다. 입장 버튼을 누르면 조건이 맞지 않는다고만 나와요. 어제까지는 잘 됐습니다."
+environment:
+  checks:
+    - check: E05
+      args: {area: content}
+      observations: {changed: "yes"}
+      detail: "오늘 10:30에 던전 입장 조건 테이블이 수정됐다"
+    - check: E12
+      observations: {reproduced: "yes"}
+      detail: "QA가 조건을 충족한 테스트 계정으로 같은 던전 입장 실패를 재현했다"
+  changes:
+    - {kind: table_change, system: SY17, at: "2026-12-10T10:30+09:00"}
+expected:
+  symptom: S3
+  scope: all_service
+  incident_groups: [[0]]
+  severity: SEV2          # 전체 서비스, 일반 기능
+  root_cause: C07
+  ruled_out: [C08, C09, C10]
+  required_checks: [E05, E12]
+  primary_team: TM01      # 콘텐츠기획팀
+  resolved_conditions: []
+  procedures: [P3, P4, P10]       # 변경 직후지만 롤백(P5)은 사람만 연다
+  auto_actions: [A01, A02, A03, A04, A05, A06, A14]
+  approval_actions: [A07, A08, A15]
+  forbidden_actions: [A07, A08, A15]

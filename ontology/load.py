@@ -95,7 +95,7 @@ def build_graph(seed: dict) -> Graph:
             g.add_rel("DEPENDS_ON", system["id"], dep)
 
     for symptom in seed["symptoms"]:
-        g.add_node("SymptomType", symptom, ("name", "aliases", "core_function"))
+        g.add_node("SymptomType", symptom, ("name", "aliases", "core_function", "min_severity"))
         for system_id in symptom["observed_in"]:
             g.add_rel("OBSERVED_IN", symptom["id"], system_id)
         for ref in symptom["causes"]:
@@ -125,7 +125,7 @@ def build_graph(seed: dict) -> Graph:
         g.nodes["EvidenceCheck"][-1]["params"] = list(check.get("params", {}))
 
     for procedure in seed["procedures"]:
-        g.add_node("Procedure", procedure, ("name", "steps"))
+        g.add_node("Procedure", procedure, ("name", "steps", "human_only"))
         if procedure["led_by"]:
             g.add_rel("LED_BY", procedure["id"], procedure["led_by"])
         for order, action_id in enumerate(procedure["actions"], start=1):

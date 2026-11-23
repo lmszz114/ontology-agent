@@ -8,7 +8,8 @@
 #   note: 참고용 판정 근거라는 표시와 그 쓰임. when 대신 note가 있으면 확정과 배제에 쓰지 않는다.
 #         원인을 살필 때 함께 보는 근거다 (예: 규모 산정, 먼저 살필 곳). 원인마다 확정 조건이 하나 이상 있어야 한다
 #   C02, C15, C16, C17은 설계 문서에 적힌 조건이다.
-#   나머지는 초안이며 검토 전이다. 검토가 끝나면 이 줄을 지운다.
+#   나머지는 초안을 쓴 뒤 라이브 운영 경험이 있는 사람이 검토했다 (2026-11-23).
+#   실제 운영 데이터로 확인한 조건이 아니다. 가정으로 남긴 것은 그 줄에 적었다
 # resolved_by: RESOLVED_BY 관계. P10(원인 수정과 반영)은 모든 원인에 공통으로 연다.
 causes:
   # S1 결제 후 아이템 미지급
@@ -50,6 +51,8 @@ causes:
     aliases: []
     located_in: {system: SY01, scope: operation}
     checked_by:
+      # 가정: 다른 타이틀까지 로그인이 안 되면 공통 계정 인증 문제로 본다.
+      # 인증 오류 메시지를 직접 확인하는 판정 근거는 MVP에 없다
       - {check: E03, when: {other_titles: failing}, expect: "다른 타이틀에서도 로그인이 실패한다"}
     resolved_by:
       - {procedure: P3}
@@ -159,7 +162,8 @@ causes:
     checked_by:
       - {check: E12, when: {reproduced: "yes"}, expect: "QA가 같은 조건에서 재현했다 (복사 재현)"}
       - {check: E04, args: {system: SY10}, when: {error_log: present}, expect: "월드 서버에 증상과 관련된 오류 로그가 있다"}
-      - {check: E10, when: {supply: increased}, expect: "재화 유통량이 평소보다 늘었다"}
+      # 유통량은 이벤트 같은 다른 요인으로도 늘 수 있고 "늘었다"의 기준이 없어 확정 조건으로 쓰지 않는다
+      - {check: E10, note: "회수 범위를 정할 때 재화 유통량의 증가 규모를 본다"}
     resolved_by:
       - {procedure: P4}
       - {procedure: P5}

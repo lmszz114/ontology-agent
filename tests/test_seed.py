@@ -352,7 +352,13 @@ def test_every_check_is_either_condition_or_reference(seed):
 def test_reference_checks_do_not_decide(seed):
     """참고용 근거는 확정과 배제에 쓰지 않는다 (설계 3단계 5장 S6, S7)."""
     reference = {(c["id"], x["check"]) for c in seed["causes"] for x in c["checked_by"] if "note" in x}
-    assert reference == {("C14", "E10"), ("C17", "E06")}
+    assert reference == {("C13", "E10"), ("C14", "E10"), ("C17", "E06")}
+    # 복사 버그는 재화 유통량과 상관없이 QA 재현과 오류 로그로 확정된다
+    env = Environment(seed, [
+        {"check": "E12", "observations": {"reproduced": "yes"}},
+        {"check": "E04", "args": {"system": "SY10"}, "observations": {"error_log": "present"}},
+    ])
+    assert confirmed_causes(seed, env, "S5") == ["C13"]
     # 확률 모듈 로직 오류는 배포 이력이 없어도 수치 비교만으로 확정된다
     env = Environment(seed, [{"check": "E08", "observations": {"public_vs_table": "same", "table_vs_actual": "different"}}])
     assert confirmed_causes(seed, env, "S6") == ["C17"]

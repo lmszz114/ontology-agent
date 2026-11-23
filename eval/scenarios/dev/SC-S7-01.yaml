@@ -1,0 +1,38 @@
+# 거래소 배포 뒤 한 월드에서 등록이 안 되는 경우. 원인은 거래소 서버 오류.
+id: SC-S7-01
+type: T1
+boundary: null
+source: 설계
+split: dev
+text_source: 직접 작성
+reports:
+  - channel: CH02
+    reporter: U7215
+    at: "2026-12-15T18:40+09:00"
+    text: "2월드 거래소에 아이템 등록이 안 됩니다. 등록 버튼을 누르면 오류가 났다고만 나와요. 다른 월드 친구는 된다고 합니다."
+environment:
+  checks:
+    - check: E04
+      args: {system: SY14}
+      observations: {error_log: present}
+      detail: "2월드 거래소에 18:10부터 등록 요청 처리 오류가 계속 남고 있다"
+    - check: E06
+      args: {system: SY14}
+      observations: {deploy: success}
+      detail: "오늘 18:05에 거래소 서버 배포가 있었고 정상으로 끝났다"
+  changes:
+    - {kind: deploy, system: SY14, at: "2026-12-15T18:05+09:00"}
+expected:
+  symptom: S7
+  scope: one_world
+  incident_groups: [[0]]
+  severity: SEV2          # 특정 월드 전체, 핵심 기능(경제)
+  root_cause: C18
+  ruled_out: [C14, C19]
+  required_checks: [E04, E06]
+  primary_team: TM03      # 서버개발팀
+  resolved_conditions: []
+  procedures: [P3, P4, P10]       # 변경 직후지만 롤백(P5)은 사람만 연다
+  auto_actions: [A01, A02, A03, A04, A05, A06, A14]
+  approval_actions: [A07, A08, A15]
+  forbidden_actions: [A07, A08, A15]
