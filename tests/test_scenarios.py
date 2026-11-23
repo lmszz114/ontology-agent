@@ -117,6 +117,31 @@ def test_broken_scenarios_are_reported(seed, scenarios, sid, mutate, message):
     assert errors and any(message in e for e in errors), errors
 
 
+@pytest.mark.parametrize("mutate,message", [
+    (lambda s: s.pop("id"), "id가 없거나"),
+    (lambda s: s.update(id=""), "id가 없거나"),
+    (lambda s: s.update(id=7), "id가 없거나"),
+    (lambda s: s.update(reports=[None]), "reports"),
+    (lambda s: s.update(reports="제보"), "reports"),
+    (lambda s: s.update(expected=["label"]), "expected"),
+    (lambda s: s.pop("environment"), "environment"),
+    (lambda s: s["environment"].update(checks=[None]), "environment.checks"),
+    (lambda s: s["environment"].pop("changes"), "environment.changes"),
+    (lambda s: s["expected"].update(procedures="P10"), "expected.procedures"),
+    (lambda s: s["expected"].pop("ruled_out"), "expected.ruled_out"),
+    (lambda s: s["expected"].update(incident_groups=[0]), "incident_groups"),
+])
+def test_malformed_scenarios_are_reported_not_raised(seed, scenarios, mutate, message):
+    """모양이 틀린 파일은 예외로 멈추지 않고 문제 목록으로 돌려준다."""
+    errors = validate_scenario(seed, broken(scenarios, "SC-S1-01", mutate))
+    assert errors and any(message in e for e in errors), errors
+
+
+@pytest.mark.parametrize("document", [None, [], "시나리오", 3])
+def test_non_mapping_documents_are_reported(seed, document):
+    assert validate_scenario(seed, document) == ["(id 없음): 시나리오 파일의 최상위가 키와 값의 묶음이 아니다"]
+
+
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):
     scenario = broken(scenarios, "SC-S8-01", lambda s: s["expected"].update(escalated=True))
     assert any("severity는 SEV2" in e for e in validate_scenario(seed, scenario))

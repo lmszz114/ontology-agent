@@ -92,10 +92,53 @@ def expected_procedures(seed: dict, scenario: dict) -> set[str]:
     return procedures
 
 
+LIST_LABELS = (
+    "incident_groups", "ruled_out", "required_checks", "resolved_conditions",
+    "procedures", "auto_actions", "approval_actions", "forbidden_actions",
+)
+
+
+def _structure_errors(scenario) -> list[str]:
+    """값의 모양을 본다. 모양이 틀리면 뒤의 검사가 예외로 멈추므로 먼저 걸러 낸다."""
+    if not isinstance(scenario, dict):
+        return ["(id 없음): 시나리오 파일의 최상위가 키와 값의 묶음이 아니다"]
+    sid = scenario.get("id")
+    if not isinstance(sid, str) or not sid:
+        return ["(id 없음): id가 없거나 문자열이 아니다"]
+    errors = []
+
+    def need(ok: bool, message: str) -> None:
+        if not ok:
+            errors.append(f"{sid}: {message}")
+
+    def dicts(value) -> bool:
+        return isinstance(value, list) and all(isinstance(item, dict) for item in value)
+
+    need(dicts(scenario.get("reports")), "reports는 제보 항목의 목록이어야 한다")
+    environment = scenario.get("environment")
+    if isinstance(environment, dict):
+        need(dicts(environment.get("checks")), "environment.checks는 조회 항목의 목록이어야 한다")
+        need(dicts(environment.get("changes")), "environment.changes는 변경 항목의 목록이어야 한다")
+    else:
+        need(False, "environment가 없거나 키와 값의 묶음이 아니다")
+    expected = scenario.get("expected")
+    if isinstance(expected, dict):
+        for name in LIST_LABELS:
+            need(isinstance(expected.get(name), list), f"expected.{name}은 목록이어야 한다")
+        groups = expected.get("incident_groups")
+        if isinstance(groups, list):
+            need(all(isinstance(g, list) for g in groups), "expected.incident_groups의 각 묶음은 목록이어야 한다")
+    else:
+        need(False, "expected가 없거나 키와 값의 묶음이 아니다")
+    return errors
+
+
 def validate_scenario(seed: dict, scenario: dict) -> list[str]:
     """시나리오 하나의 문제를 문장 목록으로 돌려준다. 문제가 없으면 빈 목록."""
-    errors: list[str] = []
-    sid = scenario.get("id", "(id 없음)")
+    errors: list[str] = _structure_errors(scenario)
+    if errors:
+        return errors
+    sid = scenario["id"]
 
     def check(ok: bool, message: str) -> bool:
         if not ok:
@@ -204,13 +247,17 @@ def validate_all(seed: dict) -> list[str]:
     seen: set[str] = set()
     for split in SPLITS:
         for scenario in load_scenarios(split):
-            sid = scenario.get("id")
+            problems = validate_scenario(seed, scenario)
+            errors.extend(problems)
+            # id가 없거나 모양이 틀린 파일은 위에서 보고했다. 중복과 폴더 검사는 id가 있을 때만 한다
+            sid = scenario.get("id") if isinstance(scenario, dict) else None
+            if not isinstance(sid, str) or not sid:
+                continue
             if sid in seen:
                 errors.append(f"{sid}: 같은 id가 두 번 있다")
             seen.add(sid)
             if scenario.get("split") != split:
                 errors.append(f"{sid}: {split} 폴더에 있는데 split이 {scenario.get('split')}이다")
-            errors.extend(validate_scenario(seed, scenario))
     return errors
 
 
