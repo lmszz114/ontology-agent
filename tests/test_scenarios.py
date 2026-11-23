@@ -139,6 +139,12 @@ def test_broken_scenarios_are_reported(seed, scenarios, sid, mutate, message):
     (lambda s: s["expected"].update(procedures=["P6", 10]), "expected.procedures"),
     (lambda s: s["expected"].update(auto_actions=[["A01"]]), "expected.auto_actions"),
     (lambda s: s["expected"].update(resolved_conditions=[{"조건": "미지급"}]), "expected.resolved_conditions"),
+    # 메타 정보 자리에 문자열이 아닌 값이 온 경우
+    (lambda s: s.update(type=["T1"]), "type"),
+    (lambda s: s.update(source={"출처": "설계"}), "source"),
+    (lambda s: s.update(split=["dev"]), "split"),
+    (lambda s: s.update(text_source=None), "text_source"),
+    (lambda s: s.update(boundary=["경계"]), "boundary"),
     # ID나 시각 자리에 문자열이 아닌 값이 온 경우
     (lambda s: s["reports"][0].update(channel=["CH02"]), "channel"),
     (lambda s: s["reports"][0].update(at=None), "at"),
@@ -158,7 +164,7 @@ def test_non_mapping_documents_are_reported(seed, document):
     assert validate_scenario(seed, document) == ["(id 없음): 시나리오 파일의 최상위가 키와 값의 묶음이 아니다"]
 
 
-def test_unreadable_file_does_not_stop_other_files(seed, scenarios, tmp_path, monkeypatch):
+def test_unreadable_file_does_not_stop_other_files(seed, scenarios, tmp_path, monkeypatch, capsys):
     """문법이 틀린 파일이 있어도 나머지 파일은 검사하고, 틀린 파일은 이름과 함께 보고한다."""
     import yaml
 
@@ -174,6 +180,18 @@ def test_unreadable_file_does_not_stop_other_files(seed, scenarios, tmp_path, mo
     errors = validate.validate_all(seed)
     assert any(e.startswith("a-broken.yaml: 파일을 읽을 수 없다") for e in errors), errors
     assert any(e.startswith("SC-S1-01: severity") for e in errors), errors
+
+    # 명령으로 실행해도 읽을 수 없는 파일 때문에 멈추지 않고 요약까지 출력한다
+    assert validate.main() == 1
+    printed = capsys.readouterr().out.splitlines()
+    assert printed[-1] == f"시나리오 파일 2개, 문제 {len(errors)}건"
+
+
+def test_command_reports_success_for_the_real_scenarios(capsys):
+    from eval import validate
+
+    assert validate.main() == 0
+    assert capsys.readouterr().out.strip() == "시나리오 파일 10개, 문제 0건"
 
 
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):

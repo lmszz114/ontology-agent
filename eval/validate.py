@@ -100,6 +100,12 @@ def _structure_errors(scenario) -> list[str]:
     if not isinstance(sid, str) or not sid:
         return ["(id 없음): id가 없거나 문자열이 아니다"]
     errors = []
+    # 메타 정보도 허용 값 집합에서 찾으므로 문자열인지 먼저 본다. boundary는 없을 수 있다
+    for name in ("type", "split", "source", "text_source"):
+        if not isinstance(scenario.get(name), str):
+            errors.append(f"{sid}: {name}은 문자열이어야 한다")
+    if scenario.get("boundary") is not None and not isinstance(scenario["boundary"], str):
+        errors.append(f"{sid}: boundary는 문자열이거나 비어 있어야 한다")
 
     def need(ok: bool, message: str) -> None:
         if not ok:
@@ -292,10 +298,16 @@ def validate_all(seed: dict) -> list[str]:
     return errors
 
 
-if __name__ == "__main__":
+def main() -> int:
+    """모든 시나리오를 검증하고 결과를 출력한다. 문제가 있으면 1을 돌려준다."""
     problems = validate_all(load_seed("org-a"))
     for line in problems:
         print(line)
-    total = sum(len(load_scenarios(split)) for split in SPLITS)
-    print(f"시나리오 {total}건, 문제 {len(problems)}건")
-    sys.exit(1 if problems else 0)
+    # 파일 수는 파일을 다시 읽지 않고 센다. 읽을 수 없는 파일이 있어도 요약까지 출력한다
+    total = sum(len(list((SCENARIO_DIR / split).glob("*.yaml"))) for split in SPLITS)
+    print(f"시나리오 파일 {total}개, 문제 {len(problems)}건")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
