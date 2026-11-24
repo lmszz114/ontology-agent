@@ -490,3 +490,44 @@ def test_test_split_is_refused_before_any_call(tmp_path):
     path.write_text("split: test\n", encoding="utf-8")
     with pytest.raises(SystemExit, match="dev 시나리오만"):
         check_dev_only([path])
+
+
+def test_string_list_items_are_type_checked(db, seed):
+    """문자열 목록에 다른 타입이 섞이면 오류로 멈추지 않고 다시 묻는다."""
+    scenario = load("SC-S1-01")
+    bad = lambda p: text({"symptom_id": "S1", "scope": "some_users", "system_ids": [{}], "reason": "x"})  # noqa: E731
+    model = RuleModel(intake_of(scenario), overrides={"intake": [bad]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+    assert model.calls[:2] == ["intake", "intake"] and state["outputs"][0]["root_cause"] == "C02"
+
+
+def test_check_answer_with_bad_used_checks_is_inconclusive(db, seed):
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    original = model.check
+
+    def check(params):
+        if len(params["messages"]) > 1:
+            return text({"result": "confirm", "used_checks": [1], "reason": "x"})
+        return original(params)
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    assert state["outputs"][0]["hypotheses"][0]["result"] == "inconclusive"
+
+
+def test_urgent_procedures_cannot_be_left_out(db, seed):
+    """SEV1, SEV2에서 P3, P4를 빠뜨리면 다시 묻는다 (R3, R7)."""
+    scenario = load("SC-S2-01")
+    model = RuleModel(intake_of(scenario, systems=("SY01", "SY09")))
+
+    def without_urgent(params):
+        answer = json.loads(RuleModel.procedure(model, params).content[0].text)
+        answer["procedures"] = [p for p in answer["procedures"] if p not in ("P3", "P4")]
+        answer["actions"] = [a for a in answer["actions"] if a["action_id"] not in ("A06", "A07", "A08")]
+        return text(answer)
+
+    model.overrides["procedure"] = [without_urgent]
+    state, _ = run_agent(db, seed, scenario, model, verdicts={scenario["expected"]["root_cause"]: "confirm"})
+    assert model.calls.count("procedure") == 2
+    assert {"P3", "P4"} <= set(state["outputs"][0]["procedures"])

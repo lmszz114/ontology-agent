@@ -154,9 +154,13 @@ def _structure_errors(data: Any, schema: dict) -> list[str]:
             errors.append(f"{name} 필드가 없다")
         elif spec.get("type") in types and not isinstance(data[name], types[spec["type"]]):
             errors.append(f"{name}은 {spec['type']}이어야 한다")
-        elif spec.get("type") == "array" and spec.get("items", {}).get("type") == "object":
+        elif spec.get("type") == "array":
+            item_type = spec.get("items", {}).get("type")
             for item in data[name]:
-                errors += [f"{name}의 항목: {e}" for e in _structure_errors(item, spec["items"])]
+                if item_type == "object":
+                    errors += [f"{name}의 항목: {e}" for e in _structure_errors(item, spec["items"])]
+                elif item_type in types and not isinstance(item, types[item_type]):
+                    errors.append(f"{name}의 항목은 {item_type}이어야 한다: {item!r}")
     return errors
 
 
@@ -571,10 +575,10 @@ def build_graph(deps: Deps):
             # 등급이 상향되면 에스컬레이션을 반드시 연다 (R3)
             add(await deps.knowledge.procedure(ESCALATION_PROCEDURE), always=True)
         if sev in URGENT_LEVELS:
-            # 긴급 공지(P3)는 원인이 아니라 등급에 걸린 절차다 (R3 TRIGGERS). 긴급 점검(P4)도 SEV1, SEV2의 후보다 (R7).
-            # 원인이 확정되지 않아도 후보에 둔다
-            add(await deps.knowledge.procedure(URGENT_NOTICE))
-            add(await deps.knowledge.procedure(URGENT_MAINTENANCE))
+            # 긴급 공지(P3)는 원인이 아니라 등급에 걸린 절차다 (R3 TRIGGERS). 긴급 점검(P4)도 SEV1, SEV2면 연다 (R7).
+            # 원인이 확정되지 않아도 반드시 연다. 빠지면 검증에서 막혀 다시 묻는다
+            add(await deps.knowledge.procedure(URGENT_NOTICE), always=True)
+            add(await deps.knowledge.procedure(URGENT_MAINTENANCE), always=True)
         if confirmed:
             found = await deps.knowledge.cause_procedures(confirmed, sev)
             add(await deps.knowledge.procedure(FIX_PROCEDURE), always=True)
