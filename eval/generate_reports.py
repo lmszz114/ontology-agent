@@ -49,11 +49,7 @@ def generate(llm: LLM, request: dict):
     result = llm.call(task="generation", name=f"generate.{request['slot']}", system=SYSTEM,
                       messages=[{"role": "user", "content": content}], output_schema=SCHEMA,
                       max_tokens=400 * request["count"] + 500, metadata={"slot": request["slot"], "prompt_version": PROMPT_VERSION})
-    candidates = result.json()["candidates"]
-    if len(candidates) != request["count"]:
-        # 요청한 수와 다르면 멈춘다. 모자란 후보를 사람이 채우거나 조용히 넘어가지 않는다
-        raise SystemExit(f"{request['slot']}: 후보 {request['count']}개를 요청했는데 {len(candidates)}개가 왔다")
-    return candidates, result
+    return result.json()["candidates"], result
 
 
 def main() -> int:
@@ -66,19 +62,32 @@ def main() -> int:
 
     tracer = Tracer.from_env()
     llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
-    out, cost = [], 0.0
+    out, cost, short = [], 0.0, []
+
+    def save() -> None:
+        # 슬롯마다 저장한다. 중간에 멈춰도 이미 비용을 낸 결과가 남는다
+        Path(args.out).write_text(yaml.safe_dump({"prompt_version": PROMPT_VERSION, "cost_usd": round(cost, 5),
+                                                  "slots": out}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
     try:
         with tracer.run("generate_reports", tags=["mode:generation"], metadata={"prompt_version": PROMPT_VERSION},
                         input={"requests": len(requests)}):
             for request in requests:
                 candidates, result = generate(llm, request)
                 cost += result.cost["total"]
-                out.append({"slot": request["slot"], "model": result.model, "candidates": candidates})
+                entry = {"slot": request["slot"], "model": result.model, "candidates": candidates}
+                if len(candidates) != request["count"]:
+                    # 요청한 수와 다르면 그대로 기록하고 실패로 끝낸다. 모자란 후보를 사람이 채우지 않는다
+                    entry["requested"] = request["count"]
+                    short.append(f"{request['slot']}: {request['count']}개 요청, {len(candidates)}개 받음")
+                out.append(entry)
+                save()
     finally:
         tracer.flush()
-    Path(args.out).write_text(yaml.safe_dump({"prompt_version": PROMPT_VERSION, "cost_usd": round(cost, 5),
-                                              "slots": out}, allow_unicode=True, sort_keys=False), encoding="utf-8")
     print(f"{len(out)} slots, ${cost:.5f}")
+    if short:
+        print("후보 수가 요청과 다르다:\n" + "\n".join(short), file=sys.stderr)
+        return 1
     return 0
 
 
