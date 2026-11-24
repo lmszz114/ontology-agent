@@ -1,0 +1,234 @@
+{
+  "run": {
+    "scenario": "SC-S4-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T22:18:52.242082+09:00",
+    "finished_at": "2026-11-24T22:19:04.821910+09:00",
+    "seconds": 12.6,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "b1e5d4a8e6ef769872f4ed05e6c2458f",
+    "llm_calls": 4,
+    "usage": {
+      "input": 12606,
+      "output": 1783,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0021521,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "git_commit": "523a8bc1fa622a9663284cfdf37af4106ed7c2c9",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S4",
+      "incident_id": "INC-9dcfe047d8cd",
+      "report_ids": [
+        "RP-5e829bc135cf"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C11",
+          "rank": 1,
+          "score": 5,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "confirm",
+              "detail": "오늘 15:50에 출석 이벤트의 보상 수량 설정이 수정됐다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C12",
+          "rank": 2,
+          "score": 4,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C11",
+      "primary_team": "TM01",
+      "collaborators": [
+        {
+          "team_id": "TM03",
+          "why": "같은 시스템의 다른 부분 담당"
+        }
+      ],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P7",
+        "P10"
+      ],
+      "resolved_conditions": [
+        "과지급"
+      ],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-d9af2c9ec9c7"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-32c94dda42e5"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e22da774f4e3"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6223b8e4f4ac"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0dac81e2f8e9"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e6910efc175a"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-138c59de187b"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-e2f47f93f3d1"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-c8e2464cff72"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-8f7d7300f6cd"
+        },
+        {
+          "action_id": "A11",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-9158bb38db8e"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        },
+        {
+          "step": "9.condition",
+          "cause_id": "C11",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S4 이벤트 보상 오지급, 과지급 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C11 이벤트 설정 오류 (점수 5): confirm, 근거 ['E07']. E07(query_config_change, SY15) 조회 결과 오늘 15:50에 출석 이벤트의 보상 수량 설정이 수정된 것으로 나타났다. 판정 기준은 증상 시작 전 이벤트 설정 변경 이력 존재이며, 증상 시작(16:25)보다 35분 앞선 변경이 확인되어 기준과 일치한다. 필수 근거가 하나뿐이고 expect와 일치하므로 C11 이벤트 설정 오류를 확정한다. 다만 조회에서는 변경 전후 수량 값이나 변경 내용의 정확성은 확인되지 않았다.\n-> 1차 담당 TM01",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

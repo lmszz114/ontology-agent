@@ -158,6 +158,11 @@ def test_get_procedures(db):
     assert [(p["procedure_id"], p["condition"]) for p in result["resolved_by"]] == [
         ("P3", None), ("P6", "미지급"), ("P7", "과지급"), ("P10", None),
     ]
+    # 조건이 붙은 절차는 조건의 판정 근거를 함께 준다 (M3 점검). 조건이 없으면 비어 있다
+    checks = {p["procedure_id"]: p["condition_check"] for p in result["resolved_by"]}
+    assert checks["P7"] == {"check_id": "E02", "tool": "query_mailbox_log",
+                            "expect": "보상 지급 기록이 설정된 보상보다 많다", "args": {}}
+    assert checks["P6"]["check_id"] == "E02" and checks["P3"] is None and checks["P10"] is None
     p10 = result["resolved_by"][-1]
     assert p10["led_by"] == "개발PM팀"
     assert [(a["action_id"], a["risk"]) for a in p10["actions"]] == [("A14", "low"), ("A15", "high")]

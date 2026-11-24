@@ -20,7 +20,9 @@ import yaml
 
 from common.rules.severity import ESCALATION_COUNT, ESCALATION_WINDOW, SCOPES, base_severity, escalate
 from common.writers.events import CHANGE_KINDS
-from ontology.conditions import CONFIRM, ConditionError, Environment, evaluate_cause, required_checks
+from ontology.conditions import (
+    CONFIRM, ConditionError, Environment, allowed_values, evaluate_cause, procedure_conditions, required_checks,
+)
 from ontology.seed import load_seed, resolve_owner_teams
 
 SCENARIO_DIR = Path(__file__).parent / "scenarios"
@@ -35,8 +37,6 @@ FIX_PROCEDURE = "P10"
 URGENT_NOTICE, URGENT_MAINTENANCE = "P3", "P4"
 # 등급이 상향된 사건은 에스컬레이션(P2)을 연다 (R3)
 ESCALATION_PROCEDURE = "P2"
-# 지급 조건을 가르는 판정 근거와 값 (3단계 6장 E02). 보상(P6)과 회수(P7)가 이 조건으로 갈린다
-DELIVERY_CONDITIONS = {"short": "미지급", "absent": "미지급", "over": "과지급"}
 
 # 변경 이력의 종류마다 그 변경이 보여야 하는 판정 근거와 관측 값 (3단계 6장).
 # 시스템 인자가 있는 근거는 변경된 시스템으로 조회한 결과를 본다
@@ -76,21 +76,29 @@ def started_at(scenario: dict) -> datetime:
 
 
 def _condition_errors(seed: dict, scenario: dict, env: Environment) -> list[str]:
-    """지급 조건(미지급, 과지급) 라벨이 E02 관측 값과 맞는지. 조건이 붙은 절차를 가진 원인만 본다."""
+    """절차 조건(미지급, 과지급) 라벨이 조건의 판정 근거 관측 값과 맞는지. 조건이 붙은 절차를 가진 원인만 본다.
+
+    조건마다 판정 근거와 값은 시드의 해결 절차에 있다 (causes.yaml, M3 점검). 에이전트도 같은 판정 근거를 조회한다
+    """
     expected = scenario["expected"]
     cause = next((c for c in seed["causes"] if c["id"] == expected.get("root_cause")), None)
     if cause is None:
         return []
-    used = {ref.get("condition") for ref in cause["resolved_by"]} & set(DELIVERY_CONDITIONS.values())
+    used = {ref["condition"] for ref in cause["resolved_by"] if ref.get("condition")}
     if not used:
         return []
-    observed = DELIVERY_CONDITIONS.get(env.observe("E02")["delivery"])
-    derived = {observed} & used if observed else set()
-    labelled = set(expected.get("resolved_conditions") or []) & set(DELIVERY_CONDITIONS.values())
-    if not derived:
-        return [f"{cause['id']}의 지급 조건 {sorted(used)}를 가를 E02 결과가 환경에 없다"]
+    definitions = procedure_conditions(seed)
+
+    def holds(name: str) -> bool:
+        definition = definitions[name]
+        observed = env.observe(definition["check"], definition.get("args"))
+        return all(observed[k] in allowed_values(v) for k, v in definition["when"].items())
+
+    derived = {name for name in used if holds(name)}
+    labelled = set(expected.get("resolved_conditions") or []) & used
+    # 어떤 조건도 성립하지 않으면(관측이 정상이면) 조건 절차를 열지 않는 것이 정답이다 (PR #22 리뷰)
     if labelled != derived:
-        return [f"resolved_conditions의 지급 조건은 E02 관측 값으로 {sorted(derived)}여야 한다 (라벨 {sorted(labelled)})"]
+        return [f"resolved_conditions는 조건의 판정 근거 관측 값으로 {sorted(derived)}여야 한다 (라벨 {sorted(labelled)})"]
     return []
 
 

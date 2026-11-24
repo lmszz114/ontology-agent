@@ -1,0 +1,215 @@
+{
+  "run": {
+    "scenario": "SC-S2-01",
+    "split": "dev",
+    "config": "A",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T22:29:03.301671+09:00",
+    "finished_at": "2026-11-24T22:29:32.605203+09:00",
+    "seconds": 29.3,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "d2bc8ba7ae0416a048645b8d4f510a8d",
+    "llm_calls": 12,
+    "usage": {
+      "input": 12156,
+      "output": 4717,
+      "cache_read": 123444,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.00480854,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-a-v2",
+    "git_commit": "a8ac98cbab5d5b2f7baf403f20379d364e91bc38",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S2",
+      "incident_id": "INC-5366c4a12f9e",
+      "report_ids": [
+        "RP-5ac3665b28d8"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C04",
+          "rank": 1,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "confirm",
+              "detail": "18:55부터 다른 타이틀 세 곳에서도 로그인 실패율이 급증했다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C05",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C06",
+          "rank": 3,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C04",
+      "primary_team": "TM09",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-164d3d4ac9f0"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3b4a1544a424"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3cb93bd84581"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-d874833897ce"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0bfcff24d4a8"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-87b9f4225f26"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-ee75681903ed"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-0a26696954f2"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-716701d3c92b"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-800b589ac002"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C04",
+          "tool": "check_cross_title_login",
+          "check_id": "E03",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S2 로그인 불가, 접속 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C04 공통 계정 인증 장애 (점수 2): confirm, 근거 ['E03']. 확정 조건인 E03(다른 타이틀 로그인 상태 확인)의 결과가 expect와 일치한다. 다른 타이틀 세 곳에서 18:55부터 로그인 실패율이 급증했다고 나와, 다른 타이틀에서도 로그인이 실패한다는 기대와 맞는다. 제보의 19:02 증상 시작보다 약 7분 앞서 시작되어 시간상으로도 모순되지 않는다. 필수 근거가 하나뿐이고 이 근거가 맞았으므로 C04 공통 계정 인증 장애로 확정한다.\n-> 1차 담당 TM09",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

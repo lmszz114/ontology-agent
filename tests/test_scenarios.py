@@ -96,11 +96,11 @@ def broken(scenarios, sid, mutate):
     ("SC-S8-01", lambda s: s["expected"].update(scope="one_world", severity="SEV2"), "severity"),
     ("SC-S8-01", lambda s: s["expected"].update(procedures=["P3", "P10"]), "procedures"),
     ("SC-S7-01", lambda s: s["expected"].update(procedures=["P3", "P4", "P5", "P10"]), "procedures"),
-    # 지급 조건은 E02 관측 값과 맞아야 한다 (M3 결정)
-    ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["미지급"]), "지급 조건"),
-    ("SC-S4-02", lambda s: s["expected"].update(resolved_conditions=["과지급"]), "지급 조건"),
+    # 절차 조건은 시드에 적힌 조건의 판정 근거(E02) 관측 값과 맞아야 한다 (M3 결정, M3 점검)
+    ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["미지급"]), "판정 근거 관측 값"),
+    ("SC-S4-02", lambda s: s["expected"].update(resolved_conditions=["과지급"]), "판정 근거 관측 값"),
     ("SC-S4-01", lambda s: s["environment"].update(checks=[c for c in s["environment"]["checks"] if c["check"] != "E02"]),
-     "E02 결과가 환경에 없다"),
+     "판정 근거 관측 값"),
     ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["과지급", "환불"]), "resolved_conditions"),
     ("SC-S4-02", lambda s: s["expected"]["auto_actions"].append("A10"), "auto_actions"),
     ("SC-S4-02", lambda s: s["expected"].update(approval_actions=["A15"]), "approval_actions"),
@@ -271,3 +271,15 @@ def test_unclassified_report_does_not_move_symptom_start(seed, scenarios):
     reports[2]["at"] = "2026-12-18T08:00+09:00"
     scenario = dict(scenario, reports=reports)
     assert started_at(scenario).isoformat() == "2026-12-18T20:06:00+09:00"
+
+
+def test_no_condition_holds_with_normal_delivery(seed, scenarios):
+    """지급 기록이 정상이면 어떤 조건도 성립하지 않는다. 조건 절차(P6, P7)를 열지 않는 라벨이 정답이다 (PR #22 리뷰)."""
+    def normal_delivery(s):
+        s["environment"]["checks"] = [c for c in s["environment"]["checks"] if c["check"] != "E02"]
+        e = s["expected"]
+        e["resolved_conditions"] = []
+        e["procedures"] = [p for p in e["procedures"] if p != "P7"]
+        for key in ("approval_actions", "forbidden_actions"):
+            e[key] = [a for a in e[key] if a != "A11"]
+    assert validate_scenario(seed, broken(scenarios, "SC-S4-01", normal_delivery)) == []

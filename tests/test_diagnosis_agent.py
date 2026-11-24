@@ -895,3 +895,96 @@ def test_runner_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypatch):
     assert g["symptom"] and g["top1"] and g["team"] and g["required"] == {"total": 2, "covered": 2}
     # 시나리오 하나라 이어서 돌릴 것이 없다
     assert plan([path], out=tmp_path, reps=1, resume=True, expected=expected) == []
+
+
+# --- 9단계 절차 조건과 원인이 여는 절차 (M3 점검) -------------------------------------------
+
+
+@pytest.mark.integration
+def test_condition_check_is_looked_up_before_procedure_choice(db, seed):
+    """조건이 붙은 절차(C11의 P6 미지급, P7 과지급)는 9단계 전에 코드가 조건의 판정 근거(E02)를 조회한다.
+
+    M3 dev 실행에서 E02를 아무 단계도 부르지 않아 과지급 근거 없이 P7을 고르지 못했다 (SC-S4-01).
+    두 조건이 같은 조회를 쓰면 한 번만 부르고, 결과 문장이 9단계 입력에 들어가야 한다.
+    """
+    scenario = load("SC-S4-01")
+    seen = []
+    model = RuleModel(intake_of(scenario, systems=("SY15",)),
+                      overrides={"procedure": [lambda p: seen.append(p["messages"][0]["content"])]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C11": "confirm"}, conditions=["과지급"])
+    (out,) = state["outputs"]
+    calls = [c for c in out["tool_calls"] if c["step"] == "9.condition"]
+    assert [(c["check_id"], c["tool"], c["cause_id"]) for c in calls] == [("E02", "query_mailbox_log", "C11")]
+    assert "조건 과지급: 판정 근거 E02" in seen[0] and "설정된 수량의 두 배" in seen[0]
+    assert "P7" in out["procedures"] and out["resolved_conditions"] == ["과지급"]
+
+
+@pytest.mark.integration
+def test_no_condition_lookup_without_conditional_procedure(db, seed):
+    scenario = load("SC-S1-01")
+    state, _ = run_agent(db, seed, scenario, RuleModel(intake_of(scenario)), verdicts={"C02": "confirm"})
+    (out,) = state["outputs"]
+    assert not [c for c in out["tool_calls"] if c["step"] == "9.condition"]
+
+
+@pytest.mark.integration
+def test_unconditional_cause_procedure_is_always_opened(db, seed):
+    """확정 원인에 조건 없이 연결된 절차(C14의 회수 P7)는 코드가 항상 여는 절차로 둔다 (4단계 3-4, M3 점검).
+
+    M3 dev 실행에서 LLM이 "C14와 연결 근거가 없다"며 P7을 뺐다 (구성 A, SC-S5-01). 빼면 다시 묻는다.
+    """
+    scenario = load("SC-S5-01")
+
+    def drop_p7(params):
+        candidates = json.loads(params["messages"][0]["content"].split("후보 절차:\n", 1)[1])
+        assert {p["procedure_id"]: p["always"] for p in candidates}["P7"] is True
+        procs = [p for p in candidates if p["procedure_id"] != "P7" and not p["human_only"]]
+        actions = sorted({a["action_id"]: a["risk"] for p in procs for a in p["actions"]}.items())
+        return text({"procedures": [p["procedure_id"] for p in procs], "resolved_conditions": [],
+                     "actions": [{"action_id": a, "mode": "approval" if r == "high" else "auto"} for a, r in actions],
+                     "reason": "P7을 뺀다"})
+
+    model = RuleModel(intake_of(scenario, systems=("SY22",)), overrides={"procedure": [drop_p7]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C14": "confirm"})
+    (out,) = state["outputs"]
+    assert model.calls.count("procedure") == 2
+    assert "P7" in out["procedures"]
+
+
+@pytest.mark.integration
+def test_severity_procedures_stay_with_severity_rule(db, seed):
+    """원인에 연결된 긴급 공지(P3)는 조건이 없어도 항상 여는 절차로 만들지 않는다. SEV3, SEV4면 열지 않는다 (R3)."""
+    scenario = load("SC-S5-01")
+    seen = []
+    model = RuleModel(intake_of(scenario, systems=("SY22",)),
+                      overrides={"procedure": [lambda p: seen.append(p["messages"][0]["content"])]})
+    run_agent(db, seed, scenario, model, verdicts={"C14": "confirm"})
+    candidates = {p["procedure_id"]: p for p in json.loads(seen[0].split("후보 절차:\n", 1)[1])}
+    severity = re.search(r"심각도 (SEV\d)", seen[0]).group(1)
+    assert candidates["P4"]["always"] is (severity in ("SEV1", "SEV2"))
+
+
+@pytest.mark.integration
+def test_failed_condition_lookup_goes_to_human(db, seed):
+    """조건 판정 근거를 조회하지 못하면 사람 확인 사유로 남긴다 (PR #22 리뷰).
+
+    조건 절차는 필수가 아니라 LLM이 빼도 검증을 통과한다. 근거 없이 빠진 것을 알 수 있어야 한다.
+    """
+    scenario = load("SC-S4-01")
+
+    class BrokenConditionTool(GraphKnowledge):
+        async def cause_procedures(self, cause_id, severity_id):
+            found = await super().cause_procedures(cause_id, severity_id)
+            for proc in found["resolved_by"]:
+                if proc.get("condition_check"):
+                    proc["condition_check"] = {**proc["condition_check"], "tool": "no_such_tool"}
+            return found
+
+    model = RuleModel(intake_of(scenario, systems=("SY15",)))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C11": "confirm"},
+                         knowledge=lambda onto, tracer, llm, results: BrokenConditionTool(onto, tracer))
+    (out,) = state["outputs"]
+    calls = [c for c in out["tool_calls"] if c["step"] == "9.condition"]
+    assert len(calls) == 1 and calls[0]["is_error"]
+    assert any("조건 판정 근거 E02를 조회하지 못했다" in n for n in out["needs_human"])
+    assert "P7" not in out["procedures"]

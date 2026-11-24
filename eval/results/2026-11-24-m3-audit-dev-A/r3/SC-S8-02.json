@@ -1,0 +1,591 @@
+{
+  "run": {
+    "scenario": "SC-S8-02",
+    "split": "dev",
+    "config": "A",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T22:58:34.935572+09:00",
+    "finished_at": "2026-11-24T23:00:24.041330+09:00",
+    "seconds": 109.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "c9a9f566f9189112092ae74d43957c1a",
+    "llm_calls": 55,
+    "usage": {
+      "input": 125957,
+      "output": 14856,
+      "cache_read": 154180,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0215655,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-a-v2",
+    "git_commit": "a8ac98cbab5d5b2f7baf403f20379d364e91bc38",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S8",
+      "incident_id": "INC-9493b651e193",
+      "report_ids": [
+        "RP-435c4b0d529e",
+        "RP-519e0de4f9b5",
+        "RP-e0fd7eb976a9",
+        "RP-8b6e449a48de",
+        "RP-dd8063be3544",
+        "RP-243fd225fa37",
+        "RP-4bf500ccbd94",
+        "RP-2eb783eafc2f",
+        "RP-4755c6529e73",
+        "RP-d87d44054f87",
+        "RP-580a84f3de19",
+        "RP-a18ed65948e6",
+        "RP-aa8dc27c93a2",
+        "RP-f97c6c4e608b",
+        "RP-573b2ccc2930",
+        "RP-4d582ee31164",
+        "RP-42f59bffe451",
+        "RP-9dd2580832bc",
+        "RP-2143485c1ba0",
+        "RP-9a209175ef97"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV2",
+      "escalated": true,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C20",
+          "rank": 1,
+          "score": 3,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "rule_out",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": false
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "rule_out",
+              "detail": "21시부터 3월드 공성전이 진행 중이다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C21",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "confirm",
+              "detail": "3월드 월드 서버에 공성전 시작 직후부터 처리 지연 로그가 계속 남는다",
+              "reused": false
+            },
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "confirm",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": true
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "confirm",
+              "detail": "21시부터 3월드 공성전이 진행 중이다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": "C21",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6b5d4a69a5a3"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0f6d8a0b63af"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-809e229f694a"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7dedb5330cf3"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-db583de1432b"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e1286d1acf6e"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-69bd0402cac0"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-75c52f348035"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6a5ceb13f369"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-490fea1fe399"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-519e0de4f9b5",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-dbf9183c418b"
+        },
+        {
+          "report_id": "RP-e0fd7eb976a9",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-0351b454d4c3"
+        },
+        {
+          "report_id": "RP-8b6e449a48de",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-29df367d868a"
+        },
+        {
+          "report_id": "RP-dd8063be3544",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b3cca495943d"
+        },
+        {
+          "report_id": "RP-243fd225fa37",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-4e5bda589279"
+        },
+        {
+          "report_id": "RP-4bf500ccbd94",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-18873d3c9c27"
+        },
+        {
+          "report_id": "RP-2eb783eafc2f",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-3ebce70922f0"
+        },
+        {
+          "report_id": "RP-4755c6529e73",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-2d85f6f5b2f4"
+        },
+        {
+          "report_id": "RP-d87d44054f87",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-eedd4c33f9f2"
+        },
+        {
+          "report_id": "RP-580a84f3de19",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-93980060e6e8"
+        },
+        {
+          "report_id": "RP-a18ed65948e6",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-3f68aed11589"
+        },
+        {
+          "report_id": "RP-aa8dc27c93a2",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-e335b7aa0af0"
+        },
+        {
+          "report_id": "RP-f97c6c4e608b",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-12edc17b35c4"
+        },
+        {
+          "report_id": "RP-573b2ccc2930",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-7ead5e96aa9f"
+        },
+        {
+          "report_id": "RP-4d582ee31164",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-7cc8af1af7df"
+        },
+        {
+          "report_id": "RP-42f59bffe451",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-2a7d393858dd"
+        },
+        {
+          "report_id": "RP-9dd2580832bc",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-9437cb3ea869"
+        },
+        {
+          "report_id": "RP-2143485c1ba0",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-3221aece7e98"
+        },
+        {
+          "report_id": "RP-9a209175ef97",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-d0f628986aa5"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_content_schedule",
+          "check_id": "E14",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C21",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S8 대규모 콘텐츠 중 서버 과부하 (영향 범위 one_world, 심각도 SEV2)\n-> 원인 C20 서버 자원 부족 (점수 3): rule_out, 근거 ['E09', 'E14']. E09(query_resource_metrics, SY05) 결과는 서버 자원, 네트워크 지표가 정상 범위라는 것이었다. 기대값인 한계 근처 또는 초과와 다르므로 확정 조건이 깨졌다. E14(query_content_schedule) 결과는 21시부터 3월드 공성전이 진행 중이라는 것이었고, 대규모 콘텐츠 시간과 겹친다는 기대값과는 일치한다. 그러나 required 근거 하나가 expect와 다르므로 C20 서버 자원 부족 가설은 배제된다. 제보가 공성 시작 시각(21:00)과 겹치는 점은 콘텐츠 부하가 아닌 다른 원인을 가리킬 여지가 있으니 별도 가설로 검토할 필요가 있다.\n-> 원인 C21 콘텐츠 처리 로직 비효율 (점수 2): confirm, 근거 ['E04', 'E09', 'E14']. E04(SY10 서버 오류 로그): 3월드 월드 서버에 공성전 시작 직후부터 처리 지연 로그가 계속 남아 있어, 기대값인 '특정 콘텐츠 처리 지연 로그가 있다'와 일치한다. E09(SY05 자원·네트워크, 기존 결과 K1 재사용): 자원과 네트워크 지표가 정상 범위여서 '서버 인프라 자원에 여유가 있다'와 일치한다. E14(콘텐츠 일정, 기존 결과 K2 재사용): 21시부터 3월드 공성전이 진행 중이어서 '대규모 콘텐츠 진행 시간과 겹친다'와 일치한다. 필수 근거 3개가 모두 기대값과 맞으므로 확정이다. 다만 E04 로그가 처리 지연의 구체적인 로직 이름까지 특정하지는 않으므로, 세부 원인 코드 확인은 별도로 필요할 수 있다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

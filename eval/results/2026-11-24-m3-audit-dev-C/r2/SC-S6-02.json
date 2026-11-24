@@ -1,0 +1,295 @@
+{
+  "run": {
+    "scenario": "SC-S6-02",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T22:19:57.047081+09:00",
+    "finished_at": "2026-11-24T22:20:18.277453+09:00",
+    "seconds": 21.2,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "420d1e1d7d82c0ea8ed60362a1bc3c08",
+    "llm_calls": 9,
+    "usage": {
+      "input": 24142,
+      "output": 2857,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0038427,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "git_commit": "523a8bc1fa622a9663284cfdf37af4106ed7c2c9",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S6",
+      "incident_id": "INC-7e3a71687881",
+      "report_ids": [
+        "RP-940a9d85e49d",
+        "RP-76e3c0081543",
+        "RP-d5c7af53c59a",
+        "RP-2fe316d9c652"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C15",
+          "rank": 1,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "args": {
+                "area": "probability"
+              },
+              "result": "confirm",
+              "detail": "증상 시작 전에 게임 데이터 테이블 확률 영역의 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E08",
+              "tool": "compare_probability",
+              "args": {},
+              "result": "confirm",
+              "detail": "공개 페이지의 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C16",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C17",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C15",
+      "primary_team": "TM06",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P8",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-58664d0a0829"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1b50eb81e834"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-b3b2101ed127"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-85942c9610e9"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ec8eaef02dbc"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-249b0a7cd0d9"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-ca389dd2596c"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-72441764457d"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-854aa2979b57"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-a3deb4a64007"
+        },
+        {
+          "action_id": "A12",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-e63e2e348b48"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-76e3c0081543",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-0eb8b0c907e0"
+        },
+        {
+          "report_id": "RP-d5c7af53c59a",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f9c843c516fb"
+        },
+        {
+          "report_id": "RP-2fe316d9c652",
+          "channel": "CH03",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f24cbf417821"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C15",
+          "tool": "query_table_change",
+          "check_id": "E05",
+          "args": {
+            "area": "probability"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C15",
+          "tool": "compare_probability",
+          "check_id": "E08",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S6 확률형 아이템 확률 표기 불일치 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C15 공개 페이지 표기 오류 (점수 2): confirm, 근거 ['E05', 'E08']. E05(query_table_change, area=probability) 결과 증상 시작 전에 확률 테이블 변경 이력이 없어 expect(증상 시작 전 확률 테이블 변경 이력 없음)와 일치했다. E08(compare_probability) 결과 공개 페이지 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%로, 공개 수치와 테이블 수치는 다르고 테이블 수치와 실제 결과는 같아 expect와 일치했다. required 근거 두 개가 모두 expect대로 나와 C15(공개 페이지 표기 오류)를 확정한다. 실제 적용 확률은 테이블 기준 0.3%이고 공개 페이지의 3.0%가 잘못 표기된 것으로 보인다. 다만 표기 수정, 보상, 환불 등의 조치 판단은 이 진단 범위 밖이다.\n-> 1차 담당 TM06",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

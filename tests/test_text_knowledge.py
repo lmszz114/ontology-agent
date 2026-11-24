@@ -177,6 +177,10 @@ class OracleModel(RuleModel):
                "actions": [{"action_id": a["action_id"], "risk": a["risk"]} for a in p["actions"]]}
         if with_condition:
             row["condition"] = p.get("condition") or ""
+            check = p.get("condition_check") or {}
+            row["condition_check"] = {"check_id": check.get("check_id", ""), "tool": check.get("tool", ""),
+                                      "expect": check.get("expect", ""),
+                                      "args": [{"name": k, "value": v} for k, v in (check.get("args") or {}).items()]}
         return row
 
     def knowledge(self, question: str) -> dict:

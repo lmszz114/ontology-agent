@@ -1,0 +1,252 @@
+{
+  "run": {
+    "scenario": "SC-S5-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T22:13:30.290108+09:00",
+    "finished_at": "2026-11-24T22:13:46.392963+09:00",
+    "seconds": 16.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "4fd66e3e74f36ac0207411624d0791ed",
+    "llm_calls": 6,
+    "usage": {
+      "input": 20704,
+      "output": 2559,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0033499000000000003,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "git_commit": "523a8bc1fa622a9663284cfdf37af4106ed7c2c9",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S5",
+      "incident_id": "INC-bdd7cdde76f6",
+      "report_ids": [
+        "RP-a0c9880753b2"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C13",
+          "rank": 1,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "rule_out",
+              "detail": "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "args": {},
+              "result": "rule_out",
+              "detail": "QA가 같은 조건에서 재현하지 못했다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C14",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E11",
+              "tool": "query_account_activity",
+              "args": {},
+              "result": "confirm",
+              "detail": "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C14",
+      "primary_team": "TM11",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P7",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1c2c89f449e8"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-bd5f3dcb5246"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-638bdfdecd1e"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7241369a4342"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-51a9e77b4a2f"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3d463a74ec6b"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-52248526b603"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-a8fc3f17d72d"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-dc94c9943dee"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-a65469528058"
+        },
+        {
+          "action_id": "A11",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-12ea5c96f62d"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C13",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C13",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C14",
+          "tool": "query_account_activity",
+          "check_id": "E11",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S5 아이템 복사, 재화 비정상 증식 (영향 범위 some_users, 심각도 SEV2)\n-> 원인 C13 복사 버그 (점수 2): rule_out, 근거 ['E04', 'E12']. 필수 확정 근거 E04(월드 서버 SY10 오류 로그)는 기대값인 '증상 관련 오류 로그 있음'과 달리 관련 오류 로그가 없고 처리 지연 로그도 없다는 결과가 나왔다. 필수 근거 E12(QA 복사 재현)도 기대값인 '복사 재현'과 달리 QA가 같은 조건에서 재현하지 못했다. 필수 근거 두 개 모두 expect와 다르므로 C13 복사 버그 가설은 배제된다. E10은 참고용(required=false)이라 판정에 사용하지 않았다.\n-> 원인 C14 어뷰징 (불법 프로그램, 악용) (점수 2): confirm, 근거 ['E11']. E11(계정별 거래, 행동 집중도 조회, required=true) 결과 최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다. 기대값인 '소수 계정에 거래와 행동이 집중돼 있다'와 일치하므로 확정 조건을 충족했다. 확정 근거가 된 것은 E11 하나이며, 유통량 증가 규모를 보는 E10은 required=false 참고용이라 판정에 쓰지 않았다. K1(월드 서버 오류 로그 없음)과 K2(QA 재현 실패)는 계정 집중도와 직접 관련이 없어 재사용하지 않았다. 다만 집중 계정이 어뷰징인지 자동 사냥 등 다른 원인인지는 이 결과만으로 구분되지 않으며, 계정 제재 전 보안팀 확인이 필요하다.\n-> 1차 담당 TM11",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

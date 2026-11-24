@@ -699,13 +699,19 @@ def build_graph(deps: Deps):
         if confirmed:
             required.add(FIX_PROCEDURE)
 
+        # 조건마다 그 조건을 판단할 판정 근거. 지식 공급자가 절차와 함께 준다 (M3 점검)
+        condition_checks: dict[str, dict] = {}
+
         def add(proc: dict | None, **extra) -> None:
             if proc is None:
                 return
-            entry = candidates.setdefault(proc["procedure_id"], {**proc, "always": False, "conditions": []})
+            fields = {k: v for k, v in proc.items() if k not in ("condition", "condition_check")}
+            entry = candidates.setdefault(proc["procedure_id"], {**fields, "always": False, "conditions": []})
             entry["always"] = entry["always"] or proc["procedure_id"] in required
             if extra.get("condition"):
                 entry["conditions"].append(extra["condition"])
+                if proc.get("condition_check"):
+                    condition_checks.setdefault(extra["condition"], proc["condition_check"])
 
         for procedure_id in (INTAKE_PROCEDURE, ESCALATION_PROCEDURE, URGENT_NOTICE, URGENT_MAINTENANCE):
             if procedure_id in required:
@@ -718,6 +724,11 @@ def build_graph(deps: Deps):
                 unavailable.append(f"{confirmed}가 여는 절차를 받지 못했다: {exc}")
             add(await known(FIX_PROCEDURE))
             for proc in found["resolved_by"]:
+                # 원인에 조건 없이 연결된 절차(보상, 회수, 확률 표기 정정 등)는 연다는 규칙이라 코드가 정한다
+                # (4단계 3-4, M3 점검). 긴급 공지와 긴급 점검은 등급 규칙(R3, R7)을, 롤백은 사람 결정을 따른다
+                if (not proc.get("condition") and not proc.get("human_only")
+                        and proc["procedure_id"] not in (URGENT_NOTICE, URGENT_MAINTENANCE)):
+                    required.add(proc["procedure_id"])
                 add(proc, condition=proc.get("condition"))
             for proc in found.get("triggered_by_severity", []):
                 add(proc)
@@ -769,12 +780,36 @@ def build_graph(deps: Deps):
                 errors.append(f"조건이 붙은 절차인데 충족한 조건을 적지 않았다: {unmet}")
             return errors
 
+        # 조건의 판정 근거는 판단이 아니라 조회라서 코드가 부른다. 조건이 맞는지는 LLM이 결과를 읽고 정한다
+        # (접수 내역 조회 E15와 같은 방식, M3 점검). 같은 도구와 인자는 한 번만 부른다
+        condition_calls: list[dict] = []
+        condition_lines: list[str] = []
+        done: dict[tuple[str, str], dict] = {}
+        for name in sorted(condition_checks):
+            check = condition_checks[name]
+            args = check.get("args") or {}
+            key = (check["tool"], json.dumps(args, ensure_ascii=False, sort_keys=True))
+            if key not in done:
+                result = await call_tool(deps.mock_client, deps.tracer, server="mock_tools", name=check["tool"], args=args)
+                done[key] = {"step": "9.condition", "cause_id": confirmed, "tool": check["tool"],
+                             "check_id": check["check_id"], "args": args, "is_error": result.is_error,
+                             "text": result.text}
+                condition_calls.append(done[key])
+                if result.is_error:
+                    # 조건 절차는 필수가 아니라 LLM이 빼도 검증을 통과한다. 근거 없이 빠진 것을 사람이 알게 남긴다
+                    unavailable.append(f"조건 판정 근거 {check['check_id']}를 조회하지 못했다: {result.text}")
+            call = done[key]
+            text = call["text"] if not call["is_error"] else f"조회하지 못했다 ({call['text']})"
+            condition_lines.append(f"- 조건 {name}: 판정 근거 {check['check_id']}, 기대 결과 \"{check['expect']}\". "
+                                   f"조회 결과: {text}")
+
         verdict = diag["verdicts"].get(confirmed, {}) if confirmed else {}
         content = (
             f"사건: 증상 {incident['symptom_id']}, 심각도 {sev}, 등급 상향 {'예' if incident.get('escalated') else '아니오'}, "
             f"확정 원인 {confirmed or '없음'}"
             + (f" (판단 이유: {verdict.get('reason')})" if verdict else "")
             + "\n조회 결과:\n" + "\n".join(f"- {c['tool']}: {c['text']}" for c in diag["tool_calls"] if not c["is_error"])
+            + ("\n\n조건 판정 근거 조회:\n" + "\n".join(condition_lines) if condition_lines else "")
             + f"\n\n후보 절차:\n{json.dumps(list(candidates.values()), ensure_ascii=False, indent=1)}"
         )
         needs_human = list(diag["needs_human"]) + unavailable
@@ -792,7 +827,8 @@ def build_graph(deps: Deps):
                 needs_human.append(f"절차, 조치 선택 출력 검증 실패: {errors}")
         if data is None:
             data = {"procedures": [], "resolved_conditions": [], "actions": [], "reason": None}
-        diag |= {"procedure_choice": data, "candidate_procedures": sorted(candidates), "needs_human": needs_human}
+        diag |= {"procedure_choice": data, "candidate_procedures": sorted(candidates), "needs_human": needs_human,
+                 "tool_calls": list(diag["tool_calls"]) + condition_calls}
         return {"diag": diag}
 
     # 10 승인 게이트 (코드, R6)

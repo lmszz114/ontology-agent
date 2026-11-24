@@ -265,13 +265,30 @@ class TextKnowledge:
             "actions": {"type": "array", "items": _schema({"action_id": _enum(self.ids.actions), "risk": _enum(RISKS)})},
         }
         if with_condition:
+            # 조건이 없으면 condition과 condition_check의 check_id, tool을 빈 문자열로 둔다
             props["condition"] = {"type": "string"}
+            props["condition_check"] = _schema({
+                "check_id": {"type": "string", "enum": ["", *sorted(self.ids.checks)]},
+                "tool": {"type": "string", "enum": ["", *self.ids.tools]},
+                "expect": {"type": "string"},
+                "args": {"type": "array", "items": _schema({"name": {"type": "string"}, "value": {"type": "string"}})},
+            })
         return _schema(props)
 
     def _procedure_errors(self, rows: list[dict]) -> list[str]:
         errors = self._undefined("절차", [r["procedure_id"] for r in rows], self.ids.procedures)
         errors += self._undefined("조치", [a["action_id"] for r in rows for a in r["actions"]], self.ids.actions)
         errors += self._undefined("위험도", [a["risk"] for r in rows for a in r["actions"]], RISKS)
+        for r in rows:
+            if "condition" not in r:
+                continue
+            check = r["condition_check"]
+            if r["condition"] and not (check["check_id"] and check["tool"] and check["expect"]):
+                errors.append(f"{r['procedure_id']}: 조건 {r['condition']}의 판정 근거(check_id, tool, expect)를 적지 않았다")
+            if not r["condition"] and (check["check_id"] or check["tool"]):
+                errors.append(f"{r['procedure_id']}: 조건이 없는데 조건의 판정 근거를 적었다")
+            errors += self._undefined("판정 근거", [check["check_id"]] if check["check_id"] else [], self.ids.checks)
+            errors += self._undefined("조회 도구", [check["tool"]] if check["tool"] else [], self.ids.tools)
         return errors + self._undefined("팀", [r["led_by_team_id"] for r in rows if r["led_by_team_id"]], self.ids.teams)
 
     def _procedure_row(self, r: dict) -> dict:
@@ -280,7 +297,11 @@ class TextKnowledge:
                "actions": [{"action_id": a["action_id"], "name": self.ids.actions[a["action_id"]], "risk": a["risk"]}
                            for a in r["actions"]]}
         if "condition" in r:
-            row = {"condition": r["condition"] or None, **row}
+            check = r["condition_check"]
+            condition_check = ({"check_id": check["check_id"], "tool": check["tool"], "expect": check["expect"],
+                                "args": {a["name"]: a["value"] for a in check["args"]}}
+                               if r["condition"] else None)
+            row = {"condition": r["condition"] or None, "condition_check": condition_check, **row}
         return row
 
     async def cause_procedures(self, cause_id: str, severity_id: str) -> dict[str, Any]:
