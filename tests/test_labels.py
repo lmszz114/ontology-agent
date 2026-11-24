@@ -212,3 +212,15 @@ def test_unconfirmed_incident_needs_no_confirmation_and_no_team():
     # 근거 없이 원인을 확정하면 틀린다
     g = grade_scenario(_result(s, [_output(label, root="C02", team="TM03")]), s, SEED)
     assert not g["top1"] and not g["team"] and g["first_failure"] == "원인: Top-1"
+
+
+def test_change_between_incidents_counts_for_the_later_incident():
+    """첫 사건 뒤, 둘째 사건 전의 배포는 둘째 사건의 증상 시작 전 변경이다. 조회에 보여야 하고 그러면 통과한다 (PR #25 리뷰)."""
+    s = mixed()
+    s["environment"]["changes"].append({"kind": "deploy", "system": "SY13", "at": "2026-12-07T20:20+09:00"})
+    assert any("변경이 없다고 답한다" in e for e in validate_scenario(SEED, s))
+    s["environment"]["checks"].append({"check": "E06", "args": {"system": "SY13"}, "observations": {"deploy": "success"}})
+    assert validate_scenario(SEED, s) == []
+    # 마지막 사건이 시작한 뒤의 변경은 어느 사건의 원인도 아니라 조회에 보이면 안 된다
+    s["environment"]["changes"][-1]["at"] = "2026-12-07T20:40+09:00"
+    assert any("그런 변경 이력이 없다" in e for e in validate_scenario(SEED, s))

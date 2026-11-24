@@ -79,6 +79,12 @@ def started_at(scenario: dict) -> datetime:
     return min(_aware(r["at"]) for i, r in enumerate(scenario["reports"]) if i in grouped)
 
 
+def last_incident_start(scenario: dict) -> datetime:
+    """사건마다 시작 시각(묶인 제보 중 가장 이른 시각)을 구하고 그중 가장 늦은 것. 사건이 하나면 started_at과 같다."""
+    reports = scenario["reports"]
+    return max(min(_aware(reports[i]["at"]) for i in group) for group in label_groups(scenario["expected"]))
+
+
 def _condition_errors(seed: dict, expected: dict, env: Environment) -> list[str]:
     """절차 조건(미지급, 과지급) 라벨이 조건의 판정 근거 관측 값과 맞는지. 조건이 붙은 절차를 가진 원인만 본다.
 
@@ -117,9 +123,13 @@ def _change_errors(seed: dict, scenario: dict, env: Environment) -> list[str]:
 
     증상 시작 전 변경이 있으면 그 변경을 보는 조회도 변경이 있다고 답해야 하고, 거꾸로도 같다.
     어긋나면 원인 점수의 변경 가중(R4)과 판정 근거가 서로 다른 말을 한다.
+
+    사건이 여럿이면 가장 늦게 시작한 사건을 기준으로 본다. 판정 근거 조회는 시각 인자가 없어 시나리오에 답이
+    하나라서 사건마다 따로 대조할 수 없다. 첫 사건 뒤, 둘째 사건 전에 생긴 변경은 둘째 사건의 증상 시작 전 변경이라
+    조회에 보여야 한다. 대신 첫 사건을 조회해도 그 변경이 보인다 (한계, PR #25 리뷰)
     """
     errors = []
-    start = started_at(scenario)
+    start = last_incident_start(scenario)
     before = [c for c in scenario["environment"]["changes"] if _aware(c["at"]) <= start]
     for change in before:
         check_id, field_name, changed_values, arg = CHANGE_EVIDENCE[change["kind"]]
