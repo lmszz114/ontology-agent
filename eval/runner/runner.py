@@ -7,6 +7,7 @@
 """
 
 import json
+import os
 import subprocess
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -48,11 +49,16 @@ def git_state(out: Path, root: Path = ROOT) -> GitState:
         status = git("status", "--porcelain=v1", "-z", "--untracked-files=all")
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RunnerError(f"Git 상태를 읽을 수 없다: {exc}") from exc
-    ignored = (out.resolve(), (root / RESULTS_DIR).resolve())
+    # 심볼릭 링크를 따라가지 않고 경로 자체로 비교한다. 결과 폴더 밖의 파일을 결과 폴더 안을 가리키는
+    # 링크로 바꾼 변경도 놓치지 않게 한다 (resolve는 링크 대상을 돌려준다)
+    def absolute(path: Path) -> Path:
+        return Path(os.path.abspath(path))
+
+    ignored = (absolute(out), absolute(root / RESULTS_DIR))
     changed = []
     for paths in _status_entries(status):
         # 이동은 원래 경로와 새 경로를 모두 본다. 하나라도 결과 폴더 밖이면 변경이다
-        outside = [p for p in paths if not any((root / p).resolve().is_relative_to(d) for d in ignored)]
+        outside = [p for p in paths if not any(absolute(root / p).is_relative_to(d) for d in ignored)]
         if outside:
             changed.append(" <- ".join(paths) if len(paths) > 1 else paths[0])
     return GitState(commit=commit, dirty=bool(changed), changed=changed)

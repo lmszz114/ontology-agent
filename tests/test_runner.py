@@ -172,3 +172,15 @@ def test_git_state_ignores_other_result_folders(tmp_path):
     scenario.write_text("id: SC-X\n", encoding="utf-8")
     state = git_state(out, root=repo)
     assert state.dirty and state.changed == ["eval/scenarios/dev/SC-X.yaml"]
+
+
+def test_git_state_does_not_follow_symlinks_into_results(tmp_path):
+    """결과 폴더 밖의 추적 파일을 결과 폴더 안을 가리키는 링크로 바꿔도 변경으로 잡는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    target = repo / "eval" / "results" / "2026-11-24-x-C" / "a.py"
+    target.parent.mkdir(parents=True)
+    target.write_text("x = 9\n", encoding="utf-8")
+    (repo / "a.py").unlink()
+    (repo / "a.py").symlink_to(target)
+    state = git_state(repo / "eval" / "results" / "2026-11-24-x-A", root=repo)
+    assert state.dirty and state.changed == ["a.py"]
