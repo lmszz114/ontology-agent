@@ -1,0 +1,239 @@
+{
+  "run": {
+    "scenario": "SC-S7-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T19:53:00.592387+09:00",
+    "finished_at": "2026-11-24T19:53:11.222880+09:00",
+    "seconds": 10.6,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "trace_id": "71bf1565b52f7ad1abc0609ec33cbe8d",
+    "llm_calls": 5,
+    "usage": {
+      "input": 14184,
+      "output": 1470,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0021534,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "git_commit": "f4e4515a31b094abb1c13e2730aa6e6f27112b69",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S7",
+      "incident_id": "INC-7c70660b1e1f",
+      "report_ids": [
+        "RP-d03eaddcfc00"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "one_world",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C18",
+          "rank": 1,
+          "score": 5,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY14"
+              },
+              "result": "confirm",
+              "detail": "2월드 거래소에 18:10부터 등록 요청 처리 오류가 계속 남고 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E06",
+              "tool": "query_deploy_history",
+              "args": {
+                "system": "SY14"
+              },
+              "result": "confirm",
+              "detail": "오늘 18:05에 거래소 서버 배포가 있었고 정상으로 끝났다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C19",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C14",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C18",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0e80aaf04432"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-c4c1afaa220a"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-9a3326def682"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-2f664ec6dc8a"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-bc8a2dcfc221"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-4e4a77aab1f3"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-26d1cb4549e9"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-0105444e7660"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-2424a9222a20"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-3bfe842c2ce0"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C18",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY14"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C18",
+          "tool": "query_deploy_history",
+          "check_id": "E06",
+          "args": {
+            "system": "SY14"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S7 거래소 장애 (영향 범위 one_world, 심각도 SEV2)\n-> 원인 C18 거래소 서버 오류 (점수 5): confirm, 근거 ['E04', 'E06']. E04(SY14 서버 오류 로그)에서 2월드 거래소의 등록 요청 처리 오류가 18:10부터 계속 남아 있다고 확인되었다. 이는 ' 거래소에 증상과 관련된 오류 로그가 있다'는 기대값과 일치한다. E06(SY14 배포 이력)에서 증상 시작(18:40) 전인 18:05에 거래소 서버 배포가 있었고 정상 완료되었다고 확인되었다. 이는 '증상 시작 전에 거래소 배포 이력이 있다'는 기대값과 일치한다. 두 필수 근거가 모두 기대값과 일치하므로 C18 거래소 서버 오류 가설은 확정된다. 다만 오류 로그 시작(18:10)이 배포(18:05) 직후이고 증상 보고는 18:40이므로, 제보 1건과 2월드 한정 범위와 함께 배포 변경 내용과의 연관은 추가 확인이 권장된다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

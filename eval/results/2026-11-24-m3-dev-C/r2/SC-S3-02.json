@@ -1,0 +1,564 @@
+{
+  "run": {
+    "scenario": "SC-S3-02",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T19:56:05.096637+09:00",
+    "finished_at": "2026-11-24T19:57:28.451284+09:00",
+    "seconds": 83.4,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "trace_id": "cede6926ed5de04c17365eda76ba3393",
+    "llm_calls": 42,
+    "usage": {
+      "input": 110684,
+      "output": 10623,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0163799,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "git_commit": "f4e4515a31b094abb1c13e2730aa6e6f27112b69",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-dc4d7b02ae58",
+      "report_ids": [
+        "RP-cdfdfb42d2df",
+        "RP-b1a99d45ada1",
+        "RP-c80291cf4077",
+        "RP-25c42ffa3471",
+        "RP-ae4ea5daa9a2",
+        "RP-a1de671d5691",
+        "RP-b61648677726",
+        "RP-e1cd768b0efa",
+        "RP-242bd31bc5aa",
+        "RP-c4757e9bc2b5",
+        "RP-f3263416ba79",
+        "RP-e493027c73a7",
+        "RP-3870e9753072",
+        "RP-6c048640b8b1",
+        "RP-b2a1e32f826a",
+        "RP-ed47568e5a70",
+        "RP-5f8f8435bad3",
+        "RP-afddc6c63a83",
+        "RP-03ed05efb8b1",
+        "RP-cfcc7bb51712"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C08",
+          "rank": 1,
+          "score": 4,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "confirm",
+              "detail": "2월드 월드 서버에 퀘스트 완료 보상 처리 오류가 10시 25분부터 남는다",
+              "reused": false
+            },
+            {
+              "check_id": "E06",
+              "tool": "query_deploy_history",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "confirm",
+              "detail": "10시에 월드 서버 배포가 있었다. 배포는 정상으로 끝났다",
+              "reused": false
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "args": {},
+              "result": "confirm",
+              "detail": "QA가 2월드 테스트 계정으로 같은 퀘스트의 보상 수령 오류를 재현했다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C07",
+          "rank": 2,
+          "score": 3,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C09",
+          "rank": 3,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C10",
+          "rank": 4,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C08",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-9aad1f303554"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-b93645a68a29"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-23c57301cbb2"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-53e10add1b5c"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1c6d90e32c39"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-a1048cd3c500"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-1eafc3f11aa7"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-b1a99d45ada1",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-6b49d709b862"
+        },
+        {
+          "report_id": "RP-c80291cf4077",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-9c37bd468434"
+        },
+        {
+          "report_id": "RP-25c42ffa3471",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-571a68a80149"
+        },
+        {
+          "report_id": "RP-ae4ea5daa9a2",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-9d0180995b2c"
+        },
+        {
+          "report_id": "RP-a1de671d5691",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a0aa4a53d8e3"
+        },
+        {
+          "report_id": "RP-b61648677726",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-d0b8e04fa069"
+        },
+        {
+          "report_id": "RP-e1cd768b0efa",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f6032c9c8f33"
+        },
+        {
+          "report_id": "RP-242bd31bc5aa",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-351f7e4731b2"
+        },
+        {
+          "report_id": "RP-c4757e9bc2b5",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-503c89f6507f"
+        },
+        {
+          "report_id": "RP-f3263416ba79",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-5a55402b77bc"
+        },
+        {
+          "report_id": "RP-e493027c73a7",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-078940df49aa"
+        },
+        {
+          "report_id": "RP-3870e9753072",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-fe5ab7dd1889"
+        },
+        {
+          "report_id": "RP-6c048640b8b1",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-c09276e6adec"
+        },
+        {
+          "report_id": "RP-b2a1e32f826a",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-c29ac0c15432"
+        },
+        {
+          "report_id": "RP-ed47568e5a70",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-683e39fade42"
+        },
+        {
+          "report_id": "RP-5f8f8435bad3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-d576680ed063"
+        },
+        {
+          "report_id": "RP-afddc6c63a83",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8d343d7f6dbf"
+        },
+        {
+          "report_id": "RP-03ed05efb8b1",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-00a808a150e7"
+        },
+        {
+          "report_id": "RP-cfcc7bb51712",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-bcdc68082cbb"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C08",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C08",
+          "tool": "query_deploy_history",
+          "check_id": "E06",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C08",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C08 서버 적용 로직 오류 (점수 4): confirm, 근거 ['E04', 'E06', 'E12']. E04: SY10 월드 서버 로그에 2월드 퀘스트 완료 보상 처리 오류가 10시 25분부터 남아 있어 '증상과 관련된 오류 로그 존재' 조건에 맞다. E06: 증상 시작(10:30) 전인 10시에 SY10 월드 서버 배포가 있었고, 배포는 정상 종료로 기록되어 '증상 시작 전 서버 배포 이력 존재' 조건에 맞다. E12: QA가 2월드 테스트 계정으로 같은 퀘스트의 보상 수령 오류를 재현해 '같은 조건에서 재현' 조건에 맞다. 필수 근거 3개가 모두 기대 결과와 일치하므로 C08 서버 적용 로직 오류로 확정한다. 다만 배포가 정상 종료로 기록되어 있어 배포 자체의 실패가 아니라 배포된 서버 적용 로직의 문제로 해석된다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
