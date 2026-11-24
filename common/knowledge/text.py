@@ -4,8 +4,9 @@
 LLM이 텍스트와 규칙 설명을 읽고 답한다. 구성 C의 그래프 공급자와 같은 모양의 값을 돌려준다.
 
 코드는 형식과 정의된 ID까지만 검증한다. "이 증상의 후보 원인인가"처럼 그래프 관계로 답을 고치지 않는다.
-그렇게 하면 구성 A에 온톨로지를 몰래 주는 셈이다. 틀리면 한 번 다시 묻고, 그래도 틀리면 빈 값을 돌려주고
-errors에 남긴다. 빈 값을 받은 단계는 원래의 사람 확인 처리를 따른다.
+그렇게 하면 구성 A에 온톨로지를 몰래 주는 셈이다. 틀리면 한 번 다시 묻고, 그래도 틀리면 errors에 남기고
+KnowledgeUnavailable을 낸다. 빈 값으로 돌려주지 않는다. 빈 값은 "근거가 없다"와 구분되지 않기 때문이다.
+받는 쪽(진단 그래프)은 이 예외를 사람 확인 사유로 남긴다.
 
 K와 규칙 설명은 system 블록 하나로 두고 캐싱한다 (5분). 같은 질문은 한 실행 안에서 다시 묻지 않는다.
 변경 경과 시간(gap_minutes)은 기록용 값이라 코드가 시각으로 계산한다. 가중을 줄지는 LLM이 정한다.
@@ -18,6 +19,7 @@ from datetime import datetime
 from typing import Any
 
 from common.knowledge import text_prompts as P
+from common.knowledge.base import KnowledgeUnavailable
 from common.knowledge.k_text import k_text
 from common.models import LLM, LLMResult
 
@@ -54,6 +56,31 @@ def _enum(values) -> dict:
     return {"type": "string", "enum": sorted(values)}
 
 
+def _shape_errors(data: Any, schema: dict, where: str = "답") -> list[str]:
+    """스키마의 필수 필드와 타입을 본다. 변환 코드가 읽는 필드가 빠지거나 타입이 다르면 예외 대신 다시 묻는다."""
+    kind = schema.get("type")
+    checks = {"object": dict, "array": list, "string": str, "boolean": bool}
+    if kind == "integer":
+        ok = isinstance(data, int) and not isinstance(data, bool)
+    else:
+        ok = isinstance(data, checks[kind]) if kind in checks else True
+    if not ok:
+        return [f"{where}의 타입이 {kind}가 아니다"]
+    if kind == "object":
+        errors = []
+        for name in schema.get("required", []):
+            if name not in data:
+                errors.append(f"{where}에 {name} 필드가 없다")
+            else:
+                errors += _shape_errors(data[name], schema["properties"][name], f"{where}.{name}")
+        return errors
+    if kind == "array":
+        return [e for i, item in enumerate(data) for e in _shape_errors(item, schema["items"], f"{where}[{i}]")]
+    if "enum" in schema and data not in schema["enum"]:
+        return [f"{where}가 정의된 값이 아니다: {data!r}"]
+    return []
+
+
 def _number(pid: str) -> int:
     return int(pid[1:]) if pid[1:].isdigit() else 0
 
@@ -73,7 +100,7 @@ class TextKnowledge:
 
     # --- 공통 ---------------------------------------------------------------
 
-    def _ask(self, name: str, content: str, schema: dict, validate: Callable[[dict], list[str]]) -> dict | None:
+    def _ask(self, name: str, content: str, schema: dict, validate: Callable[[dict], list[str]]) -> dict:
         messages: list[dict] = [{"role": "user", "content": content}]
         errors: list[str] = []
         for attempt in range(2):
@@ -88,22 +115,25 @@ class TextKnowledge:
             except ValueError:
                 data, errors = None, [f"JSON으로 읽을 수 없는 답이다 (stop_reason={result.message.stop_reason})"]
             else:
-                try:
-                    errors = validate(data) if isinstance(data, dict) else ["답은 JSON 객체여야 한다"]
-                except (KeyError, TypeError) as exc:
-                    # JSON 형식 출력이라도 필드가 빠지거나 타입이 다를 수 있다. 예외 대신 다시 묻는다
-                    data, errors = None, [f"답의 형식이 스키마와 다르다: {exc!r}"]
+                # 형식(필수 필드, 타입)을 먼저 보고 ID를 본다. 변환 코드가 읽는 필드가 빠지면 예외 대신 다시 묻는다
+                errors = _shape_errors(data, schema) or validate(data)
             if not errors:
                 return data
             messages += [{"role": "assistant", "content": result.text or "(빈 답)"},
                          {"role": "user", "content": P.RETRY.format(errors="\n".join(f"- {e}" for e in errors))}]
         self.errors.append(f"{name}: {errors}")
-        return None
+        raise KnowledgeUnavailable(f"{name}: {errors}")
 
     def _memoized(self, key: tuple, make: Callable[[], Any]) -> Any:
         if key not in self._memo:
-            self._memo[key] = make()
-        return json.loads(json.dumps(self._memo[key]))  # 부르는 쪽이 고쳐도 저장한 값이 바뀌지 않게 복사한다
+            try:
+                self._memo[key] = make()
+            except KnowledgeUnavailable as exc:
+                self._memo[key] = exc  # 실패도 기억한다. 같은 질문을 다시 물어 비용을 더 쓰지 않는다
+        value = self._memo[key]
+        if isinstance(value, KnowledgeUnavailable):
+            raise value
+        return json.loads(json.dumps(value))  # 부르는 쪽이 고쳐도 저장한 값이 바뀌지 않게 복사한다
 
     def _undefined(self, label: str, values, defined) -> list[str]:
         bad = sorted({v for v in values if v not in defined})
@@ -136,8 +166,6 @@ class TextKnowledge:
 
         data = self._ask("6.rank", P.RANK.format(symptom_id=symptom_id, started_at=started_at, changes=listing),
                          schema, validate)
-        if data is None:
-            return []
         start = datetime.fromisoformat(started_at)
         rows = []
         for r in sorted(data["candidates"], key=lambda r: r["rank"]):
@@ -174,8 +202,6 @@ class TextKnowledge:
             return errors
 
         data = self._ask(f"7.checks.{cause_id}", P.CHECKS.format(cause_id=cause_id), schema, validate)
-        if data is None:
-            return []
         rows = []
         for r in sorted(data["checks"], key=lambda r: r["check_id"]):
             rows.append({
@@ -210,10 +236,7 @@ class TextKnowledge:
             used = data["primary"] + [o["team_id"] for o in data["other_owners"]] + [c["team_id"] for c in data["collaborators"]]
             return errors + self._undefined("팀", used, self.ids.teams)
 
-        empty = {"cause_id": cause_id, "located_in": None, "primary": [], "other_owners": [], "collaborators": []}
         data = self._ask(f"8.owner.{cause_id}", P.OWNER.format(cause_id=cause_id), schema, validate)
-        if data is None:
-            return empty
         primary_ids = list(dict.fromkeys(data["primary"]))
         others: dict[str, dict] = {}
         for o in sorted(data["other_owners"], key=lambda o: (o["team_id"], o["scope"])):
@@ -274,8 +297,6 @@ class TextKnowledge:
 
         data = self._ask(f"9.procedures.{cause_id}", P.CAUSE_PROCEDURES.format(cause_id=cause_id, severity_id=severity_id),
                          schema, validate)
-        if data is None:
-            return {"cause_id": cause_id, "resolved_by": [], "triggered_by_severity": []}
         order = lambda rows: sorted(rows, key=lambda r: _number(r["procedure_id"]))  # noqa: E731
         return {"cause_id": cause_id,
                 "resolved_by": [self._procedure_row(r) for r in order(data["resolved_by"])],
@@ -294,7 +315,4 @@ class TextKnowledge:
             return errors
 
         data = self._ask(f"9.procedure.{procedure_id}", P.PROCEDURE.format(procedure_id=procedure_id), schema, validate)
-        if data is None:
-            return {"procedure_id": procedure_id, "name": self.ids.procedures.get(procedure_id, ""), "steps": [],
-                    "human_only": False, "led_by": None, "actions": []}
         return self._procedure_row(data)

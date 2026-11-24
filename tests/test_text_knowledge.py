@@ -14,6 +14,7 @@ import pytest
 
 from common.knowledge import text_prompts as P
 from common.knowledge.k_text import k_text
+from common.knowledge.base import KnowledgeUnavailable
 from common.knowledge.text import TextKnowledge
 from common.models import LLM, load_model_config
 from mcp_servers.ontology_query import queries
@@ -90,8 +91,13 @@ def test_rank_converts_answer_and_computes_gap_in_code():
 def test_undefined_id_is_asked_again_then_recorded():
     bad = {"candidates": [{"cause_id": "C02", "score": 3, "rank": 1, "change_ids": ["CG-9"], "reason": "x"}]}
     kp, results = provider(Script(bad, bad))
-    assert asyncio.run(kp.rank_causes("S1", "2026-12-03T20:14:00+09:00")) == []
+    with pytest.raises(KnowledgeUnavailable):
+        asyncio.run(kp.rank_causes("S1", "2026-12-03T20:14:00+09:00"))
     assert len(results) == 2 and "CG-9" in kp.errors[0]
+    # 실패도 기억한다. 같은 질문을 다시 묻지 않는다
+    with pytest.raises(KnowledgeUnavailable):
+        asyncio.run(kp.rank_causes("S1", "2026-12-03T20:14:00+09:00"))
+    assert len(results) == 2 and len(kp.errors) == 1
 
 
 def test_wrong_rank_order_is_asked_again():
@@ -119,18 +125,30 @@ def test_checks_args_and_same_question_is_not_asked_twice():
     assert len(results) == 1
 
 
-def test_procedure_failure_returns_empty_procedure():
+def test_procedure_failure_is_not_an_empty_procedure():
+    """조회에 실패한 절차를 조치가 빈 정상 절차로 돌려주지 않는다 (PR #18 리뷰)."""
     wrong = {"procedure_id": "P2", "human_only": False, "led_by_team_id": "", "steps": [], "actions": []}
     kp, _ = provider(Script(wrong, wrong))
-    proc = asyncio.run(kp.procedure("P1"))
-    assert proc["procedure_id"] == "P1" and proc["actions"] == []
+    with pytest.raises(KnowledgeUnavailable, match="P1"):
+        asyncio.run(kp.procedure("P1"))
     assert kp.errors and "P1" in kp.errors[0]
 
 
 def test_malformed_answer_is_asked_again():
     kp, results = provider(Script({"wrong": 1}, "not json"))
-    assert asyncio.run(kp.owner_team("C02"))["primary"] == []
+    with pytest.raises(KnowledgeUnavailable):
+        asyncio.run(kp.owner_team("C02"))
     assert len(results) == 2 and len(kp.errors) == 1
+
+
+def test_missing_field_read_by_conversion_is_asked_again():
+    """ID는 맞는데 변환 코드가 읽는 scope가 빠진 답. 예외로 멈추지 않고 다시 묻는다 (PR #18 리뷰)."""
+    partial = {"system_id": "SY13", "area": "", "primary": ["TM03"], "other_owners": [], "collaborators": []}
+    script = Script(partial, partial | {"scope": "logic"})
+    kp, results = provider(script)
+    owner = asyncio.run(kp.owner_team("C02"))
+    assert owner["located_in"]["scope"] == "logic" and len(results) == 2
+    assert "scope" in script.params[1]["messages"][-1]["content"]
 
 
 # --- 통합: 그래프 결과를 그대로 답하는 가짜 LLM ---------------------------------------
@@ -238,3 +256,96 @@ def test_no_candidates_goes_to_human(db, seed):  # noqa: F811
     assert out["hypotheses"] == [] and out["root_cause"] is None and out["primary_team"] is None
     assert "원인 후보를 받지 못했다" in out["needs_human"]
     assert not any(c["step"] == "7.check" for c in out["tool_calls"])
+
+
+def _failing(method: str, *, procedure_id: str | None = None):
+    """한 메서드만 답하지 못하는 텍스트 공급자. 나머지는 가짜 LLM(OracleModel)이 그래프 결과로 답한다."""
+    def make(onto, tracer, llm, results):
+        from common.writers import events
+
+        class Failing(TextKnowledge):
+            pass
+
+        original = getattr(TextKnowledge, method)
+
+        async def fail(self, *args):
+            if procedure_id is None or args[0] == procedure_id:
+                raise KnowledgeUnavailable(f"{method} 실패")
+            return await original(self, *args)
+        setattr(Failing, method, fail)
+        return Failing(llm=llm, seed=SEED, results=results, changes=lambda: events.list_changes(_DB[0]))
+    return make
+
+
+_DB: list = []
+
+
+@pytest.mark.integration
+def test_unavailable_checks_never_confirm(db, seed):  # noqa: F811
+    """판정 근거를 받지 못하면 LLM이 확정하려 해도 확정하지 않고 사람에게 넘긴다 (PR #18 리뷰)."""
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+    model = OracleModel(db, intake_of(scenario))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"}, knowledge=_failing("get_checks"))
+    (out,) = state["outputs"]
+    assert out["root_cause"] is None
+    assert all(h["status"] == "candidate" for h in out["hypotheses"] if h["result"])
+    assert any("판정 근거를 받지 못했다" in n for n in out["needs_human"])
+    assert not any(c["step"] == "7.check" for c in out["tool_calls"])
+    assert "check" not in model.calls
+
+
+@pytest.mark.integration
+def test_no_required_check_never_confirms(db, seed):  # noqa: F811
+    """필수 판정 근거가 하나도 없는 목록이면 확정 조건이 없다. 조회 없이 확정되지 않는다 (모든 구성 공통)."""
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+
+    def make(onto, tracer, llm, results):
+        from common.writers import events
+
+        class NoRequired(TextKnowledge):
+            async def get_checks(self, cause_id):
+                return [dict(c, required=False) for c in await TextKnowledge.get_checks(self, cause_id)]
+        return NoRequired(llm=llm, seed=SEED, results=results, changes=lambda: events.list_changes(db))
+
+    model = OracleModel(db, intake_of(scenario))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"}, knowledge=make)
+    (out,) = state["outputs"]
+    assert out["root_cause"] is None
+    assert any("확정 조건" in n for n in out["needs_human"])
+
+
+@pytest.mark.integration
+def test_unavailable_procedure_goes_to_human(db, seed):  # noqa: F811
+    """절차를 받지 못하면 후보에 넣지 않고 사람 확인 사유로 남긴다. 조치가 빈 절차로 검증을 통과하지 않는다."""
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+    model = OracleModel(db, intake_of(scenario))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"},
+                         knowledge=_failing("procedure", procedure_id="P1"))
+    (out,) = state["outputs"]
+    # P1(접수)은 절차 조회로만 후보가 된다. 받지 못하면 항상 여는 절차여도 후보에서 빠진다
+    assert out["root_cause"] == "C02" and "P1" not in out["procedures"]
+    assert any("절차 P1를 받지 못했다" in n for n in out["needs_human"])
+
+
+@pytest.mark.integration
+def test_unavailable_owner_goes_to_human(db, seed):  # noqa: F811
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+    model = OracleModel(db, intake_of(scenario))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"}, knowledge=_failing("owner_team"))
+    (out,) = state["outputs"]
+    assert out["primary_team"] is None
+    assert any("담당 팀을 받지 못했다" in n for n in out["needs_human"])
+
+
+@pytest.mark.integration
+def test_unavailable_rank_goes_to_human(db, seed):  # noqa: F811
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+    model = OracleModel(db, intake_of(scenario))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={}, knowledge=_failing("rank_causes"))
+    (out,) = state["outputs"]
+    assert out["hypotheses"] == [] and any("원인 후보를 받지 못했다" in n for n in out["needs_human"])

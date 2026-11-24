@@ -8,6 +8,13 @@
 from typing import Any, Protocol
 
 
+class KnowledgeUnavailable(Exception):
+    """지식 공급자가 답을 주지 못했다 (예: 구성 A에서 LLM 답이 검증에 두 번 실패).
+
+    빈 값과 구분한다. 받는 쪽은 이 예외를 사람 확인 사유로 남기고, 빈 값을 정상 결과로 쓰지 않는다.
+    """
+
+
 class KnowledgeProvider(Protocol):
     name: str  # 구성 이름 (C, C-ext 등)
 

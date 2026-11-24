@@ -23,7 +23,7 @@ from neo4j import Driver
 from agents.diagnosis import prompts
 from common.gate import gate
 from common.gate.gate import GateError
-from common.knowledge import KnowledgeProvider
+from common.knowledge import KnowledgeProvider, KnowledgeUnavailable
 from common.models import LLM, LLMResult
 from common.rules.severity import ESCALATION_COUNT, ESCALATION_WINDOW, SCOPES, base_severity, escalate
 from common.tool_calls import call_tool
@@ -167,6 +167,15 @@ def _structure_errors(data: Any, schema: dict) -> list[str]:
                 elif item_type in types and not isinstance(item, types[item_type]):
                     errors.append(f"{name}의 항목은 {item_type}이어야 한다: {item!r}")
     return errors
+
+
+def _flag(state: dict, incident_id: str, reason: str) -> dict:
+    """사건에 사람 확인 사유를 하나 더한 incidents를 돌려준다 (상태를 직접 고치지 않는다)."""
+    incidents = dict(state["incidents"])
+    incident = dict(incidents[incident_id])
+    incident["needs_human"] = [*incident["needs_human"], reason]
+    incidents[incident_id] = incident
+    return incidents
 
 
 def _schema(properties: dict, required: list[str] | None = None) -> dict:
@@ -400,7 +409,11 @@ def build_graph(deps: Deps):
     async def rank(state: State) -> State:
         diag = dict(state["diag"])
         incident = state["incidents"][diag["incident_id"]]
-        ranked = await deps.knowledge.rank_causes(incident["symptom_id"], incident["opened_at"].isoformat())
+        try:
+            ranked = await deps.knowledge.rank_causes(incident["symptom_id"], incident["opened_at"].isoformat())
+            problem = None
+        except KnowledgeUnavailable as exc:
+            ranked, problem = [], f"원인 후보를 받지 못했다: {exc}"
         for row in ranked:
             events.record_hypothesis(
                 deps.driver, incident_id=diag["incident_id"], cause_id=row["cause_id"],
@@ -414,12 +427,8 @@ def build_graph(deps: Deps):
         diag["ranked"] = ranked
         if not ranked:
             # 원인 후보가 하나도 없으면 근거 확인을 건너뛰고 사람에게 넘긴다.
-            # 그래프 공급자는 증상마다 후보가 있어 생기지 않는다. 텍스트 공급자(구성 A)가 답에 실패하면 생긴다
-            incidents = dict(state["incidents"])
-            incident = dict(incidents[diag["incident_id"]])
-            incident["needs_human"] = [*incident["needs_human"], "원인 후보를 받지 못했다"]
-            incidents[diag["incident_id"]] = incident
-            return {"diag": diag, "incidents": incidents}
+            # 그래프 공급자는 증상마다 후보가 있어 생기지 않는다. 텍스트 공급자(구성 A)가 답하지 못하면 생긴다
+            return {"diag": diag, "incidents": _flag(state, diag["incident_id"], problem or "원인 후보를 받지 못했다")}
         return {"diag": diag}
 
     def after_rank(state: State) -> str:
@@ -431,7 +440,14 @@ def build_graph(deps: Deps):
         incident = state["incidents"][diag["incident_id"]]
         hypothesis = diag["ranked"][diag["hyp_index"]]
         cause_id = hypothesis["cause_id"]
-        checks = await deps.knowledge.get_checks(cause_id)
+        # 확정 조건(필수 판정 근거)이 없으면 이 가설은 확정도 배제도 할 근거가 없다. LLM에 묻지 않고 불명확으로 둔다.
+        # 그래프 공급자는 시드 검증으로 원인마다 확정 조건이 있다. 텍스트 공급자(구성 A)가 답하지 못하거나
+        # 필수 근거를 하나도 적지 않으면 생긴다. 빈 목록을 그대로 쓰면 조회 없이 확정될 수 있다 (R4-4)
+        try:
+            checks = await deps.knowledge.get_checks(cause_id)
+            problem = None if any(c["required"] for c in checks) else f"{cause_id}의 확정 조건(필수 판정 근거)을 받지 못했다"
+        except KnowledgeUnavailable as exc:
+            checks, problem = [], f"{cause_id}의 판정 근거를 받지 못했다: {exc}"
         tool_results = dict(diag["tool_results"])
         tool_calls = list(diag["tool_calls"])
 
@@ -457,7 +473,7 @@ def build_graph(deps: Deps):
         messages: list[dict] = [{"role": "user", "content": content}]
         data, called, retried = None, [], False
         required = [(c["check_id"], c["args"]) for c in checks if c["required"]]
-        for _ in range(MAX_TOOL_ROUNDS):
+        for _ in range(0 if problem else MAX_TOOL_ROUNDS):
             result = deps.llm.call(
                 task="diagnosis", name=f"7.check.{cause_id}", system=prompts.CHECK, messages=messages,
                 tools=deps.mock_tools, output_schema=schema,
@@ -496,7 +512,9 @@ def build_graph(deps: Deps):
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
 
-        if (data is None or _structure_errors(data, schema)
+        if problem:
+            verdict = {"result": "inconclusive", "reason": problem, "used_checks": [], "reused_results": []}
+        elif (data is None or _structure_errors(data, schema)
                 or data["result"] not in ("confirm", "rule_out", "inconclusive")
                 or not set(data["reused_results"]) <= prior_ids):
             verdict = {"result": "inconclusive", "reason": "판정 근거 단계의 답을 읽을 수 없다",
@@ -541,6 +559,8 @@ def build_graph(deps: Deps):
         if verdict["result"] == "confirm":
             diag["confirmed"] = cause_id
         diag["hyp_index"] += 1
+        if problem:
+            return {"diag": diag, "incidents": _flag(state, diag["incident_id"], problem)}
         return {"diag": diag}
 
     def after_check(state: State) -> str:
@@ -550,6 +570,14 @@ def build_graph(deps: Deps):
         if diag["hyp_index"] < len(diag["ranked"]) and diag["checked"] < MAX_HYPOTHESES:
             return "check"
         return "owner"
+
+    async def _owner_or_none(cause_id: str, needs_human: list[str]) -> dict:
+        """담당 팀을 받지 못하면 사람 확인 사유를 남기고 팀이 없는 값으로 둔다. 빈 값을 정상 결과로 쓰지 않는다."""
+        try:
+            return await deps.knowledge.owner_team(cause_id)
+        except KnowledgeUnavailable as exc:
+            needs_human.append(f"{cause_id}의 담당 팀을 받지 못했다: {exc}")
+            return {"cause_id": cause_id, "located_in": None, "primary": [], "other_owners": [], "collaborators": []}
 
     # 8 담당 팀 결정 (지식 공급자 + 조건부 협업만 LLM, R5)
     async def owner(state: State) -> State:
@@ -568,7 +596,7 @@ def build_graph(deps: Deps):
                     above.append(h["cause_id"])
             if above:
                 needs_human.append(f"상위 가설 {above}가 불명확인 채로 {confirmed}가 확정됐다")
-            info = await deps.knowledge.owner_team(confirmed)
+            info = await _owner_or_none(confirmed, needs_human)
             primaries = [t["team_id"] for t in info["primary"]]
             if len(primaries) != 1:
                 needs_human.append(f"1차 담당 팀이 하나로 정해지지 않는다: {primaries}")
@@ -606,7 +634,7 @@ def build_graph(deps: Deps):
             open_hyps = [h for h in diag["ranked"] if diag["verdicts"].get(h["cause_id"], {}).get("status") != "ruled_out"][:2]
             teams = []
             for h in open_hyps:
-                info = await deps.knowledge.owner_team(h["cause_id"])
+                info = await _owner_or_none(h["cause_id"], needs_human)
                 teams += [t["team_id"] for t in info["primary"] if t["team_id"] not in teams]
             primary = teams[0] if teams else None
             collaborators += [{"team_id": t, "why": "확정 전 상위 가설 담당"} for t in teams[1:]]
@@ -616,8 +644,12 @@ def build_graph(deps: Deps):
                 # 다음 확인은 상위 가설의 필수 근거 중 아직 결과가 없는 것이다. 모두 조회했으면 사람이 결과를 판단한다
                 target = open_hyps[0]["cause_id"]
                 done = [(e["check_id"], e["args"]) for e in diag["verdicts"].get(target, {}).get("evidence", [])]
-                pending = [c for c in await deps.knowledge.get_checks(target)
-                           if c["required"] and not _covered(c["check_id"], c["args"], done)]
+                try:
+                    target_checks = await deps.knowledge.get_checks(target)
+                except KnowledgeUnavailable as exc:
+                    target_checks = []
+                    needs_human.append(f"다음 확인할 판정 근거를 받지 못했다: {exc}")
+                pending = [c for c in target_checks if c["required"] and not _covered(c["check_id"], c["args"], done)]
                 if pending:
                     c = pending[0]
                     # 담당은 팀 ID로 적는다. 사람이 하는 조회는 수행 팀, 판단 팀이 따로 있으면 그 팀, 없으면 1차 담당
@@ -644,24 +676,41 @@ def build_graph(deps: Deps):
         confirmed = diag.get("confirmed")
         candidates: dict[str, dict] = {}
 
-        def add(proc: dict, **extra) -> None:
+        unavailable: list[str] = []
+
+        async def known(procedure_id: str) -> dict | None:
+            # 절차를 받지 못하면 후보에 넣지 않고 사람 확인 사유로 남긴다. 조치가 빈 절차를 정상 후보로 쓰면
+            # 그 절차를 고르고 조치를 빼도 검증을 통과한다
+            try:
+                return await deps.knowledge.procedure(procedure_id)
+            except KnowledgeUnavailable as exc:
+                unavailable.append(f"절차 {procedure_id}를 받지 못했다: {exc}")
+                return None
+
+        def add(proc: dict | None, **extra) -> None:
+            if proc is None:
+                return
             entry = candidates.setdefault(proc["procedure_id"], {**proc, "always": False, "conditions": []})
             entry["always"] = entry["always"] or extra.get("always", False)
             if extra.get("condition"):
                 entry["conditions"].append(extra["condition"])
 
-        add(await deps.knowledge.procedure(INTAKE_PROCEDURE), always=True)
+        add(await known(INTAKE_PROCEDURE), always=True)
         if incident.get("escalated"):
             # 등급이 상향되면 에스컬레이션을 반드시 연다 (R3)
-            add(await deps.knowledge.procedure(ESCALATION_PROCEDURE), always=True)
+            add(await known(ESCALATION_PROCEDURE), always=True)
         if sev in URGENT_LEVELS:
             # 긴급 공지(P3)는 원인이 아니라 등급에 걸린 절차다 (R3 TRIGGERS). 긴급 점검(P4)도 SEV1, SEV2면 연다 (R7).
             # 원인이 확정되지 않아도 반드시 연다. 빠지면 검증에서 막혀 다시 묻는다
-            add(await deps.knowledge.procedure(URGENT_NOTICE), always=True)
-            add(await deps.knowledge.procedure(URGENT_MAINTENANCE), always=True)
+            add(await known(URGENT_NOTICE), always=True)
+            add(await known(URGENT_MAINTENANCE), always=True)
         if confirmed:
-            found = await deps.knowledge.cause_procedures(confirmed, sev)
-            add(await deps.knowledge.procedure(FIX_PROCEDURE), always=True)
+            try:
+                found = await deps.knowledge.cause_procedures(confirmed, sev)
+            except KnowledgeUnavailable as exc:
+                found = {"resolved_by": [], "triggered_by_severity": []}
+                unavailable.append(f"{confirmed}가 여는 절차를 받지 못했다: {exc}")
+            add(await known(FIX_PROCEDURE), always=True)
             for proc in found["resolved_by"]:
                 add(proc, condition=proc.get("condition"))
             for proc in found.get("triggered_by_severity", []):
@@ -725,7 +774,7 @@ def build_graph(deps: Deps):
             deps, task="diagnosis", name="9.procedures", system=prompts.PROCEDURE, content=content,
             schema=schema, validate=validate,
         )
-        needs_human = list(diag["needs_human"])
+        needs_human = list(diag["needs_human"]) + unavailable
         if data is None:
             needs_human.append(f"절차, 조치 선택 출력 검증 실패: {errors}")
             data = {"procedures": [], "resolved_conditions": [], "actions": [], "reason": None}
