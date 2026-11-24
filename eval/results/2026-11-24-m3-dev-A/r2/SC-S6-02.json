@@ -1,0 +1,302 @@
+{
+  "run": {
+    "scenario": "SC-S6-02",
+    "split": "dev",
+    "config": "A",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T20:24:10.519503+09:00",
+    "finished_at": "2026-11-24T20:24:57.374027+09:00",
+    "seconds": 46.9,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "trace_id": "c7d9f5d9a3c32fce0978ffc4e9b69c04",
+    "llm_calls": 18,
+    "usage": {
+      "input": 32170,
+      "output": 7308,
+      "cache_read": 105201,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.00792301,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-a-v1",
+    "git_commit": "f4e4515a31b094abb1c13e2730aa6e6f27112b69",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    }
+  },
+  "outputs": [
+    {
+      "symptom": "S6",
+      "incident_id": "INC-f649a6f61324",
+      "report_ids": [
+        "RP-5069e8227100",
+        "RP-e817b98cc19a",
+        "RP-db5584d14259",
+        "RP-d553cb0a01fa"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C15",
+          "rank": 1,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "args": {
+                "area": "probability"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 게임 데이터 테이블 확률 영역의 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E08",
+              "tool": "compare_probability",
+              "args": {},
+              "result": "rule_out",
+              "detail": "공개 페이지의 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C16",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "args": {
+                "area": "probability"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 게임 데이터 테이블 확률 영역의 변경 이력이 없다",
+              "reused": true
+            },
+            {
+              "check_id": "E08",
+              "tool": "compare_probability",
+              "args": {},
+              "result": "rule_out",
+              "detail": "공개 페이지의 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%다",
+              "reused": true
+            }
+          ]
+        },
+        {
+          "cause_id": "C17",
+          "rank": 3,
+          "score": 1,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E08",
+              "tool": "compare_probability",
+              "args": {},
+              "result": "rule_out",
+              "detail": "공개 페이지의 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-224566b2dfb0"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-52b7cb4ad542"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-95a91d73b5f7"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-c12995e0b4d1"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-a1d2b62b6f3a"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-62cc80d31620"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-6232db6b8210"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-740d47cc5750"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-e817b98cc19a",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-5e5ef5332e96"
+        },
+        {
+          "report_id": "RP-db5584d14259",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-393caa704f5c"
+        },
+        {
+          "report_id": "RP-d553cb0a01fa",
+          "channel": "CH03",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b4a5268e9971"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C15",
+          "tool": "query_table_change",
+          "check_id": "E05",
+          "args": {
+            "area": "probability"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C15",
+          "tool": "compare_probability",
+          "check_id": "E08",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S6 확률형 아이템 확률 표기 불일치 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C15 공개 페이지 표기 오류 (점수 2): rule_out, 근거 ['E05', 'E08']. E05(probability 테이블 변경 이력 조회): 증상 시작 전 확률 영역 변경 이력이 없어 expect(증상 시작 전 변경 이력 없음)와 일치한다. E08(공개 수치, 테이블 수치, 실제 결과 비교): 공개 페이지 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과도 0.3%로 나와, expect(공개 수치와 테이블 수치가 다르고 테이블 수치가 실제 결과와 같다)와 다르다. 필수 근거 중 하나가 expect와 달라 가설 C15(공개 페이지 표기 오류)는 배제한다. 공개 페이지 표기는 3.0%인데 실제 확률은 0.3%로 나와 표기 자체가 실제 확률과 어긋나는 상황이므로, 원인은 표기 오류보다 테이블 또는 실제 적용 쪽을 따로 확인해야 한다. 표기 오류 가설은 기각하며, 제보에 나온 환불 요청에 대한 처리는 이 판정 범위 밖이다.\n-> 원인 C16 확률 테이블 값 오류 (점수 2): rule_out, 근거 ['E05', 'E08']. E05 판정 근거(필수)는 증상 시작 전 확률 테이블 변경 이력이 있어야 하지만, 이미 조회한 K1 결과는 증상 시작 전 확률 영역 변경 이력이 없다는 것이었다. expect와 달라 확정 조건이 깨지므로 C16 확률 테이블 값 오류 가설은 배제된다. E08(필수)은 공개 수치 3.0%와 테이블 수치 0.3%가 다르고 실제 결과 0.3%가 테이블 수치와 같다는 K2 결과로 expect와 일치했다. 다만 E05가 배제 조건이므로 이 일치로 확정할 수는 없다. 공개 페이지 표기가 실제 테이블과 다른 문제일 가능성은 별도로 검토할 필요가 있다.\n-> 원인 C17 확률 모듈 로직 오류 (점수 1): rule_out, 근거 ['E08']. 판정 근거 E08(required=true)의 expect는 '테이블 수치와 공개 수치가 같은데 실제 결과가 테이블 수치와 다르다'였다. 기존 조회 K2에 따르면 공개 페이지 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%다. 공개 수치와 테이블 수치가 다르고, 실제 결과는 테이블 수치와 일치한다. 따라서 expect와 달라 C17(확률 모듈 로직 오류)은 배제된다. 확률 모듈은 테이블 값대로 동작하고 있으며, 문제는 공개 표기(3.0%)와 테이블(0.3%)의 불일치로 보인다. 이는 확률 모듈 로직이 아니라 안내 표기 쪽 문제이므로 별도 가설로 검토해야 한다. 참고용 E06은 required=false이므로 판단에 쓰지 않았고 조회하지 않았다. K1(확률 테이블 변경 이력 없음)도 이 판정의 확정 근거로는 쓰지 않았다.",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: []"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
