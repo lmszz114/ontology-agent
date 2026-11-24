@@ -8,8 +8,8 @@ import copy
 import pytest
 
 from ontology.apply_schema import apply_schema
-from ontology.load import STATIC_LABELS, STATIC_RELATIONS, build_graph, load_static
-from ontology.seed import load_seed
+from ontology.load import STATIC_LABELS, STATIC_RELATIONS, build_graph, load_static, loaded_seed
+from ontology.seed import load_seed, seed_hash
 
 # 시드 키 -> 레이블
 LABEL_BY_KEY = {
@@ -153,6 +153,29 @@ def test_node_properties_are_replaced_and_stale_nodes_removed(driver, seed, load
             session.run(
                 "MATCH (n:Cause) WHERE n.id = '__stale__' OR n.name = '__no_id__' DETACH DELETE n"
             ).consume()
+
+
+@pytest.mark.integration
+def test_load_records_seed_hash(driver, seed, loaded):
+    """적재한 시드의 해시를 남긴다. 실행기가 그래프와 시드 파일이 같은지 이 값으로 본다 (M3 점검 2)."""
+    assert loaded_seed(driver) == {"hash": seed_hash(seed), "org": "org-a"}
+    changed = copy.deepcopy(seed)
+    changed["causes"][0]["name"] = "이름만 바꾼 원인"
+    assert seed_hash(changed) != seed_hash(seed)
+    try:
+        load_static(driver, changed)
+        assert loaded_seed(driver)["hash"] == seed_hash(changed)
+    finally:
+        load_static(driver, seed)
+
+
+@pytest.mark.integration
+def test_failed_load_keeps_previous_seed_hash(driver, seed, loaded):
+    broken = copy.deepcopy(seed)
+    broken["causes"][0]["located_in"]["system"] = "SY99"
+    with pytest.raises(ValueError):
+        load_static(driver, broken)
+    assert loaded_seed(driver)["hash"] == seed_hash(seed)
 
 
 @pytest.mark.integration

@@ -6,6 +6,7 @@
 실행마다 결과의 run에 커밋, 작업 트리 변경 여부, 쓴 모델의 단가를 남긴다 (4단계 10장, 한계 L8, L14).
 """
 
+import hashlib
 import json
 import os
 import subprocess
@@ -19,7 +20,7 @@ from common.files import write_text_atomic
 
 ROOT = Path(__file__).resolve().parents[2]
 # 이어서 돌릴 때 앞 결과와 같아야 하는 값. 다르면 같은 조건의 반복이 아니다
-RESUME_SAME = ("config", "org", "split", "prompt_version", "git_commit", "git_dirty")
+RESUME_SAME = ("config", "org", "split", "prompt_version", "git_commit", "git_dirty", "seed_hash")
 
 
 class RunnerError(Exception):
@@ -36,6 +37,23 @@ class GitState:
 # 실행 결과를 두는 곳. 결과 파일은 실행에 영향을 주지 않아 커밋하지 않은 변경으로 보지 않는다.
 # 앞 실행의 결과를 커밋하기 전에 다음 구성을 돌릴 수 있다 (비용 승인 지점 1, 2026-11-24 사용자 결정)
 RESULTS_DIR = Path("eval") / "results"
+
+
+def check_out_dir(out: Path, root: Path = ROOT) -> None:
+    """결과 폴더는 eval/results 아래만 받는다 (M3 점검 2).
+
+    변경 검사는 이번 결과 폴더를 뺀다. 저장소 밖이나 코드 폴더(예: --out .)를 주면 고친 코드가 변경으로
+    잡히지 않고 깨끗한 실행으로 기록된다.
+    """
+    results = Path(os.path.abspath(root / RESULTS_DIR))
+    given = Path(os.path.abspath(out))
+    if given == results or not given.is_relative_to(results):
+        raise RunnerError(f"결과 폴더는 {RESULTS_DIR.as_posix()} 아래 새 폴더여야 한다: {out}")
+
+
+def file_hash(path: Path) -> str:
+    """시나리오 파일 바이트의 해시. 채점할 때 실행 때와 같은 라벨인지 본다."""
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def git_state(out: Path, root: Path = ROOT, inputs: list[Path] | tuple[Path, ...] = ()) -> GitState:
@@ -167,18 +185,21 @@ RunOne = Callable[[dict, Path], Awaitable[dict]]
 
 
 async def run_all(todo: list[tuple[int, Path]], *, out: Path, git: GitState, run_one: RunOne,
-                  prices: Callable[[list[str]], dict], log: Callable[[str], None] = print) -> list[Path]:
+                  prices: Callable[[list[str]], dict], seed_hash: str,
+                  log: Callable[[str], None] = print) -> list[Path]:
     """목록을 순서대로 돌린다. 실패하면 그 자리에서 멈춘다. 이미 쓴 결과는 남는다 (--resume으로 이어서 돌린다).
 
     자동으로 다시 시도하지 않는다. 다시 시도하면 실패가 가려진다. 일시적인 API 오류는 SDK가 재시도한다.
     prices는 비용 계산에 쓴 모델 설정의 단가 기록 함수다 (ModelConfig.price_record).
+    seed_hash는 실행에 쓴 시드의 해시다. 시나리오 파일 해시와 함께 남겨 채점기가 같은 기준으로 채점하는지 본다.
     """
     written = []
     for rep, path in todo:
         scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
         result = await run_one(scenario, path)
         run = result["run"]
-        run |= {"git_commit": git.commit, "git_dirty": git.dirty, "prices": prices(run["models"])}
+        run |= {"git_commit": git.commit, "git_dirty": git.dirty, "prices": prices(run["models"]),
+                "seed_hash": seed_hash, "scenario_hash": file_hash(path)}
         folder = out / f"r{rep}"
         folder.mkdir(parents=True, exist_ok=True)
         target = folder / f"{scenario['id']}.json"

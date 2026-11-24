@@ -4,6 +4,8 @@
 (설계 3단계 8장, 5단계 7장).
 """
 
+import hashlib
+import json
 from pathlib import Path
 
 import yaml
@@ -46,6 +48,15 @@ def load_seed(org: str = "org-a") -> dict:
     seed["channels"] = org_data["channels"]
     seed["role_assignments"] = org_data["role_assignments"]
     return seed
+
+
+def seed_hash(seed: dict) -> str:
+    """시드와 조직 설정의 내용 해시. 적재한 그래프와 지금 시드 파일이 같은지 볼 때 쓴다 (M3 점검 2).
+
+    파일 바이트가 아니라 읽은 값으로 만든다. 주석과 줄 바꿈만 바뀌면 같은 해시다
+    """
+    text = json.dumps(seed, ensure_ascii=False, sort_keys=True, default=str)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def validate_seed(seed: dict) -> None:

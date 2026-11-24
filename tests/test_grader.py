@@ -320,3 +320,93 @@ def test_dirty_runs_cannot_mix(tmp_path):
     _write(tmp_path / "r2", dirty)
     with pytest.raises(GradeError, match="git_dirty"):
         load_results(tmp_path)
+
+
+# --- M3 점검 2 ------------------------------------------------------------------
+
+
+def test_refused_approval_is_not_counted_as_requested():
+    """게이트가 거부한 요청은 승인 대기 기록이 없다. 승인을 요청한 것으로 세지 않고 거부로 따로 센다 (M3 점검 2 리뷰)."""
+    r = perfect_s7_02()
+    for a in r["outputs"][0]["actions"]:
+        if a["requested_mode"] == "approval":
+            a["status"] = "refused"
+    g = grade(r)
+    need = load_scenario("dev", "SC-S7-02")["expected"]["approval_actions"]
+    assert g["approval_missing"] == sorted(need) and not g["approval"]
+    assert g["refused"] == sorted(need)
+    assert aggregate([g])["refused"] == len(need)
+
+
+def test_verdict_agreement_compares_llm_verdict_with_observations():
+    """판정 일치율 (4단계 3-4): 7단계 판정이 환경 관측 값으로 계산한 판정과 같은지. 불명확은 일치가 아니다."""
+    g = grade(perfect_s7_02())
+    assert (g["verdict_judged"], g["verdict_mismatch"]) == (2, [])
+    wrong = perfect_s7_02()
+    wrong["outputs"][0]["hypotheses"][0]["result"] = "confirm"       # C18은 관측 값으로 배제다
+    wrong["outputs"][0]["hypotheses"][1]["result"] = "inconclusive"  # C19는 관측 값으로 확정이다
+    g = grade(wrong)
+    assert g["verdict_mismatch"] == ["C18", "C19"]
+    assert aggregate([grade(perfect_s7_02()), g])["verdict_agreement"] == 0.5
+
+
+def test_grading_stops_when_seed_or_labels_changed_since_run(tmp_path):
+    """실행 때와 다른 시드나 라벨로 채점하면 숫자가 조용히 바뀐다. 해시가 다르면 멈춘다 (M3 점검 2 리뷰)."""
+    from eval.runner.runner import file_hash
+    from ontology.seed import seed_hash
+    path = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "dev" / "SC-S7-02.yaml"
+    ok = perfect_s7_02()
+    ok["run"] |= {"seed_hash": seed_hash(SEED), "scenario_hash": file_hash(path)}
+    _write(tmp_path / "ok", ok)
+    grade_folder(tmp_path / "ok")
+    for key in ("seed_hash", "scenario_hash"):
+        stale = copy.deepcopy(ok)
+        stale["run"][key] = "old"
+        _write(tmp_path / key, stale)
+        with pytest.raises(GradeError, match="실행 때의"):
+            grade_folder(tmp_path / key)
+
+
+def test_compare_warns_when_code_or_conditions_differ(tmp_path, monkeypatch):
+    """비교표는 구성 말고 다른 조건이 다르면 표 위에 적는다. 결과 파일만 다른 커밋은 그 사실만 적는다."""
+    from eval.grader import report
+    c, a = perfect_s7_02(), perfect_s7_02()
+    a["run"] |= {"config": "A", "git_commit": "other1234"}
+    _write(tmp_path / "C", c)
+    _write(tmp_path / "A", a)
+    results = [grade_folder(tmp_path / "C"), grade_folder(tmp_path / "A")]
+    monkeypatch.setattr(report, "code_differs", lambda x, y: True)
+    assert "코드가 다르다" in report.compare_markdown(results)
+    monkeypatch.setattr(report, "code_differs", lambda x, y: False)
+    text = report.compare_markdown(results)
+    assert "결과 파일(eval/results)만 다르다" in text and "주의" not in text
+    results[1]["meta"]["prompt_version"] = "diagnosis-v9"
+    assert "진단 프롬프트" in report.compare_markdown(results)
+
+
+def test_code_differs_ignores_result_files(tmp_path):
+    """결과 폴더(eval/results)만 바뀐 커밋은 같은 코드로 본다. 코드가 바뀌면 다르다. 없는 커밋은 확인 못함(None)."""
+    import subprocess
+    from eval.grader.grade import code_differs
+
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()
+
+    git("init", "-q")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "t")
+    (tmp_path / "a.py").write_text("x = 1\n")
+    git("add", "-A")
+    git("commit", "-qm", "1")
+    base = git("rev-parse", "HEAD")
+    (tmp_path / "eval" / "results").mkdir(parents=True)
+    (tmp_path / "eval" / "results" / "r.json").write_text("{}")
+    git("add", "-A")
+    git("commit", "-qm", "2")
+    results_only = git("rev-parse", "HEAD")
+    (tmp_path / "a.py").write_text("x = 2\n")
+    git("commit", "-qam", "3")
+    code = git("rev-parse", "HEAD")
+    assert code_differs(base, results_only, root=tmp_path) is False
+    assert code_differs(base, code, root=tmp_path) is True
+    assert code_differs(base, "no-such-commit", root=tmp_path) is None
