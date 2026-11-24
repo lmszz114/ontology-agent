@@ -1,0 +1,176 @@
+{
+  "run": {
+    "scenario": "SC-S2-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T10:34:15.631623+09:00",
+    "finished_at": "2026-11-24T10:34:25.727109+09:00",
+    "seconds": 10.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v2",
+    "git_commit": "c3c7706ba4e691d9c0965da77c4a38dd9d2a0259",
+    "trace_id": "fb2d87d49e0f78bde2e7a103ce6d3cc6",
+    "llm_calls": 4,
+    "usage": {
+      "input": 11326,
+      "output": 1070,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0016676
+  },
+  "outputs": [
+    {
+      "symptom": "S2",
+      "incident_id": "INC-878edc2b506c",
+      "report_ids": [
+        "RP-fd9cf92ffde8"
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C04",
+          "rank": 1,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "result": "confirm",
+              "detail": "18:55부터 다른 타이틀 세 곳에서도 로그인 실패율이 급증했다"
+            }
+          ]
+        },
+        {
+          "cause_id": "C05",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C06",
+          "rank": 3,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C04",
+      "primary_team": "TM09",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-d5272f2798c9"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-80907bbf7ba3"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-f673c70ccab4"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-15e656a7e4a2"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-bc9e37304d42"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-dd244026885a"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-1855fd979d2b"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-270c74d75d3d"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-2355669364f9"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-39a2eefbc715"
+        }
+      ],
+      "tool_calls": [
+        {
+          "cause_id": "C04",
+          "tool": "check_cross_title_login",
+          "check_id": "E03",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S2 로그인 불가, 접속 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C04 공통 계정 인증 장애 (점수 2): confirm, 근거 ['E03']. E03(check_cross_title_login) 결과, 다른 타이틀 세 곳에서도 18:55부터 로그인 실패율이 급증했다. 필수 판정 근거 E03의 expect(다른 타이틀에서도 로그인이 실패한다)와 일치하므로 C04 공통 계정 인증 장애 가설을 확정한다. 다만 실패 시작 시각(18:55)이 제보 증상 시작(19:02)보다 7분 앞서 있어 시간 차이는 참고용으로 기록해 둔다.\n-> 1차 담당 TM09",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
