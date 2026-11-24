@@ -18,6 +18,9 @@ environment:
     - check: E02
       observations: {delivery: absent}
       detail: "해당 결제 건에 대한 우편함 지급 기록이 없다"
+    # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
+    - check: E15
+      detail: "같은 증상(결제 후 아이템 미지급) 문의는 이 제보 1건뿐이다"
   changes: []
 expected:
   symptom: S1

@@ -206,7 +206,9 @@ def test_one_scenario_produces_structured_output(db, seed):
     assert out["root_cause"] == "C02" and out["primary_team"] == expected["primary_team"]
     # 우편함 지급 누락(prior 높음)이 1순위라 한 번에 확정된다. 다른 가설은 확인하지 않는다
     assert [(h["cause_id"], h["status"]) for h in out["hypotheses"]][0] == ("C02", "confirmed")
-    assert {c["check_id"] for c in out["tool_calls"]} == set(expected["required_checks"])
+    # 7단계 판정 근거 조회는 필수 근거와 같고, 1단계에서 영향 범위 근거(E15)를 제보마다 한 번 조회한다
+    assert {c["check_id"] for c in out["tool_calls"] if c["step"] == "7.check"} == set(expected["required_checks"])
+    assert [c["check_id"] for c in out["tool_calls"] if c["step"] == "1.intake"] == ["E15"] * len(scenario["reports"])
     # 규칙대로 고르는 모델이면 정답 라벨의 절차, 조치와 같아야 한다 (P1은 정답 라벨에 넣지 않는다)
     procedures = set(out["procedures"]) - {"P1"}
     assert procedures == expected_procedures(seed, scenario) == set(expected["procedures"])
@@ -478,7 +480,7 @@ def test_reused_evidence_is_linked_to_the_later_hypothesis(db, seed):
     assert [(f["check_id"], f["reused"]) for f in c01["findings"]] == [("E01", True)]
     assert graph_count(db, "MATCH (f:Finding {cause_id: 'C01'}) RETURN count(f)") == 1
     # 실제 호출 이력에는 C02를 확인할 때 부른 것만 있다
-    assert {t["cause_id"] for t in out["tool_calls"]} == {"C02"}
+    assert {t["cause_id"] for t in out["tool_calls"] if t["step"] == "7.check"} == {"C02"}
 
 
 def burst(scenario: dict, times: list[int]) -> dict:
@@ -570,9 +572,12 @@ def test_reused_result_is_linked_by_result_id_not_check_id(db, seed):
                         for s in ("SY10", "SY18")]
                 return message(uses, stop_reason="tool_use")
             return text({"result": "rule_out", "used_checks": ["E06"], "reused_results": [], "reason": "x"})
-        if "picked" not in seen:
-            seen["cached"] = [line for line in first.splitlines() if line.startswith("- K") and " E06 " in line]
-            seen["picked"] = next(line.split()[1] for line in seen["cached"] if '"SY18"' in line)
+        if seen.get("pick_cause", cause) == cause:
+            # 이 가설의 필수 근거가 E06이 아니어서 한 번 다시 묻는다. 다시 물어도 같은 답을 한다
+            seen["pick_cause"] = cause
+            if "picked" not in seen:
+                seen["cached"] = [line for line in first.splitlines() if line.startswith("- K") and " E06 " in line]
+                seen["picked"] = next(line.split()[1] for line in seen["cached"] if '"SY18"' in line)
             return text({"result": "confirm", "used_checks": ["E06"], "reused_results": [seen["picked"]],
                          "reason": "앞의 SY18 배포 이력"})
         return original(params)
@@ -628,3 +633,54 @@ def test_same_query_called_again_keeps_the_earlier_result(db, seed):
     (out,) = state["outputs"]
     second = next(h for h in out["hypotheses"] if h["cause_id"] != seen["first"] and h["findings"])
     assert sorted((f["reused"], f["detail"]) for f in second["findings"]) == [(False, "다시 조회한 결과"), (True, "첫 조회 결과")]
+
+
+def test_intake_sees_the_report_lookup(db, seed):
+    """접수 정리에는 접수 내역 조회(E15) 결과가 함께 들어간다. 영향 범위의 근거다 (3단계 6장)."""
+    scenario = load("SC-S3-01")
+    detail = next(c["detail"] for c in scenario["environment"]["checks"] if c["check"] == "E15")
+    seen = []
+    model = RuleModel(intake_of(scenario), overrides={"intake": [lambda p: seen.append(p["messages"][0]["content"])]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={scenario["expected"]["root_cause"]: "confirm"})
+    assert f"접수 내역 조회(E15) 결과: {detail}" in seen[0]
+    (out,) = state["outputs"]
+    assert [c for c in out["tool_calls"] if c["step"] == "1.intake"] == [
+        {"step": "1.intake", "cause_id": None, "tool": "query_reports", "check_id": "E15", "args": {}, "is_error": False}]
+
+
+def test_answer_without_required_checks_is_asked_again(db, seed):
+    """필수 판정 근거를 조회하지 않고 답하면 한 번 다시 묻는다. 다시 물은 뒤 조회해서 확정한다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    original = model.check
+    prompts_seen = []
+
+    def check(params):
+        prompts_seen.append(params["messages"][-1]["content"])
+        if len(params["messages"]) == 1:
+            return text({"result": "inconclusive", "used_checks": [], "reused_results": [], "reason": "조회 안 함"})
+        if len(params["messages"]) == 3:
+            # 다시 묻는 말을 받고 처음처럼 필수 근거를 조회한다
+            return original({**params, "messages": params["messages"][:1]})
+        return original(params)
+
+    model.check = check
+    root = scenario["expected"]["root_cause"]
+    state, _ = run_agent(db, seed, scenario, model, verdicts={root: "confirm"})
+    (out,) = state["outputs"]
+    assert out["root_cause"] == root
+    retry = next(p for p in prompts_seen if isinstance(p, str) and "필수 판정 근거" in p)
+    assert all(c in retry for c in scenario["expected"]["required_checks"])
+
+
+def test_required_check_retry_happens_once(db, seed):
+    """다시 물어도 조회하지 않으면 그 답을 받는다. 무한히 다시 묻지 않는다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    model.check = lambda params: text({"result": "inconclusive", "used_checks": [], "reused_results": [],
+                                        "reason": "조회 안 함"})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    assert out["root_cause"] is None
+    assert model.calls.count("check") == 2 * len(out["hypotheses"][:3])
+    assert all(h["result"] == "inconclusive" for h in out["hypotheses"][:3])

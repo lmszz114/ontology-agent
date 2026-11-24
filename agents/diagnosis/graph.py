@@ -45,6 +45,7 @@ MAX_TOOL_ROUNDS = 8
 URGENT_LEVELS = {"SEV1", "SEV2"}
 INTAKE_PROCEDURE, ESCALATION_PROCEDURE = "P1", "P2"
 URGENT_NOTICE, URGENT_MAINTENANCE, FIX_PROCEDURE = "P3", "P4", "P10"
+SCOPE_CHECK = "E15"  # 접수 내역 조회. 영향 범위 추정의 근거 (3단계 6장, R3)
 CAUSE_FIX_ACTION = "A15"
 # R7: 원인 수정(A15)의 반영 시점. 시드의 승인 조건 값과 같아야 한다
 FIX_TIMING = {True: "긴급 점검 반영", False: "정기 점검 반영"}
@@ -208,7 +209,12 @@ def build_graph(deps: Deps):
                 errors.append("증상이 있으면 관련 시스템을 하나 이상 적는다")
             return errors
 
-        content = f"증상 유형:\n{catalog}\n\n시스템:\n{systems}\n\n제보:\n{_report_block(report)}"
+        # 영향 범위의 근거: 접수 내역 조회(E15). 판단이 아니라 조회라서 코드가 부르고, 범위는 LLM이 정한다 (3단계 6장, R3)
+        lookup_tool = next(tool for tool, check in deps.tool_checks.items() if check == SCOPE_CHECK)
+        lookup = await call_tool(deps.mock_client, deps.tracer, server="mock_tools", name=lookup_tool, args={})
+        lookup_text = lookup.text if not lookup.is_error else "접수 내역을 조회하지 못했다"
+        content = (f"증상 유형:\n{catalog}\n\n시스템:\n{systems}\n\n제보:\n{_report_block(report)}"
+                   f"\n\n접수 내역 조회({SCOPE_CHECK}) 결과: {lookup_text}")
         data, errors = _ask_json(
             deps, task="intake", name="1.intake", system=prompts.INTAKE, content=content,
             schema=schema, validate=validate,
@@ -217,6 +223,8 @@ def build_graph(deps: Deps):
         work = {
             "report_id": _new_id("RP"), "channel": report["channel"], "reporter": report["reporter"],
             "at": at, "text": report["text"], "needs_human": [],
+            "scope_lookup": {"cause_id": None, "step": "1.intake", "tool": lookup_tool, "check_id": SCOPE_CHECK,
+                             "args": {}, "is_error": lookup.is_error, "text": lookup.text},
         }
         if data is None:
             work |= {"symptom_id": None, "scope": None, "system_ids": [], "intake_reason": None}
@@ -421,7 +429,8 @@ def build_graph(deps: Deps):
             "reason": {"type": "string"},
         })
         messages: list[dict] = [{"role": "user", "content": content}]
-        data, called = None, []
+        data, called, retried = None, [], False
+        required = [c["check_id"] for c in checks if c["required"]]
         for _ in range(MAX_TOOL_ROUNDS):
             result = deps.llm.call(
                 task="diagnosis", name=f"7.check.{cause_id}", system=prompts.CHECK, messages=messages,
@@ -434,6 +443,17 @@ def build_graph(deps: Deps):
                     data = result.json()
                 except ValueError:
                     data = None
+                # 필수 판정 근거를 조회하지도, 앞 결과를 인용하지도 않고 답하면 한 번 다시 묻는다 (R4-4)
+                missing = _unchecked(data, schema, required, called, tool_results, prior_ids)
+                if missing and not retried:
+                    retried = True
+                    messages.append({"role": "assistant", "content": [b.model_dump(mode="json", exclude_none=True)
+                                                                      for b in result.message.content]})
+                    messages.append({"role": "user", "content": prompts.RETRY.format(
+                        errors=f"- 필수 판정 근거 {missing}를 조회하지 않고 답했다. 조회하거나 이미 조회한 결과를 "
+                               "reused_results로 인용한 뒤 다시 답한다")})
+                    data = None
+                    continue
                 break
             messages.append({"role": "assistant", "content": [b.model_dump(mode="json", exclude_none=True)
                                                               for b in result.message.content]})
@@ -444,7 +464,7 @@ def build_graph(deps: Deps):
                     result_id = f"K{len(tool_results) + 1}"
                     tool_results[result_id] = {"result_id": result_id, "tool": use.name, "args": use.input,
                                                "check_id": deps.tool_checks.get(use.name), "text": out.text}
-                called.append({"tool": use.name, "args": use.input, "check_id": deps.tool_checks.get(use.name),
+                called.append({"step": "7.check", "tool": use.name, "args": use.input, "check_id": deps.tool_checks.get(use.name),
                                "is_error": out.is_error, "text": out.text})
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
@@ -714,7 +734,9 @@ def build_graph(deps: Deps):
             "procedures": sorted(diag["procedure_choice"]["procedures"], key=lambda p: int(p[1:])),
             "resolved_conditions": diag["procedure_choice"]["resolved_conditions"],
             "actions": diag["runs"],
-            "tool_calls": [{k: c[k] for k in ("cause_id", "tool", "check_id", "args", "is_error")} for c in diag["tool_calls"]],
+            # 접수 정리의 접수 내역 조회(1단계)와 판정 근거 조회(7단계)를 단계와 함께 남긴다
+            "tool_calls": [{k: c[k] for k in ("step", "cause_id", "tool", "check_id", "args", "is_error")}
+                           for c in [*(r["scope_lookup"] for r in incident["reports"]), *diag["tool_calls"]]],
             "explanation": _explain(incident, diag, symptom_by_id),
             "needs_human": diag["needs_human"],
             "retrieved_docs": None,  # 문서 검색 구성(B, H)만 쓴다
@@ -743,6 +765,19 @@ def build_graph(deps: Deps):
     graph.add_edge("approval_gate", "record")
     graph.add_edge("record", "next_incident")
     return graph.compile()
+
+
+def _unchecked(data, schema: dict, required: list[str], called: list[dict], tool_results: dict,
+               prior_ids: set[str]) -> list[str]:
+    """답에 쓸 근거가 없는 필수 판정 근거. 이번에 성공한 조회와 인용한 앞 결과를 근거로 본다.
+
+    답을 읽을 수 없으면 빈 목록이다. 그 경우는 읽을 수 없는 답으로 따로 처리한다.
+    """
+    if data is None or _structure_errors(data, schema):
+        return []
+    have = {c["check_id"] for c in called if not c["is_error"]}
+    have |= {tool_results[r]["check_id"] for r in data["reused_results"] if r in prior_ids}
+    return [c for c in dict.fromkeys(required) if c not in have]
 
 
 def _explain(incident: dict, diag: dict, symptom_by_id: dict) -> str:

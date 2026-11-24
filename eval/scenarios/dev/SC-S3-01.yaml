@@ -19,6 +19,9 @@ environment:
     - check: E12
       observations: {reproduced: "yes"}
       detail: "QA가 조건을 충족한 테스트 계정으로 같은 던전 입장 실패를 재현했다"
+    # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
+    - check: E15
+      detail: "오늘 오전 이후 신규 던전 입장 실패 문의가 38건 들어왔다. 모든 월드에서 들어왔다"
   changes:
     - {kind: table_change, system: SY17, at: "2026-12-10T10:30+09:00"}
 expected:

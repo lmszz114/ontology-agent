@@ -19,6 +19,9 @@ environment:
       args: {area: probability}
       observations: {changed: "yes"}
       detail: "어제 14:20에 확률 테이블이 수정됐다"
+    # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
+    - check: E15
+      detail: "어제 점검 이후 뽑기 확률 이상 문의와 커뮤니티 글이 64건 들어왔다. 모든 월드에서 들어왔다"
   changes:
     - {kind: table_change, system: SY17, at: "2026-12-13T14:20+09:00"}
 expected:
