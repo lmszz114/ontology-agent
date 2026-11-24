@@ -45,10 +45,12 @@ def check_out_dir(out: Path, root: Path = ROOT) -> None:
     변경 검사는 이번 결과 폴더를 뺀다. 저장소 밖이나 코드 폴더(예: --out .)를 주면 고친 코드가 변경으로
     잡히지 않고 깨끗한 실행으로 기록된다.
     """
-    results = Path(os.path.abspath(root / RESULTS_DIR))
-    given = Path(os.path.abspath(out))
-    if given == results or not given.is_relative_to(results):
-        raise RunnerError(f"결과 폴더는 {RESULTS_DIR.as_posix()} 아래 새 폴더여야 한다: {out}")
+    # 경로 그대로(변경 검사가 빼는 경로)와 링크를 푼 경로(실제로 쓰는 곳) 모두 결과 폴더 아래여야 한다.
+    # eval/results 안의 링크가 밖을 가리키면 결과가 그곳에 써진다 (PR #23 리뷰)
+    for results, given in ((Path(os.path.abspath(root / RESULTS_DIR)), Path(os.path.abspath(out))),
+                           ((root / RESULTS_DIR).resolve(), Path(out).resolve())):
+        if given == results or not given.is_relative_to(results):
+            raise RunnerError(f"결과 폴더는 {RESULTS_DIR.as_posix()} 아래 새 폴더여야 한다: {out}")
 
 
 def file_hash(path: Path) -> str:
@@ -195,11 +197,13 @@ async def run_all(todo: list[tuple[int, Path]], *, out: Path, git: GitState, run
     """
     written = []
     for rep, path in todo:
-        scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
+        # 실행에 쓴 바이트로 해시를 낸다. 실행 중 파일이 바뀌면 채점할 때 해시가 달라 멈춘다 (PR #23 리뷰)
+        raw = Path(path).read_bytes()
+        scenario = yaml.safe_load(raw.decode("utf-8"))
         result = await run_one(scenario, path)
         run = result["run"]
         run |= {"git_commit": git.commit, "git_dirty": git.dirty, "prices": prices(run["models"]),
-                "seed_hash": seed_hash, "scenario_hash": file_hash(path)}
+                "seed_hash": seed_hash, "scenario_hash": hashlib.sha256(raw).hexdigest()}
         folder = out / f"r{rep}"
         folder.mkdir(parents=True, exist_ok=True)
         target = folder / f"{scenario['id']}.json"

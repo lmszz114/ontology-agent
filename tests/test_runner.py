@@ -315,3 +315,33 @@ def test_run_refuses_stale_graph(monkeypatch, loaded):
 def test_run_accepts_matching_graph(monkeypatch):
     monkeypatch.setattr(cli, "loaded_seed", lambda driver: {"hash": SEED_HASH, "org": "org-a"})
     cli.check_loaded_seed(None, "org-a", SEED_HASH)
+
+
+def test_out_dir_link_inside_results_pointing_outside_is_refused(tmp_path):
+    """eval/results 안의 링크가 밖을 가리키면 결과가 그곳에 써진다. 링크를 푼 경로도 결과 폴더 아래여야 한다 (PR #23 리뷰)."""
+    results = tmp_path / "repo" / "eval" / "results"
+    results.mkdir(parents=True)
+    (tmp_path / "outside").mkdir()
+    (results / "link").symlink_to(tmp_path / "outside")
+    (results / "inner").mkdir()
+    (results / "ok").symlink_to(results / "inner")
+    with pytest.raises(RunnerError, match="eval/results 아래"):
+        check_out_dir(results / "link" / "run", root=tmp_path / "repo")
+    check_out_dir(results / "ok" / "run", root=tmp_path / "repo")
+
+
+def test_scenario_hash_is_of_the_bytes_that_ran(tmp_path):
+    """해시는 실행에 쓴 바이트로 낸다. 실행 중 파일이 바뀌어도 실행한 내용의 해시가 남는다 (PR #23 리뷰)."""
+    import hashlib
+    path = tmp_path / "SC-S1-01.yaml"
+    original = PATHS[0].read_bytes()
+    path.write_bytes(original)
+    out = tmp_path / "out"
+
+    async def run_one(scenario, p):
+        path.write_bytes(original + b"\n# changed\n")
+        return fake_result(scenario)
+    asyncio.run(run_all([(1, path)], out=out, git=GIT, run_one=run_one, prices=load_model_config("org-a").price_record,
+                        seed_hash=SEED_HASH, log=lambda _: None))
+    run = json.loads((out / "r1" / "SC-S1-01.json").read_text(encoding="utf-8"))["run"]
+    assert run["scenario_hash"] == hashlib.sha256(original).hexdigest() != file_hash(path)
