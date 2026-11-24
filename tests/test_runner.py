@@ -141,7 +141,7 @@ def test_git_state_korean_result_folder_and_moves(tmp_path):
 
 
 def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(cli, "git_state", lambda out: GitState("abc", True, ["a.py"]))
+    monkeypatch.setattr(cli, "git_state", lambda out, inputs=(): GitState("abc", True, ["a.py"]))
     assert cli.main(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path)]) == 1
     assert "--allow-dirty" in capsys.readouterr().err
     with pytest.raises(SystemExit):
@@ -152,8 +152,131 @@ def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
 
 def test_cli_allow_dirty_reaches_plan(tmp_path, monkeypatch):
     """--allow-dirty면 실행 목록까지 만든다. 실제 실행은 하지 않는다."""
-    monkeypatch.setattr(cli, "git_state", lambda out: GitState("abc", True, ["a.py"]))
+    monkeypatch.setattr(cli, "git_state", lambda out, inputs=(): GitState("abc", True, ["a.py"]))
     args = cli.parse_args(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path), "--allow-dirty",
                            "--reps", "2"])
     out, git, todo = cli.prepare(args)
     assert git.dirty and len(todo) == 2
+
+
+def test_git_state_ignores_other_result_folders(tmp_path):
+    """앞 구성의 결과를 커밋하기 전에 다음 구성을 돌릴 수 있다. eval/results 밖의 변경은 그대로 잡는다."""
+    repo = _repo(tmp_path)
+    earlier = repo / "eval" / "results" / "2026-11-24-x-C" / "r1"
+    earlier.mkdir(parents=True)
+    (earlier / "SC-S1-01.json").write_text("{}", encoding="utf-8")
+    out = repo / "eval" / "results" / "2026-11-24-x-A"
+    assert not git_state(out, root=repo).dirty
+    scenario = repo / "eval" / "scenarios" / "dev" / "SC-X.yaml"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text("id: SC-X\n", encoding="utf-8")
+    state = git_state(out, root=repo)
+    assert state.dirty and state.changed == ["eval/scenarios/dev/SC-X.yaml"]
+
+
+def test_git_state_does_not_follow_symlinks_into_results(tmp_path):
+    """결과 폴더 밖의 추적 파일을 결과 폴더 안을 가리키는 링크로 바꿔도 변경으로 잡는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    target = repo / "eval" / "results" / "2026-11-24-x-C" / "a.py"
+    target.parent.mkdir(parents=True)
+    target.write_text("x = 9\n", encoding="utf-8")
+    (repo / "a.py").unlink()
+    (repo / "a.py").symlink_to(target)
+    state = git_state(repo / "eval" / "results" / "2026-11-24-x-A", root=repo)
+    assert state.dirty and state.changed == ["a.py"]
+
+
+def test_git_state_counts_uncommitted_inputs_inside_results(tmp_path):
+    """결과 폴더 안에 커밋하지 않은 시나리오를 두고 실행에 넣으면 변경으로 잡는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    scenario = repo / "eval" / "results" / "scratch" / "SC-X.yaml"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text("id: SC-X\n", encoding="utf-8")
+    out = repo / "eval" / "results" / "2026-11-24-x-A"
+    assert not git_state(out, root=repo).dirty  # 입력이 아니면 결과 폴더 안의 파일일 뿐이다
+    state = git_state(out, root=repo, inputs=[scenario])
+    assert state.dirty and state.changed == ["eval/results/scratch/SC-X.yaml (커밋에 없는 입력)"]
+    outside = tmp_path / "elsewhere.yaml"
+    outside.write_text("id: SC-Y\n", encoding="utf-8")
+    state = git_state(out, root=repo, inputs=[outside])
+    assert state.dirty and "저장소 밖" in state.changed[0]
+
+
+def _commit_all(repo: Path) -> None:
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "x"],
+                   cwd=repo, check=True, capture_output=True)
+
+
+def test_git_state_input_checks_content_against_head(tmp_path):
+    """입력은 내용이 HEAD와 같아야 깨끗하다. 링크로 저장소 밖을 가리키거나 무시 규칙에 걸려도 잡는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    scenario = repo / "eval" / "scenarios" / "dev" / "SC-X.yaml"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text("id: SC-X\n", encoding="utf-8")
+    _commit_all(repo)
+    out = repo / "eval" / "results" / "x"
+    assert not git_state(out, root=repo, inputs=[scenario]).dirty
+    # 저장소 밖 파일을 가리키는 링크를 커밋해 두고 입력으로 쓰면, 링크가 바뀌지 않았어도 재현할 수 없다
+    outside = tmp_path / "outside.yaml"
+    outside.write_text("id: SC-O\n", encoding="utf-8")
+    link = repo / "eval" / "scenarios" / "dev" / "SC-L.yaml"
+    link.symlink_to(outside)
+    _commit_all(repo)
+    state = git_state(out, root=repo, inputs=[link])
+    assert state.dirty and state.changed == ["eval/scenarios/dev/SC-L.yaml (심볼릭 링크를 거친 입력)"]
+    # 무시 규칙에 걸린 커밋하지 않은 입력은 git status에 나오지 않는다. 내용 비교로 잡는다
+    (repo / ".gitignore").write_text("ignored/\n", encoding="utf-8")
+    _commit_all(repo)
+    hidden = repo / "ignored" / "SC-H.yaml"
+    hidden.parent.mkdir()
+    hidden.write_text("id: SC-H\n", encoding="utf-8")
+    assert not git_state(out, root=repo).dirty
+    state = git_state(out, root=repo, inputs=[hidden])
+    assert state.dirty and state.changed == ["ignored/SC-H.yaml (커밋에 없는 입력)"]
+
+
+def test_git_state_input_replaced_by_link_to_other_committed_file(tmp_path):
+    """커밋된 A.yaml을 다른 내용의 B.yaml을 가리키는 링크로 바꾸면 변경이다. B.yaml이 HEAD와 같아도 그렇다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    folder = repo / "eval" / "results" / "inputs"
+    folder.mkdir(parents=True)
+    a, b = folder / "A.yaml", folder / "B.yaml"
+    a.write_text("id: A\n", encoding="utf-8")
+    b.write_text("id: B\n", encoding="utf-8")
+    _commit_all(repo)
+    out = repo / "eval" / "results" / "x"
+    assert not git_state(out, root=repo, inputs=[a]).dirty
+    a.unlink()
+    a.symlink_to(b)
+    state = git_state(out, root=repo, inputs=[a])
+    assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
+
+
+def test_git_state_dotdot_through_link_is_a_link_input(tmp_path):
+    """alias가 링크인 alias/../A.yaml은 abspath로는 inputs/A.yaml이지만 실제로는 다른 파일을 읽는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    inputs = repo / "eval" / "results" / "inputs"
+    (inputs / "real" / "deep").mkdir(parents=True)
+    (inputs / "A.yaml").write_text("id: A\n", encoding="utf-8")
+    (inputs / "real" / "A.yaml").write_text("id: REAL\n", encoding="utf-8")
+    (inputs / "alias").symlink_to(inputs / "real" / "deep")
+    _commit_all(repo)
+    state = git_state(repo / "eval" / "results" / "x", root=repo, inputs=[inputs / "alias" / ".." / "A.yaml"])
+    assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
+
+
+def test_git_state_dotdot_through_link_to_sibling_is_a_link_input(tmp_path):
+    """alias가 같은 폴더의 real을 가리키면 alias/../A.yaml은 실제로도 inputs/A.yaml이다. 최종 경로가 같아도
+    링크를 거쳤으므로 변경이다 (PR #20 리뷰). 경로를 한 단계씩 따라가며 링크를 찾아야 잡힌다."""
+    repo = _repo(tmp_path)
+    inputs = repo / "eval" / "results" / "inputs"
+    (inputs / "real").mkdir(parents=True)
+    (inputs / "A.yaml").write_text("id: A\n", encoding="utf-8")
+    (inputs / "alias").symlink_to(inputs / "real")
+    _commit_all(repo)
+    out = repo / "eval" / "results" / "x"
+    assert not git_state(out, root=repo, inputs=[inputs / "A.yaml"]).dirty
+    assert not git_state(out, root=repo, inputs=[inputs / "real" / ".." / "A.yaml"]).dirty
+    state = git_state(out, root=repo, inputs=[inputs / "alias" / ".." / "A.yaml"])
+    assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
