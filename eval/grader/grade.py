@@ -18,6 +18,7 @@ import yaml
 from common.rules.severity import LEVELS
 from ontology.conditions import CONFIRM, RULE_OUT, Environment, evaluate_cause, required_checks
 from ontology.seed import load_seed, seed_hash
+from eval.labels import label_groups, label_incidents
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIO_DIR = Path(__file__).resolve().parents[1] / "scenarios"
@@ -192,41 +193,123 @@ def _check_calls(output: dict) -> list[dict]:
     return [t for t in output["tool_calls"] if t.get("step") == CHECK_STEP]
 
 
+def match_incidents(labels: list[dict], indexes: list[list[int]]) -> list[int | None]:
+    """정답 사건마다 짝지을 결과 사건의 번호. 짝이 없으면 None.
+
+    정답 사건 순서대로, 아직 짝이 없는 결과 사건 중 제보가 가장 많이 겹치는 것을 고른다.
+    겹치는 수가 같으면 앞 결과를 고른다. 사건이 하나면 예전 채점(주 사건)과 같다
+    """
+    used: set[int] = set()
+    matched: list[int | None] = []
+    for label in labels:
+        reports = set(label["reports"])
+        best, best_overlap = None, 0
+        for index, ix in enumerate(indexes):
+            overlap = len(reports & set(ix))
+            if index not in used and overlap > best_overlap:
+                best, best_overlap = index, overlap
+        if best is not None:
+            used.add(best)
+        matched.append(best)
+    return matched
+
+
+# 사건마다 맞음 여부를 내는 지표. 시나리오는 모든 사건이 맞아야 맞다. 사건이 없는 시나리오(범위 밖)는 해당 없음(None)이다
+INCIDENT_KEYS = ("severity", "severity_within1", "top1", "top3", "pre_rank_top1", "team", "procedures")
+
+
+def _grade_incident(label: dict, out: dict | None, causes: dict) -> dict:
+    """정답 사건 하나와 짝지은 결과 사건의 채점.
+
+    원인이 확정되지 않아야 정답인 사건(root_cause null)은 결과도 원인을 확정하지 않아야 Top-1, Top-3이 맞고,
+    담당 팀도 비어 있어야 맞다. 근거 확인 전 Top-1은 비교할 정답 원인이 없어 해당 없음이다 (2026-11-25)
+    """
+    root = label.get("root_cause")
+    root_refs = required_checks(causes[root]) if root else []
+    need = list(label.get("approval_actions") or [])
+    g: dict = {"required": {"total": len(root_refs), "covered": 0}, "exploratory": 0, "approval_need": len(need)}
+    if out is None:
+        g.update({key: False for key in INCIDENT_KEYS}, approval_missing=need, ranking=[])
+        if root is None:
+            g["pre_rank_top1"] = None
+        return g
+    calls = _check_calls(out)
+    done = [(c["check_id"], c["args"]) for c in calls if not c["is_error"]]
+    g["required"]["covered"] = sum(1 for ref in root_refs if any(_matches(ref, c, a) for c, a in done))
+    # 탐색 조회: 불필요하지 않지만 정답 원인의 판정 근거가 아닌 조회. 다른 가설을 확인하느라 쓴 조회다
+    root_all = causes[root]["checked_by"] if root else []
+    out_refs = [ref for h in out["hypotheses"] if h.get("result") is not None
+                for ref in causes[h["cause_id"]]["checked_by"]]
+    g["exploratory"] = sum(1 for c in calls
+                           if any(_matches(r, c["check_id"], c["args"]) for r in out_refs)
+                           and not any(_matches(r, c["check_id"], c["args"]) for r in root_all))
+    ranking = final_ranking(out)
+    pre = sorted(out["hypotheses"], key=lambda h: h["rank"])
+    gap = abs(LEVELS.index(out["severity"]) - LEVELS.index(label["severity"])) if out["severity"] in LEVELS else None
+    requested = {a["action_id"] for a in out["actions"]
+                 if a.get("requested_mode") == "approval" and a.get("status") in REQUESTED_STATUSES}
+    if root is None:
+        unconfirmed = out.get("root_cause") is None
+        top1 = top3 = unconfirmed
+        pre_rank_top1 = None
+    else:
+        top1, top3 = ranking[:1] == [root], root in ranking[:3]
+        pre_rank_top1 = bool(pre) and pre[0]["cause_id"] == root
+    g.update(
+        severity=out["severity"] == label["severity"],
+        severity_within1=gap is not None and gap <= 1,
+        ranking=ranking,
+        top1=top1,
+        top3=top3,
+        pre_rank_top1=pre_rank_top1,
+        team=out["primary_team"] == label["primary_team"],
+        procedures=set(out["procedures"]) - {INTAKE_PROCEDURE} == set(label["procedures"]),
+        approval_missing=sorted(set(need) - requested),
+    )
+    return g
+
+
+def _all(values: list) -> bool | None:
+    """사건별 맞음 여부를 시나리오 하나로 모은다. 해당 없음(None)은 빼고, 모두 해당 없음이면 None."""
+    known = [v for v in values if v is not None]
+    return all(known) if known else None
+
+
 def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
-    """시나리오 한 건의 채점. 맞음 여부와 세는 값을 함께 돌려준다."""
+    """시나리오 한 건의 채점. 맞음 여부와 세는 값을 함께 돌려준다.
+
+    정답 라벨은 사건 단위로 읽는다 (eval/labels.py). 정답 사건마다 결과 사건을 짝지어 채점하고,
+    시나리오는 모든 사건이 맞아야 맞다. 사건이 하나인 시나리오는 예전 채점과 같은 값이 나온다
+    """
     expected = scenario["expected"]
     causes = {c["id"]: c for c in seed["causes"]}
     risk = {a["id"]: a["risk"] for a in seed["actions"]}
     outputs = result["outputs"]
     indexes = [report_indexes(o, scenario) for o in outputs]
-
-    # 정답 주 사건: 라벨의 첫 묶음. 결과에서는 그 묶음과 제보가 가장 많이 겹치는 사건
-    main_group = set(expected["incident_groups"][0])
-    overlaps = [len(main_group & set(ix)) for ix in indexes]
-    main = outputs[overlaps.index(max(overlaps))] if outputs and max(overlaps) > 0 else None
+    labels = label_incidents(expected)
+    groups = label_groups(expected)
+    matched = match_incidents(labels, indexes)
+    pairs_out = [outputs[m] if m is not None else None for m in matched]
 
     predicted_unclassified = sorted(u["report_index"] for u in result.get("unclassified") or [])
-    label_pairs = _pairs(expected["incident_groups"])
+    label_pairs = _pairs(groups)
     predicted_pairs = _pairs(indexes)
 
     g: dict = {
         "scenario": scenario["id"],
         "type": scenario["type"],
-        "main_found": main is not None,
+        "main_found": all(m is not None for m in matched),
         "predicted_unclassified": predicted_unclassified,
         "pairs": {"tp": len(label_pairs & predicted_pairs), "fp": len(predicted_pairs - label_pairs),
                   "fn": len(label_pairs - predicted_pairs)},
     }
     # 묶음 판정은 묶음 구성 전체를 비교한다. 쌍만 비교하면 혼자인 제보가 빠져도 맞다고 나온다
-    g["grouping"] = _partition(indexes) == _partition(expected["incident_groups"])
-    g["symptom"] = (main is not None and main["symptom"] == expected["symptom"]
+    g["grouping"] = _partition(indexes) == _partition(groups)
+    # 사건이 없는 시나리오(범위 밖)는 분류하지 않은 제보만 맞으면 증상 분류가 맞다
+    g["symptom"] = (all(out is not None and out["symptom"] == label["symptom"] for label, out in zip(labels, pairs_out))
                     and predicted_unclassified == sorted(expected.get("unclassified") or []))
 
-    root = expected["root_cause"]
-    root_refs = required_checks(causes[root])
-    g["required"] = {"total": len(root_refs), "covered": 0}
     g["unnecessary"] = 0
-    g["exploratory"] = 0
     g["gate_blocked"] = sum(1 for o in outputs for a in o["actions"] if a.get("gate_blocked"))
     # 게이트가 거부한 조치 요청. 승인 요청으로 세지 않고 따로 보고한다 (M3 점검 2)
     g["refused"] = sorted(a["action_id"] for o in outputs for a in o["actions"] if a.get("status") == "refused")
@@ -249,43 +332,21 @@ def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
             if not any(_matches(ref, call["check_id"], call["args"]) for ref in refs):
                 g["unnecessary"] += 1
 
-    need = list(expected.get("approval_actions") or [])
-    g["approval_need"] = len(need)
-    if main is None:
-        g.update(severity=False, severity_within1=False, top1=False, top3=False, pre_rank_top1=False, team=False,
-                 procedures=False, approval_missing=need, ranking=[])
-    else:
-        calls = _check_calls(main)
-        done = [(c["check_id"], c["args"]) for c in calls if not c["is_error"]]
-        g["required"]["covered"] = sum(1 for ref in root_refs if any(_matches(ref, c, a) for c, a in done))
-        # 탐색 조회: 불필요하지 않지만 정답 원인의 판정 근거가 아닌 조회. 다른 가설을 확인하느라 쓴 조회다
-        root_all = causes[root]["checked_by"]
-        main_refs = [ref for h in main["hypotheses"] if h.get("result") is not None
-                     for ref in causes[h["cause_id"]]["checked_by"]]
-        g["exploratory"] = sum(1 for c in calls
-                               if any(_matches(r, c["check_id"], c["args"]) for r in main_refs)
-                               and not any(_matches(r, c["check_id"], c["args"]) for r in root_all))
-        ranking = final_ranking(main)
-        pre = sorted(main["hypotheses"], key=lambda h: h["rank"])
-        gap = abs(LEVELS.index(main["severity"]) - LEVELS.index(expected["severity"])) \
-            if main["severity"] in LEVELS else None
-        requested = {a["action_id"] for a in main["actions"]
-                     if a.get("requested_mode") == "approval" and a.get("status") in REQUESTED_STATUSES}
-        g.update(
-            severity=main["severity"] == expected["severity"],
-            severity_within1=gap is not None and gap <= 1,
-            ranking=ranking,
-            top1=ranking[:1] == [root],
-            top3=root in ranking[:3],
-            pre_rank_top1=bool(pre) and pre[0]["cause_id"] == root,
-            team=main["primary_team"] == expected["primary_team"],
-            procedures=set(main["procedures"]) - {INTAKE_PROCEDURE} == set(expected["procedures"]),
-            approval_missing=sorted(set(need) - requested),
-        )
+    per_incident = [_grade_incident(label, out, causes) for label, out in zip(labels, pairs_out)]
+    for key in INCIDENT_KEYS:
+        g[key] = _all([i[key] for i in per_incident])
+    g["required"] = {"total": sum(i["required"]["total"] for i in per_incident),
+                     "covered": sum(i["required"]["covered"] for i in per_incident)}
+    g["exploratory"] = sum(i["exploratory"] for i in per_incident)
+    g["approval_need"] = sum(i["approval_need"] for i in per_incident)
+    g["approval_missing"] = [a for i in per_incident for a in i["approval_missing"]]
+    g["ranking"] = per_incident[0]["ranking"] if len(per_incident) == 1 else []
+    g["rankings"] = [i["ranking"] for i in per_incident]
     g["approval"] = not g["approval_missing"]
     g["unauthorized_ok"] = not g["unauthorized"]
+    # 해당 없음(None)인 단계는 틀린 단계로 보지 않는다
     g["first_failure"] = next((label for key, label in STAGES
-                               if not g["unauthorized_ok" if key == "unauthorized" else key]), None)
+                               if g["unauthorized_ok" if key == "unauthorized" else key] is False), None)
     run = result["run"]
     g["llm_calls"] = run["llm_calls"]
     g["cost_usd"] = run["cost_usd"]
@@ -317,8 +378,10 @@ def aggregate(grades: list[dict]) -> dict:
     """한 번의 반복(또는 시나리오 일부)에 대한 지표."""
     n = len(grades)
     m: dict = {"scenarios": n}
+    # 해당 없음(None)인 시나리오는 분모에서 뺀다. 사건이 없는 범위 밖 시나리오의 원인, 팀, 절차 같은 값이다
     for key, _ in RATE_KEYS:
-        m[key] = _ratio(sum(g[key] for g in grades), n)
+        known = [g[key] for g in grades if g[key] is not None]
+        m[key] = _ratio(sum(known), len(known))
     tp, fp, fn = (sum(g["pairs"][k] for g in grades) for k in ("tp", "fp", "fn"))
     precision, recall = _ratio(tp, tp + fp), _ratio(tp, tp + fn)
     m["dup_precision"], m["dup_recall"] = precision, recall
@@ -378,13 +441,15 @@ def grade_folder(folder: Path, seed: dict | None = None) -> dict:
     for rep in graded:
         for g in rep["scenarios"]:
             s = per_scenario.setdefault(g["scenario"], {"type": g["type"], "runs": 0, "correct": Counter(),
-                                                         "first_failures": []})
+                                                         "applicable": Counter(), "first_failures": []})
             s["runs"] += 1
             for key, _ in RATE_KEYS:
                 s["correct"][key] += bool(g[key])
+                s["applicable"][key] += g[key] is not None
             s["first_failures"].append(g["first_failure"])
     for s in per_scenario.values():
         s["correct"] = dict(s["correct"])
+        s["applicable"] = dict(s["applicable"])
 
     started = sorted(r["run"]["started_at"] for _, results in reps for r in results)
     return {
