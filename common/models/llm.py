@@ -8,6 +8,7 @@ Anthropic 라이브러리는 이 이름을 자동으로 읽는다. 주소를 지
 Claude Code의 통신 경로로 갈 수 있어서 공식 주소를 직접 넘긴다.
 """
 
+import json
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -66,6 +67,10 @@ class LLMResult:
     def text(self) -> str:
         return "".join(b.text for b in self.message.content if b.type == "text")
 
+    def json(self) -> Any:
+        """JSON 형식 출력(output_schema)을 요청한 호출의 결과를 읽는다. 형식이 깨졌으면 ValueError."""
+        return json.loads(self.text)
+
 
 class LLM:
     def __init__(self, config: ModelConfig, tracer: Tracer, client: Anthropic):
@@ -83,11 +88,14 @@ class LLM:
         tools: list[dict[str, Any]] | None = None,
         max_tokens: int = DEFAULT_MAX_TOKENS,
         metadata: dict[str, Any] | None = None,
+        output_schema: dict[str, Any] | None = None,
     ) -> LLMResult:
         """작업에 맞는 모델로 Messages API를 한 번 부르고 기록을 남긴다.
 
         name은 실행 기록에 보일 이름이다 (예: 진단 단계 이름).
         refusal 같은 stop_reason은 그대로 돌려준다. 어떻게 다룰지는 부르는 쪽이 정한다.
+        output_schema(JSON Schema)를 주면 응답을 그 형식의 JSON으로 받는다 (structured outputs).
+        형식은 API가 보장하지만 값이 정의된 ID인지는 부르는 쪽이 검증한다.
         """
         model = self.config.model_for(task)
         if tools is not None:
@@ -97,6 +105,8 @@ class LLM:
             params["system"] = system
         if tools is not None:
             params["tools"] = tools
+        if output_schema is not None:
+            params["output_config"] = {"format": {"type": "json_schema", "schema": output_schema}}
         trace_input = {"system": system, "messages": messages, "tools": [t.get("name") for t in tools or []]}
         with self.tracer.generation(
             name,

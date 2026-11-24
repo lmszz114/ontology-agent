@@ -148,6 +148,10 @@ class Tracer:
         with self._observe(name=name, as_type="guardrail", input=input) as obs:
             yield obs
 
+    def current_trace_id(self) -> str | None:
+        """지금 열린 실행(run)의 trace ID. 결과 파일에 남겨 Langfuse 기록과 대조한다."""
+        return self._client.get_current_trace_id()
+
     def flush(self) -> None:
         """쌓인 기록을 보낸다. 프로세스가 끝나기 전에 부른다."""
         self._client.flush()

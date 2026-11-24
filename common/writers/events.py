@@ -5,6 +5,7 @@ LLM은 그래프에 직접 쓰지 않는다. 사건 계층은 이 모듈의 함�
 함수는 그것을 쓰는 단계를 만들 때 함께 추가한다.
 """
 
+import json
 from datetime import datetime
 
 from neo4j import Driver
@@ -228,3 +229,219 @@ def reset_event_layer(driver: Driver) -> int:
             summary = session.run(f"MATCH (n:{label}) DETACH DELETE n").consume()
             deleted += summary.counters.nodes_deleted
     return deleted
+
+
+# INDICATES로 쓸 수 있는 영향 범위 (설계 3단계 4-3)와 가설, 근거 결과의 허용 값 (3단계 2-2, 3-2)
+REPORT_SCOPES = {"all_service", "one_world", "some_users"}
+HYPOTHESIS_STATUSES = {"candidate", "confirmed", "ruled_out"}
+FINDING_RESULTS = {"confirm", "rule_out", "inconclusive"}
+REPORT_LINKS = {"part_of": "PART_OF", "suspected_duplicate": "SUSPECTED_DUPLICATE_OF"}
+
+
+def record_report(
+    driver: Driver,
+    *,
+    report_id: str,
+    channel_id: str,
+    reporter_id: str,
+    raw_text: str,
+    received_at: datetime,
+    symptom_id: str | None,
+    scope: str | None,
+) -> None:
+    """접수 하나를 기록한다 (Report, RECEIVED_VIA, 분류했으면 INDICATES) (R1).
+
+    symptom_id가 None이면 증상 8개에 해당하지 않는 제보다. INDICATES를 만들지 않는다.
+    """
+    _require_aware(received_at, "received_at")
+    if scope is not None and scope not in REPORT_SCOPES:
+        raise RecordError(f"영향 범위에 쓸 수 없는 값이다: {scope}")
+
+    def write(tx) -> None:
+        if tx.run("MATCH (n:Report {id: $id}) RETURN n.id", id=report_id).single():
+            raise RecordError(f"이미 있는 Report다: {report_id}")
+        if symptom_id is not None and not tx.run(
+            "MATCH (s:SymptomType {id: $id}) RETURN s.id", id=symptom_id
+        ).single():
+            raise RecordError(f"정의되지 않은 증상이다: {symptom_id}")
+        created = tx.run(
+            "MATCH (ch:Channel {id: $channel}) "
+            "CREATE (r:Report {id: $id, channel_id: $channel, reporter_id: $reporter, raw_text: $text, "
+            "received_at: $at, extracted_symptom_id: $symptom, extracted_scope: $scope})-[:RECEIVED_VIA]->(ch) "
+            "RETURN r.id",
+            channel=channel_id, id=report_id, reporter=reporter_id, text=raw_text,
+            at=received_at, symptom=symptom_id, scope=scope,
+        ).single()
+        if created is None:
+            raise RecordError(f"정의되지 않은 채널이다: {channel_id}")
+        if symptom_id is not None:
+            tx.run(
+                "MATCH (r:Report {id: $id}), (s:SymptomType {id: $symptom}) CREATE (r)-[:INDICATES]->(s)",
+                id=report_id, symptom=symptom_id,
+            ).consume()
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def link_report(driver: Driver, *, report_id: str, incident_id: str, link: str, linked_by: str = "agent") -> None:
+    """접수를 사건에 묶는다 (R2). part_of는 같은 사건, suspected_duplicate는 중복 의심(사람 확인)이다.
+
+    같은 사건으로 묶으면 사건의 접수 수(report_count)를 하나 올린다. 등급 상향(R3)이 이 값을 읽는다.
+    """
+    if link not in REPORT_LINKS:
+        raise RecordError(f"접수 연결에 쓸 수 없는 값이다: {link}")
+
+    def write(tx) -> None:
+        if not tx.run(LOCK.format(label="Incident"), id=incident_id).single():
+            raise RecordError(f"없는 Incident다: {incident_id}")
+        if not tx.run("MATCH (r:Report {id: $id}) RETURN r.id", id=report_id).single():
+            raise RecordError(f"없는 Report다: {report_id}")
+        rel = REPORT_LINKS[link]
+        # 이미 같은 연결이 있으면 관계와 접수 수를 다시 늘리지 않는다. 잠금을 건 뒤에 확인한다
+        if tx.run(
+            f"MATCH (:Report {{id: $report}})-[:{rel}]->(:Incident {{id: $incident}}) RETURN 1",
+            report=report_id, incident=incident_id,
+        ).single():
+            return
+        tx.run(
+            f"MATCH (r:Report {{id: $report}}), (i:Incident {{id: $incident}}) "
+            f"CREATE (r)-[:{rel} {{linked_by: $by}}]->(i)",
+            report=report_id, incident=incident_id, by=linked_by,
+        ).consume()
+        if link == "part_of":
+            tx.run(
+                "MATCH (i:Incident {id: $id}) SET i.report_count = i.report_count + 1", id=incident_id
+            ).consume()
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def set_incident_severity(driver: Driver, *, incident_id: str, severity_id: str) -> None:
+    """사건의 심각도를 바꾼다. 접수가 늘어 등급이 상향될 때 쓴다 (R3)."""
+    def write(tx) -> None:
+        if not tx.run("MATCH (s:Severity {id: $id}) RETURN s.id", id=severity_id).single():
+            raise RecordError(f"정의되지 않은 심각도다: {severity_id}")
+        if not tx.run(
+            "MATCH (i:Incident {id: $id}) SET i.severity_id = $severity RETURN i.id",
+            id=incident_id, severity=severity_id,
+        ).single():
+            raise RecordError(f"없는 Incident다: {incident_id}")
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def record_affects(driver: Driver, *, incident_id: str, system_ids: list[str]) -> None:
+    """사건이 영향을 준 시스템을 기록한다 (AFFECTS). 정의되지 않은 시스템이 하나라도 있으면 쓰지 않는다."""
+    def write(tx) -> None:
+        known = tx.run(
+            "MATCH (s:System) WHERE s.id IN $ids RETURN collect(s.id) AS ids", ids=system_ids
+        ).single()["ids"]
+        unknown = sorted(set(system_ids) - set(known))
+        if unknown:
+            raise RecordError(f"정의되지 않은 시스템이다: {unknown}")
+        if not tx.run("MATCH (i:Incident {id: $id}) RETURN i.id", id=incident_id).single():
+            raise RecordError(f"없는 Incident다: {incident_id}")
+        tx.run(
+            "MATCH (i:Incident {id: $id}) UNWIND $ids AS sid MATCH (s:System {id: sid}) "
+            "MERGE (i)-[:AFFECTS]->(s)",
+            id=incident_id, ids=system_ids,
+        ).consume()
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def record_started_after(driver: Driver, *, incident_id: str, change_id: str, gap_minutes: int) -> None:
+    """증상 시작 직전의 변경 이력을 사건에 잇는다 (STARTED_AFTER). 원인 순위의 변경 가중 근거다 (R4)."""
+    def write(tx) -> None:
+        if not tx.run(
+            "MATCH (i:Incident {id: $incident}), (c:Change {id: $change}) "
+            "MERGE (i)-[r:STARTED_AFTER]->(c) SET r.gap_minutes = $gap RETURN i.id",
+            incident=incident_id, change=change_id, gap=gap_minutes,
+        ).single():
+            raise RecordError(f"없는 Incident 또는 Change다: {incident_id}, {change_id}")
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def record_hypothesis(
+    driver: Driver, *, incident_id: str, cause_id: str, score: int, rank: int, status: str
+) -> None:
+    """원인 가설을 기록하거나 상태를 바꾼다 (HAS_HYPOTHESIS) (R4)."""
+    if status not in HYPOTHESIS_STATUSES:
+        raise RecordError(f"가설 상태에 쓸 수 없는 값이다: {status}")
+
+    def write(tx) -> None:
+        if not tx.run(
+            "MATCH (i:Incident {id: $incident}), (c:Cause {id: $cause}) "
+            "MERGE (i)-[h:HAS_HYPOTHESIS]->(c) SET h.score = $score, h.rank = $rank, h.status = $status "
+            "RETURN i.id",
+            incident=incident_id, cause=cause_id, score=score, rank=rank, status=status,
+        ).single():
+            raise RecordError(f"없는 Incident 또는 Cause다: {incident_id}, {cause_id}")
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def record_finding(
+    driver: Driver,
+    *,
+    finding_id: str,
+    incident_id: str,
+    check_id: str,
+    cause_id: str,
+    result: str,
+    detail: str,
+    checked_at: datetime,
+    tool: str,
+    args: dict,
+) -> None:
+    """판정 근거 확인 결과를 기록한다 (Finding, FOR, CHECKS) (R4-4).
+
+    result는 이 근거로 cause_id 가설을 확정, 배제, 불명확 중 무엇으로 판단했는지다.
+    tool과 args는 이 결과를 낸 조회다. 같은 근거를 다른 인자로 조회한 결과를 구분한다.
+    Neo4j 속성은 맵을 담지 못해서 args는 JSON 문자열로 둔다.
+    """
+    if result not in FINDING_RESULTS:
+        raise RecordError(f"Finding.result에 쓸 수 없는 값이다: {result}")
+    _require_aware(checked_at, "checked_at")
+
+    def write(tx) -> None:
+        if tx.run("MATCH (n:Finding {id: $id}) RETURN n.id", id=finding_id).single():
+            raise RecordError(f"이미 있는 Finding이다: {finding_id}")
+        if not tx.run(
+            "MATCH (i:Incident {id: $incident}), (e:EvidenceCheck {id: $check}), (:Cause {id: $cause}) "
+            "CREATE (f:Finding {id: $id, check_id: $check, cause_id: $cause, result: $result, "
+            "detail: $detail, checked_at: $at, tool: $tool, args: $args}) "
+            "CREATE (f)-[:FOR]->(i) CREATE (f)-[:CHECKS]->(e) RETURN f.id",
+            incident=incident_id, check=check_id, cause=cause_id, id=finding_id,
+            result=result, detail=detail, at=checked_at,
+            tool=tool, args=json.dumps(args, ensure_ascii=False, sort_keys=True),
+        ).single():
+            raise RecordError(f"없는 Incident, EvidenceCheck 또는 Cause다: {incident_id}, {check_id}, {cause_id}")
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+def open_incidents(driver: Driver, *, since: datetime) -> list[dict]:
+    """중복 판정의 비교 대상 (R2). closed가 아니고 since 이후에 열린 사건과 그 접수, 영향 시스템."""
+    _require_aware(since, "since")
+    with driver.session() as session:
+        rows = session.execute_read(lambda tx: tx.run(
+            "MATCH (i:Incident) WHERE i.status <> 'closed' "
+            "AND datetime({datetime: i.opened_at, timezone: 'UTC'}) >= datetime({datetime: $since, timezone: 'UTC'}) "
+            "RETURN i.id AS incident_id, toString(i.opened_at) AS opened_at, i.severity_id AS severity_id, "
+            "i.report_count AS report_count, "
+            "[(r:Report)-[:PART_OF]->(i) | {report_id: r.id, reporter_id: r.reporter_id, "
+            "symptom_id: r.extracted_symptom_id, received_at: toString(r.received_at), text: r.raw_text}] AS reports, "
+            "[(i)-[:AFFECTS]->(s:System) | s.id] AS systems "
+            "ORDER BY i.opened_at",
+            since=since,
+        ).data())
+    return rows

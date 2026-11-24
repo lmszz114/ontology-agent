@@ -20,6 +20,9 @@ environment:
       args: {system: SY15}
       observations: {error_log: present}
       detail: "이벤트 시스템에 보상 지급 처리 실패 오류가 남아 있다"
+    # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
+    - check: E15
+      detail: "주말 이벤트 보상 미지급 문의는 이 제보를 포함해 2건이다. 두 계정 외에 같은 문의는 없다"
   changes: []
 expected:
   symptom: S4

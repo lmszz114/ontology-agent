@@ -88,6 +88,12 @@ def build_server(driver: Driver) -> MCPServer:
 
     @server.tool()
     @_input_errors_as_tool_errors
+    def get_procedure(procedure_id: str) -> dict:
+        """절차(P1~P10) 하나와 그 조치를 돌려준다. 원인과 상관없이 여는 절차(접수, 상향, 원인 수정, 긴급 점검)를 볼 때 쓴다."""
+        return queries.get_procedure(driver, procedure_id)
+
+    @server.tool()
+    @_input_errors_as_tool_errors
     def get_action_policy(action_id: str) -> dict:
         """조치(A01~A17)의 위험도, 자동 실행 여부, 실행 팀, 승인권자를 돌려준다."""
         return queries.get_action_policy(driver, action_id)

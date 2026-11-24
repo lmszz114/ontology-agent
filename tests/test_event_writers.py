@@ -1,5 +1,6 @@
 """사건 계층 기록 함수 검증. 시드를 적재한 테스트용 Neo4j에서 돈다."""
 
+import json
 from datetime import datetime, timedelta, timezone, tzinfo
 
 import pytest
@@ -112,3 +113,117 @@ def test_reset_event_layer_keeps_static_layer(db):
     assert reset_event_layer(db) == 2
     assert count(db, "Change") == 0
     assert {label: count(db, label) for label in STATIC_LABELS} == before
+
+
+# --- 진단 에이전트가 쓰는 기록 함수 (PR #12) -------------------------------------------
+
+from common.writers import events  # noqa: E402
+
+
+def open_incident(db, incident_id="INC-1", at=AT):
+    events.record_incident(db, incident_id=incident_id, severity_id="SEV3", opened_at=at)
+
+
+def report(db, report_id="RP-1", reporter="U1", at=AT, symptom="S1", channel="CH02"):
+    events.record_report(db, report_id=report_id, channel_id=channel, reporter_id=reporter, raw_text="안 들어와요",
+                         received_at=at, symptom_id=symptom, scope="some_users" if symptom else None)
+
+
+def test_report_is_linked_to_channel_and_symptom(db):
+    report(db)
+    report(db, report_id="RP-2", symptom=None)
+    with db.session() as session:
+        row = session.run(
+            "MATCH (r:Report {id: 'RP-1'})-[:RECEIVED_VIA]->(c:Channel), (r)-[:INDICATES]->(s:SymptomType) "
+            "RETURN c.id AS c, s.id AS s"
+        ).single()
+        assert (row["c"], row["s"]) == ("CH02", "S1")
+        # 증상에 해당하지 않는 제보는 INDICATES가 없다
+        assert session.run("MATCH (:Report {id: 'RP-2'})-[:INDICATES]->() RETURN count(*) AS n").single()["n"] == 0
+
+
+@pytest.mark.parametrize("kwargs, message", [
+    ({"channel": "CH99"}, "정의되지 않은 채널"),
+    ({"symptom": "S99"}, "정의되지 않은 증상"),
+    ({"at": datetime(2026, 12, 3, 19, 40)}, "시간대"),
+])
+def test_report_refuses_undefined_values(db, kwargs, message):
+    with pytest.raises(RecordError, match=message):
+        report(db, **kwargs)
+    assert count(db, "Report") == 0
+
+
+def test_part_of_counts_reports_and_duplicate_does_not(db):
+    open_incident(db)
+    report(db)
+    report(db, report_id="RP-2", reporter="U2")
+    events.link_report(db, report_id="RP-1", incident_id="INC-1", link="part_of")
+    events.link_report(db, report_id="RP-2", incident_id="INC-1", link="suspected_duplicate")
+    with db.session() as session:
+        assert session.run("MATCH (i:Incident {id: 'INC-1'}) RETURN i.report_count AS n").single()["n"] == 1
+    with pytest.raises(RecordError, match="접수 연결"):
+        events.link_report(db, report_id="RP-1", incident_id="INC-1", link="merge")
+
+
+def test_open_incidents_reads_window_and_reports(db):
+    open_incident(db, "INC-OLD", at=AT - timedelta(hours=7))
+    open_incident(db, "INC-NEW", at=AT)
+    report(db)
+    events.link_report(db, report_id="RP-1", incident_id="INC-NEW", link="part_of")
+    events.record_affects(db, incident_id="INC-NEW", system_ids=["SY13"])
+    rows = events.open_incidents(db, since=AT - timedelta(hours=6))
+    assert [r["incident_id"] for r in rows] == ["INC-NEW"]
+    assert rows[0]["systems"] == ["SY13"] and rows[0]["reports"][0]["reporter_id"] == "U1"
+
+
+def test_affects_refuses_unknown_system_and_incident(db):
+    open_incident(db)
+    with pytest.raises(RecordError, match="정의되지 않은 시스템"):
+        events.record_affects(db, incident_id="INC-1", system_ids=["SY13", "SY99"])
+    with pytest.raises(RecordError, match="없는 Incident"):
+        events.record_affects(db, incident_id="INC-9", system_ids=["SY13"])
+
+
+def test_hypothesis_and_finding(db):
+    open_incident(db)
+    events.record_hypothesis(db, incident_id="INC-1", cause_id="C02", score=3, rank=1, status="candidate")
+    events.record_hypothesis(db, incident_id="INC-1", cause_id="C02", score=3, rank=1, status="confirmed")
+    events.record_finding(db, finding_id="FD-1", incident_id="INC-1", check_id="E02", cause_id="C02",
+                          result="confirm", detail="지급 기록 없음", checked_at=AT,
+                          tool="query_mailbox_log", args={"world": "W3"})
+    with db.session() as session:
+        f = session.run("MATCH (f:Finding {id: 'FD-1'}) RETURN f.tool AS t, f.args AS a").single()
+        assert (f["t"], json.loads(f["a"])) == ("query_mailbox_log", {"world": "W3"})
+        assert session.run("MATCH (:Incident)-[h:HAS_HYPOTHESIS]->(:Cause {id: 'C02'}) RETURN collect(h.status) AS s"
+                           ).single()["s"] == ["confirmed"]
+        assert session.run("MATCH (f:Finding)-[:CHECKS]->(:EvidenceCheck {id: 'E02'}) RETURN f.result AS r"
+                           ).single()["r"] == "confirm"
+    with pytest.raises(RecordError, match="가설 상태"):
+        events.record_hypothesis(db, incident_id="INC-1", cause_id="C02", score=3, rank=1, status="maybe")
+    with pytest.raises(RecordError, match="Finding.result"):
+        events.record_finding(db, finding_id="FD-2", incident_id="INC-1", check_id="E02", cause_id="C02",
+                              result="yes", detail="", checked_at=AT, tool="query_mailbox_log", args={})
+
+
+def test_started_after_and_severity_change(db):
+    open_incident(db)
+    record_change(db, change_id="CG-1", kind="deploy", system_id="SY13", changed_at=AT - timedelta(minutes=30))
+    events.record_started_after(db, incident_id="INC-1", change_id="CG-1", gap_minutes=30)
+    events.set_incident_severity(db, incident_id="INC-1", severity_id="SEV2")
+    with db.session() as session:
+        row = session.run("MATCH (i:Incident)-[r:STARTED_AFTER]->(:Change) RETURN r.gap_minutes AS g, i.severity_id AS s").single()
+    assert (row["g"], row["s"]) == (30, "SEV2")
+    with pytest.raises(RecordError, match="정의되지 않은 심각도"):
+        events.set_incident_severity(db, incident_id="INC-1", severity_id="SEV9")
+
+
+def test_linking_the_same_report_twice_changes_nothing(db):
+    open_incident(db)
+    report(db)
+    for _ in range(2):
+        events.link_report(db, report_id="RP-1", incident_id="INC-1", link="part_of")
+    with db.session() as session:
+        row = session.run("MATCH (i:Incident {id: 'INC-1'}) RETURN i.report_count AS n, "
+                          "COUNT { (:Report)-[:PART_OF]->(i) } AS links").single()
+    assert (row["n"], row["links"]) == (1, 1)
+    assert len(events.open_incidents(db, since=AT - timedelta(hours=1))[0]["reports"]) == 1

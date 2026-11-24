@@ -215,3 +215,46 @@ def get_action_policy(driver: Driver, action_id: str) -> dict:
     )[0]
     row["approvers"].sort(key=lambda t: t["team_id"])
     return row
+
+
+def get_first_handler(driver: Driver, channel_id: str) -> dict:
+    """접수 채널의 1차 처리 역할과 그 역할을 맡은 팀 (R1-2).
+
+    채널 -> HANDLED_FIRST_BY -> 역할 -> ASSIGNED_TO -> 팀. 조직별 배포에서 바뀌는 부분이다.
+    """
+    _require(driver, "Channel", channel_id)
+    return _read(
+        driver,
+        "MATCH (ch:Channel {id: $id}) "
+        "OPTIONAL MATCH (ch)-[:HANDLED_FIRST_BY]->(r:Role) "
+        "OPTIONAL MATCH (r)-[:ASSIGNED_TO]->(t:Team) "
+        "RETURN ch.id AS channel_id, ch.name AS channel_name, r.id AS role_id, r.name AS role_name, "
+        "t.id AS team_id, t.name AS team_name",
+        id=channel_id,
+    )[0]
+
+
+def get_procedure(driver: Driver, procedure_id: str) -> dict:
+    """절차 하나와 그 조치. 원인과 상관없이 여는 절차(접수 P1, 상향 P2, 원인 수정 P10, 긴급 점검 P4)를 볼 때 쓴다."""
+    _require(driver, "Procedure", procedure_id)
+    return _read(
+        driver,
+        "MATCH (p:Procedure {id: $id}) "
+        "CALL (p) { MATCH (p)-[h:HAS_ACTION]->(a:Action) WITH a, h ORDER BY h.order "
+        "RETURN collect({action_id: a.id, name: a.name, risk: a.risk}) AS actions } "
+        "RETURN p.id AS procedure_id, p.name AS name, p.steps AS steps, "
+        "coalesce(p.human_only, false) AS human_only, "
+        "head([(p)-[:LED_BY]->(t:Team) | t.name]) AS led_by, actions",
+        id=procedure_id,
+    )[0]
+
+
+def get_systems(driver: Driver) -> list[dict]:
+    """시스템 전체의 ID와 이름. 접수 정리(R1)에서 제보의 관련 시스템을 ID로 적게 할 때 쓴다."""
+    return _read(driver, "MATCH (s:System) RETURN s.id AS id, s.name AS name, s.aliases AS aliases ORDER BY id")
+
+
+def get_evidence_tools(driver: Driver) -> dict[str, str]:
+    """조회 도구 이름 -> 판정 근거 ID. 에이전트가 부른 도구가 어느 판정 근거인지 기록할 때 쓴다."""
+    rows = _read(driver, "MATCH (e:EvidenceCheck) RETURN e.tool AS tool, e.id AS id")
+    return {r["tool"]: r["id"] for r in rows}

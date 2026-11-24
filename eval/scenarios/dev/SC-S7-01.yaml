@@ -20,6 +20,9 @@ environment:
       args: {system: SY14}
       observations: {deploy: success}
       detail: "오늘 18:05에 거래소 서버 배포가 있었고 정상으로 끝났다"
+    # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
+    - check: E15
+      detail: "거래소 등록 오류 문의가 27건 들어왔다. 모두 2월드 이용자이고 다른 월드의 같은 문의는 없다"
   changes:
     - {kind: deploy, system: SY14, at: "2026-12-15T18:05+09:00"}
 expected:

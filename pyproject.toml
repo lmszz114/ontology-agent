@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "anthropic>=2.13.0",
     "langfuse>=5.2.0",
+    "langgraph==1.2.24",
     "mcp>=2.3",
     "neo4j>=5.26",
     "pyyaml>=6.0",

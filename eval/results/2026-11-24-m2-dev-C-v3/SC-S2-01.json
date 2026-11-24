@@ -1,0 +1,175 @@
+{
+  "run": {
+    "scenario": "SC-S2-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T11:12:20.500003+09:00",
+    "finished_at": "2026-11-24T11:12:37.488299+09:00",
+    "seconds": 17.0,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v3",
+    "git_commit": "f5641e2cbb55f229157aec9ea88799383d8e531d",
+    "trace_id": "a037950f8b1fe94137600d88f57b5970",
+    "llm_calls": 7,
+    "usage": {
+      "input": 21252,
+      "output": 1751,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0030007000000000002
+  },
+  "outputs": [
+    {
+      "symptom": "S2",
+      "incident_id": "INC-dc12e27e03b9",
+      "report_ids": [
+        "RP-6679d6ff6f8e"
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C04",
+          "rank": 1,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        },
+        {
+          "cause_id": "C05",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "result": "rule_out",
+              "detail": "18:55부터 다른 타이틀 세 곳에서도 로그인 실패율이 급증했다"
+            },
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "result": "rule_out",
+              "detail": "로그인 서버(게이트웨이)에 증상과 관련된 오류 로그가 없다. 로그인 서버(게이트웨이)에 처리 지연 로그가 없다"
+            }
+          ]
+        },
+        {
+          "cause_id": "C06",
+          "rank": 3,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "result": "rule_out",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다"
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM09",
+      "collaborators": [],
+      "next_check": {
+        "cause_id": "C04",
+        "check_id": "E03",
+        "by": "TM09"
+      },
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-63fe14f70cf0"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7d9500feafeb"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ef121f495815"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ea630604a3f4"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-24cc295ec7b9"
+        }
+      ],
+      "tool_calls": [
+        {
+          "cause_id": "C05",
+          "tool": "check_cross_title_login",
+          "check_id": "E03",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "cause_id": "C05",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY09"
+          },
+          "is_error": false
+        },
+        {
+          "cause_id": "C06",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S2 로그인 불가, 접속 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C04 공통 계정 인증 장애 (점수 2): inconclusive, 근거 []. 판정 근거는 E03 하나이며 required=true, 기대 결과는 다른 타이틀에서도 로그인 실패다. 아직 check_cross_title_login을 호출하지 않았으므로 조회 결과가 없어 확정이나 배제를 할 수 없다. 제보에 같은 회사 다른 게임도 로그인 화면에서 멈춘다는 내용이 있으나 이는 제보자 진술일 뿐 조회 결과가 아니므로 근거로 쓰지 않는다. E03 결과를 확인한 뒤 판정해야 한다.\n-> 원인 C05 게임 로그인 서버 장애 (점수 2): rule_out, 근거 ['E03', 'E04']. E03 required 근거: 다른 타이틀 로그인은 정상이어야 하지만, 조회 결과 18:55부터 다른 타이틀 세 곳에서도 로그인 실패율이 급증했다. expect와 다르므로 불일치다. E04 required 근거: 로그인 서버에 증상과 관련된 오류 로그가 있어야 하지만, 조회 결과 관련 오류 로그와 처리 지연 로그가 없다. 역시 expect와 불일치다. 두 확정 조건이 모두 expect와 다르므로 C05(게임 로그인 서버 장애)는 배제된다. 실패가 여러 타이틀에 걸쳐 있어 단일 게임 로그인 서버 문제와는 맞지 않으며, 공통 인증·게이트웨이 계층 등 다른 원인을 별도로 확인해야 한다.\n-> 원인 C06 서버 인프라 장애 (점수 2): rule_out, 근거 ['E09']. 판정 근거 E09(query_resource_metrics, system=SY05)를 조회한 결과 서버 인프라의 자원 및 네트워크 지표가 정상 범위였다. 확정 조건은 자원 지표가 한계에 가깝거나 네트워크 지표가 비정상이어야 하는데 둘 다 해당하지 않아 expect와 다르므로 C06 서버 인프라 장애는 배제된다. 참고로 기존 조회에서 로그인 서버(SY09) 오류·지연 로그가 없었고, 다른 타이틀 3곳에서도 18:55부터 로그인 실패율이 동시에 급증했다. 이는 개별 인프라 자원 문제보다 공통 인증 계층이나 외부 요인을 가리키지만 이 가설의 판정 근거만으로는 원인을 특정할 수 없다.\n-> 1차 담당 TM09",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: ['C04']"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
