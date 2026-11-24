@@ -20,7 +20,7 @@ pytestmark = pytest.mark.integration
 STARTED_AT = "2026-12-03T20:14+09:00"
 TOOL_NAMES = {
     "get_symptom_types", "get_cause_candidates", "rank_causes", "get_checks",
-    "get_owner_team", "get_procedures", "get_action_policy",
+    "get_owner_team", "get_procedures", "get_procedure", "get_action_policy",
 }
 
 
@@ -204,7 +204,7 @@ def test_queries_run_in_read_only_transactions(db):
         queries._read(db, "CREATE (:Team {id: '__test_write__'})")
 
 
-def test_mcp_server_exposes_the_seven_tools(db):
+def test_mcp_server_exposes_the_eight_tools(db):
     async def run():
         async with Client(build_server(db)) as client:
             listed = await client.list_tools()
@@ -218,3 +218,19 @@ def test_mcp_server_exposes_the_seven_tools(db):
     assert not ranked.is_error
     assert [r["cause_id"] for r in ranked.structured_content["result"]] == ["C02", "C01", "C03"]
     assert unknown.is_error and "C99" in unknown.content[0].text
+
+
+def test_first_handler_follows_channel_role_team(db):
+    """채널 -> 1차 처리 역할 -> 팀 (R1). 접수 분류 담당은 개발PM팀이다 (가정)."""
+    row = queries.get_first_handler(db, "CH04")
+    assert (row["role_id"], row["team_id"]) == ("RL03", "TM05")
+    with pytest.raises(queries.UnknownId):
+        queries.get_first_handler(db, "CH99")
+
+
+def test_get_procedure_and_catalogs(db):
+    p1 = queries.get_procedure(db, "P1")
+    assert [a["action_id"] for a in p1["actions"]] == ["A01", "A02", "A03", "A04", "A05"]
+    assert queries.get_procedure(db, "P5")["human_only"] is True
+    assert len(queries.get_systems(db)) == 22
+    assert queries.get_evidence_tools(db)["query_mailbox_log"] == "E02"

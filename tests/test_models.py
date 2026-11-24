@@ -286,3 +286,18 @@ def test_response_is_recorded_even_when_pricing_fails(config):
     assert span["metadata"]["raw_usage"]["inference_geo"] == "us"
     assert span["metadata"]["stop_reason"] == "end_turn"
     assert span["cost"] is None
+
+
+def test_output_schema_is_sent_as_json_format(config):
+    """JSON 형식 출력을 요청하면 output_config.format으로 보낸다 (structured outputs)."""
+    messages = FakeMessages(Message.model_validate({
+        "id": "msg_test", "type": "message", "role": "assistant", "model": "claude-haiku-5-5",
+        "content": [{"type": "text", "text": '{"symptom_id": "S1"}'}], "stop_reason": "end_turn", "stop_sequence": None,
+        "usage": {"input_tokens": 10, "output_tokens": 5, "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0},
+    }))
+    schema = {"type": "object", "properties": {"symptom_id": {"type": "string"}}, "required": ["symptom_id"],
+              "additionalProperties": False}
+    result = LLM(config, MemoryTracer(), SimpleNamespace(messages=messages)).call(
+        task="intake", name="intake", messages=[{"role": "user", "content": "x"}], output_schema=schema)
+    assert messages.calls[0]["output_config"] == {"format": {"type": "json_schema", "schema": schema}}
+    assert result.json() == {"symptom_id": "S1"}
