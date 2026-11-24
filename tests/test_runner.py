@@ -157,3 +157,18 @@ def test_cli_allow_dirty_reaches_plan(tmp_path, monkeypatch):
                            "--reps", "2"])
     out, git, todo = cli.prepare(args)
     assert git.dirty and len(todo) == 2
+
+
+def test_git_state_ignores_other_result_folders(tmp_path):
+    """앞 구성의 결과를 커밋하기 전에 다음 구성을 돌릴 수 있다. eval/results 밖의 변경은 그대로 잡는다."""
+    repo = _repo(tmp_path)
+    earlier = repo / "eval" / "results" / "2026-11-24-x-C" / "r1"
+    earlier.mkdir(parents=True)
+    (earlier / "SC-S1-01.json").write_text("{}", encoding="utf-8")
+    out = repo / "eval" / "results" / "2026-11-24-x-A"
+    assert not git_state(out, root=repo).dirty
+    scenario = repo / "eval" / "scenarios" / "dev" / "SC-X.yaml"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text("id: SC-X\n", encoding="utf-8")
+    state = git_state(out, root=repo)
+    assert state.dirty and state.changed == ["eval/scenarios/dev/SC-X.yaml"]

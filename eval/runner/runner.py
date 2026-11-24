@@ -32,8 +32,13 @@ class GitState:
     changed: list[str]
 
 
+# 실행 결과를 두는 곳. 결과 파일은 실행에 영향을 주지 않아 커밋하지 않은 변경으로 보지 않는다.
+# 앞 실행의 결과를 커밋하기 전에 다음 구성을 돌릴 수 있다 (비용 승인 지점 1, 2026-11-24 사용자 결정)
+RESULTS_DIR = Path("eval") / "results"
+
+
 def git_state(out: Path, root: Path = ROOT) -> GitState:
-    """커밋과 커밋하지 않은 변경. 결과 폴더 안의 파일은 변경으로 보지 않는다 (실행기가 쓰는 파일이다)."""
+    """커밋과 커밋하지 않은 변경. 결과 폴더(이번 --out과 eval/results 전체) 안의 파일은 변경으로 보지 않는다."""
     def git(*args: str) -> str:
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, check=True).stdout
 
@@ -43,11 +48,11 @@ def git_state(out: Path, root: Path = ROOT) -> GitState:
         status = git("status", "--porcelain=v1", "-z", "--untracked-files=all")
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RunnerError(f"Git 상태를 읽을 수 없다: {exc}") from exc
-    out = out.resolve()
+    ignored = (out.resolve(), (root / RESULTS_DIR).resolve())
     changed = []
     for paths in _status_entries(status):
         # 이동은 원래 경로와 새 경로를 모두 본다. 하나라도 결과 폴더 밖이면 변경이다
-        outside = [p for p in paths if not (root / p).resolve().is_relative_to(out)]
+        outside = [p for p in paths if not any((root / p).resolve().is_relative_to(d) for d in ignored)]
         if outside:
             changed.append(" <- ".join(paths) if len(paths) > 1 else paths[0])
     return GitState(commit=commit, dirty=bool(changed), changed=changed)
