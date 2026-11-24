@@ -83,7 +83,9 @@ def _input_change(path: Path, root: Path) -> str | None:
     if not given.is_relative_to(root_abs):
         return f"{path} (저장소 밖의 입력)"
     rel = given.relative_to(root_abs)
-    if given.resolve() != root_abs.resolve() / rel:
+    # 링크 검사는 넘겨받은 원래 경로로 한다. abspath는 링크를 풀기 전에 ..를 지워 다른 파일을 가리킬 수 있다
+    # (alias/../A.yaml에서 alias가 링크면 실제로 읽는 파일이 다르다, PR #20 리뷰)
+    if Path(path).resolve() != root_abs.resolve() / rel:
         return f"{rel.as_posix()} (심볼릭 링크를 거친 입력)"
     shown = subprocess.run(["git", "show", f"HEAD:{rel.as_posix()}"], cwd=root, capture_output=True)
     if shown.returncode != 0:

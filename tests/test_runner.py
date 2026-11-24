@@ -251,3 +251,16 @@ def test_git_state_input_replaced_by_link_to_other_committed_file(tmp_path):
     a.symlink_to(b)
     state = git_state(out, root=repo, inputs=[a])
     assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
+
+
+def test_git_state_dotdot_through_link_is_a_link_input(tmp_path):
+    """alias가 링크인 alias/../A.yaml은 abspath로는 inputs/A.yaml이지만 실제로는 다른 파일을 읽는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    inputs = repo / "eval" / "results" / "inputs"
+    (inputs / "real" / "deep").mkdir(parents=True)
+    (inputs / "A.yaml").write_text("id: A\n", encoding="utf-8")
+    (inputs / "real" / "A.yaml").write_text("id: REAL\n", encoding="utf-8")
+    (inputs / "alias").symlink_to(inputs / "real" / "deep")
+    _commit_all(repo)
+    state = git_state(repo / "eval" / "results" / "x", root=repo, inputs=[inputs / "alias" / ".." / "A.yaml"])
+    assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
