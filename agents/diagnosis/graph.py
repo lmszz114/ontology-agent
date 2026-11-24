@@ -687,30 +687,36 @@ def build_graph(deps: Deps):
                 unavailable.append(f"절차 {procedure_id}를 받지 못했다: {exc}")
                 return None
 
+        # 반드시 여는 절차는 조회 결과와 상관없이 코드가 정한다. 어느 경로(절차 조회, 원인이 여는 절차)로
+        # 후보에 들어오든 항상 여는 절차로 둔다. 절차 조회에 실패해도 원인 쪽 목록으로 들어오면 필수가 유지된다
+        # 접수(P1)는 모든 사건, 등급이 상향되면 에스컬레이션(P2, R3), 긴급 공지(P3)는 등급에 걸린 절차(R3 TRIGGERS),
+        # 긴급 점검(P4)도 SEV1, SEV2면 연다(R7). 원인이 확정되면 원인 수정(P10)을 연다
+        required = {INTAKE_PROCEDURE}
+        if incident.get("escalated"):
+            required.add(ESCALATION_PROCEDURE)
+        if sev in URGENT_LEVELS:
+            required |= {URGENT_NOTICE, URGENT_MAINTENANCE}
+        if confirmed:
+            required.add(FIX_PROCEDURE)
+
         def add(proc: dict | None, **extra) -> None:
             if proc is None:
                 return
             entry = candidates.setdefault(proc["procedure_id"], {**proc, "always": False, "conditions": []})
-            entry["always"] = entry["always"] or extra.get("always", False)
+            entry["always"] = entry["always"] or proc["procedure_id"] in required
             if extra.get("condition"):
                 entry["conditions"].append(extra["condition"])
 
-        add(await known(INTAKE_PROCEDURE), always=True)
-        if incident.get("escalated"):
-            # 등급이 상향되면 에스컬레이션을 반드시 연다 (R3)
-            add(await known(ESCALATION_PROCEDURE), always=True)
-        if sev in URGENT_LEVELS:
-            # 긴급 공지(P3)는 원인이 아니라 등급에 걸린 절차다 (R3 TRIGGERS). 긴급 점검(P4)도 SEV1, SEV2면 연다 (R7).
-            # 원인이 확정되지 않아도 반드시 연다. 빠지면 검증에서 막혀 다시 묻는다
-            add(await known(URGENT_NOTICE), always=True)
-            add(await known(URGENT_MAINTENANCE), always=True)
+        for procedure_id in (INTAKE_PROCEDURE, ESCALATION_PROCEDURE, URGENT_NOTICE, URGENT_MAINTENANCE):
+            if procedure_id in required:
+                add(await known(procedure_id))
         if confirmed:
             try:
                 found = await deps.knowledge.cause_procedures(confirmed, sev)
             except KnowledgeUnavailable as exc:
                 found = {"resolved_by": [], "triggered_by_severity": []}
                 unavailable.append(f"{confirmed}가 여는 절차를 받지 못했다: {exc}")
-            add(await known(FIX_PROCEDURE), always=True)
+            add(await known(FIX_PROCEDURE))
             for proc in found["resolved_by"]:
                 add(proc, condition=proc.get("condition"))
             for proc in found.get("triggered_by_severity", []):
@@ -723,7 +729,8 @@ def build_graph(deps: Deps):
             "procedures": {"type": "array", "items": {"type": "string", "enum": sorted(candidates)}},
             "resolved_conditions": {"type": "array", "items": {"type": "string", "enum": allowed_conditions or [""]}},
             "actions": {"type": "array", "items": _schema({
-                "action_id": {"type": "string", "enum": action_ids},
+                # 후보 절차에 조치가 없으면 빈 enum 대신 빈 문자열 하나를 둔다 (조건과 같은 방식). 검증이 거부한다
+                "action_id": {"type": "string", "enum": action_ids or [""]},
                 "mode": {"type": "string", "enum": ["auto", "approval"]},
             })},
             "reason": {"type": "string"},
@@ -770,13 +777,20 @@ def build_graph(deps: Deps):
             + "\n조회 결과:\n" + "\n".join(f"- {c['tool']}: {c['text']}" for c in diag["tool_calls"] if not c["is_error"])
             + f"\n\n후보 절차:\n{json.dumps(list(candidates.values()), ensure_ascii=False, indent=1)}"
         )
-        data, errors = _ask_json(
-            deps, task="diagnosis", name="9.procedures", system=prompts.PROCEDURE, content=content,
-            schema=schema, validate=validate,
-        )
         needs_human = list(diag["needs_human"]) + unavailable
+        if not candidates:
+            # 고를 절차가 하나도 없으면 묻지 않는다. 선택지가 빈 스키마를 API에 보내지 않는다
+            # (그래프 공급자는 접수 P1이 항상 있어 생기지 않는다. 텍스트 공급자가 절차를 하나도 주지 못하면 생긴다)
+            data = None
+            needs_human.append("고를 수 있는 절차 후보가 없어 절차와 조치를 고르지 않았다")
+        else:
+            data, errors = _ask_json(
+                deps, task="diagnosis", name="9.procedures", system=prompts.PROCEDURE, content=content,
+                schema=schema, validate=validate,
+            )
+            if data is None:
+                needs_human.append(f"절차, 조치 선택 출력 검증 실패: {errors}")
         if data is None:
-            needs_human.append(f"절차, 조치 선택 출력 검증 실패: {errors}")
             data = {"procedures": [], "resolved_conditions": [], "actions": [], "reason": None}
         diag |= {"procedure_choice": data, "candidate_procedures": sorted(candidates), "needs_human": needs_human}
         return {"diag": diag}

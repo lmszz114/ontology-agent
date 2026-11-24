@@ -349,3 +349,42 @@ def test_unavailable_rank_goes_to_human(db, seed):  # noqa: F811
     state, _ = run_agent(db, seed, scenario, model, verdicts={}, knowledge=_failing("rank_causes"))
     (out,) = state["outputs"]
     assert out["hypotheses"] == [] and any("원인 후보를 받지 못했다" in n for n in out["needs_human"])
+
+
+@pytest.mark.integration
+def test_required_procedure_stays_required_through_cause_list(db, seed):  # noqa: F811
+    """P10 조회만 실패하고 원인이 여는 절차 목록으로 P10이 들어와도 항상 여는 절차로 남는다 (PR #18 리뷰).
+
+    필수 표시가 빠지면 LLM이 P10을 빼도 검증을 통과한다. 여기서는 P10을 빼는 답을 먼저 주고 다시 묻는지 본다.
+    """
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+
+    def drop_p10(params):
+        procs = [p for p in json.loads(params["messages"][0]["content"].split("후보 절차:\n", 1)[1])
+                 if not p["human_only"] and p["procedure_id"] != "P10"]
+        actions = sorted({a["action_id"]: a["risk"] for p in procs for a in p["actions"]}.items())
+        return text({"procedures": [p["procedure_id"] for p in procs], "resolved_conditions": ["누락 보상"],
+                     "actions": [{"action_id": a, "mode": "approval" if r == "high" else "auto"} for a, r in actions],
+                     "reason": "P10을 뺀다"})
+
+    model = OracleModel(db, intake_of(scenario), overrides={"procedure": [drop_p10]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"}, conditions=["누락 보상"],
+                         knowledge=_failing("procedure", procedure_id="P10"))
+    (out,) = state["outputs"]
+    assert model.calls.count("procedure") == 2  # P10을 뺀 첫 답은 거부되고 다시 묻는다
+    assert "P10" in out["procedures"]
+    assert any("절차 P10를 받지 못했다" in n for n in out["needs_human"])
+
+
+@pytest.mark.integration
+def test_no_procedure_candidates_does_not_ask(db, seed):  # noqa: F811
+    """원인이 확정되지 않고 접수 절차도 받지 못하면 후보가 없다. 빈 선택지로 묻지 않고 사람에게 넘긴다 (PR #18 리뷰)."""
+    _DB[:] = [db]
+    scenario = load("SC-S1-01")
+    model = OracleModel(db, intake_of(scenario))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={}, knowledge=_failing("procedure"))
+    (out,) = state["outputs"]
+    assert "procedure" not in model.calls
+    assert out["procedures"] == [] and out["actions"] == []
+    assert any("절차 후보가 없어" in n for n in out["needs_human"])
