@@ -135,7 +135,25 @@ class RuleModel:
         return text(self.intake_data)
 
 
-def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, conditions=()):
+class TextOverride:
+    """모의 도구 클라이언트를 감싸 응답 문장을 바꾼다. 같은 조회가 다른 결과를 내는 경우를 만든다."""
+
+    def __init__(self, client, texts: dict[str, list[str]]):
+        self.client, self.texts = client, {name: iter(values) for name, values in texts.items()}
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+    async def call_tool(self, name, args):
+        result = await self.client.call_tool(name, args)
+        replacement = next(self.texts.get(name, iter(())), None)
+        if replacement is None or result.is_error:
+            return result
+        block = result.content[0].model_copy(update={"text": replacement})
+        return result.model_copy(update={"content": [block], "structured_content": None})
+
+
+def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, conditions=(), tool_texts=None):
     model.verdicts = verdicts
     model.conditions = list(conditions)
     tracer = MemoryTracer()
@@ -148,7 +166,7 @@ def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, condit
             listed = await mock.list_tools()
             deps = Deps(
                 driver=db, llm=llm, tracer=tracer, knowledge=GraphKnowledge(onto, tracer),
-                mock_client=mock,
+                mock_client=TextOverride(mock, tool_texts) if tool_texts else mock,
                 mock_tools=[{"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
                             for t in listed.tools],
                 tool_checks=queries.get_evidence_tools(db),
@@ -578,3 +596,35 @@ def test_unknown_reused_result_id_is_inconclusive(db, seed):
     model.check = lambda params: text({"result": "confirm", "used_checks": [], "reused_results": ["K99"], "reason": "x"})
     state, _ = run_agent(db, seed, scenario, model, verdicts={})
     assert state["outputs"][0]["hypotheses"][0]["result"] == "inconclusive"
+
+
+def test_same_query_called_again_keeps_the_earlier_result(db, seed):
+    """같은 도구를 같은 인자로 다시 불러 결과가 달라져도, 앞 결과 ID를 인용하면 앞 결과가 근거로 남는다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    original = model.check
+    seen = {}
+
+    def check(params):
+        first = params["messages"][0]["content"]
+        cause = re.search(r"확인할 원인 가설: (C\d+)", first).group(1)
+        seen.setdefault("first", cause)
+        payment = [{"type": "tool_use", "id": "tu_pay", "name": "query_payment_record", "input": {}}]
+        if cause == seen["first"]:
+            if len(params["messages"]) == 1:
+                return message(payment, stop_reason="tool_use")
+            return text({"result": "rule_out", "used_checks": ["E01"], "reused_results": [], "reason": "x"})
+        if "picked" not in seen:
+            if len(params["messages"]) == 1:
+                # 앞 가설의 E01 결과(K1)가 보이는데도 같은 인자로 다시 조회한다
+                seen["old"] = re.search(r"^- (K\d+) E01 ", first, re.M).group(1)
+                return message(payment, stop_reason="tool_use")
+            seen["picked"] = True
+            return text({"result": "confirm", "used_checks": ["E01"], "reused_results": [seen["old"]], "reason": "앞 결과"})
+        return original(params)
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={}, tool_texts={"query_payment_record": ["첫 조회 결과", "다시 조회한 결과"]})
+    (out,) = state["outputs"]
+    second = next(h for h in out["hypotheses"] if h["cause_id"] != seen["first"] and h["findings"])
+    assert sorted((f["reused"], f["detail"]) for f in second["findings"]) == [(False, "다시 조회한 결과"), (True, "첫 조회 결과")]

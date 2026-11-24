@@ -402,7 +402,8 @@ def build_graph(deps: Deps):
         tool_calls = list(diag["tool_calls"])
 
         # 앞 가설에서 조회해 둔 결과. 결과 ID로 구분해서, 같은 근거를 다른 인자로 조회한 결과가 섞이지 않게 한다
-        prior_ids = {r["result_id"] for r in tool_results.values()}
+        # 조회 결과는 호출마다 따로 남긴다. 같은 도구, 같은 인자로 다시 불러도 앞 결과를 덮어쓰지 않는다
+        prior_ids = set(tool_results)
         known = "\n".join(f"- {r['result_id']} {r['check_id']} {r['tool']} {json.dumps(r['args'], ensure_ascii=False)}: {r['text']}"
                            for r in tool_results.values())
         content = (
@@ -439,11 +440,10 @@ def build_graph(deps: Deps):
             answers = []
             for use in uses:
                 out = await call_tool(deps.mock_client, deps.tracer, server="mock_tools", name=use.name, args=use.input)
-                key = json.dumps([use.name, use.input], ensure_ascii=False, sort_keys=True)
                 if not out.is_error:
-                    result_id = tool_results[key]["result_id"] if key in tool_results else f"K{len(tool_results) + 1}"
-                    tool_results[key] = {"result_id": result_id, "tool": use.name, "args": use.input,
-                                         "check_id": deps.tool_checks.get(use.name), "text": out.text}
+                    result_id = f"K{len(tool_results) + 1}"
+                    tool_results[result_id] = {"result_id": result_id, "tool": use.name, "args": use.input,
+                                               "check_id": deps.tool_checks.get(use.name), "text": out.text}
                 called.append({"tool": use.name, "args": use.input, "check_id": deps.tool_checks.get(use.name),
                                "is_error": out.is_error, "text": out.text})
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
@@ -461,12 +461,13 @@ def build_graph(deps: Deps):
                                  score=hypothesis["score"], rank=hypothesis["rank"], status=status)
         # 이 가설의 근거: 이번에 새로 부른 성공 결과와, 판단에 썼다고 결과 ID로 답한 앞 가설의 조회 결과.
         # 실제 호출 이력(tool_calls)과 따로 둔다. 재사용한 결과도 이 가설의 Finding과 출력에 남긴다.
-        # 근거 ID가 아니라 결과 ID로 잇는다. 같은 근거를 다른 인자로 조회한 결과가 잘못 연결되지 않게 한다
+        # 근거 ID가 아니라 결과 ID로 잇는다. 같은 근거를 다른 인자로 조회한 결과, 같은 인자로 다시 조회해
+        # 달라진 결과가 잘못 연결되지 않게 한다. 인용한 결과는 그대로 잇는다
         evidence = [{"check_id": c["check_id"], "tool": c["tool"], "args": c["args"], "text": c["text"], "reused": False}
                     for c in called if c["check_id"] and not c["is_error"]]
-        fresh = {json.dumps([e["tool"], e["args"]], ensure_ascii=False, sort_keys=True) for e in evidence}
-        for key, cached in tool_results.items():
-            if cached["result_id"] in verdict["reused_results"] and key not in fresh and cached["check_id"]:
+        for result_id in dict.fromkeys(verdict["reused_results"]):
+            cached = tool_results[result_id]
+            if cached["check_id"]:
                 evidence.append({k: cached[k] for k in ("check_id", "tool", "args", "text")} | {"reused": True})
         checked_at = deps.now()
         for e in evidence:
