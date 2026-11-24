@@ -886,8 +886,9 @@ def test_runner_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypatch):
 
     async def run_one(s, p):
         return await run_scenario(s, p, config="C", org="org-a", tracer=tracer, llm=llm, driver=db)
+    from ontology.seed import seed_hash
     asyncio.run(run_all(todo, out=tmp_path, git=git, run_one=run_one, prices=llm.config.price_record,
-                        log=lambda _: None))
+                        seed_hash=seed_hash(seed), log=lambda _: None))
 
     result = grade_folder(tmp_path, seed)
     assert result["meta"]["config"] == "C" and result["meta"]["git_dirty"] is False
@@ -988,3 +989,27 @@ def test_failed_condition_lookup_goes_to_human(db, seed):
     assert len(calls) == 1 and calls[0]["is_error"]
     assert any("조건 판정 근거 E02를 조회하지 못했다" in n for n in out["needs_human"])
     assert "P7" not in out["procedures"]
+
+
+@pytest.mark.integration
+def test_condition_check_id_follows_called_tool(db, seed):
+    """조건 조회의 판정 근거 ID는 7단계처럼 부른 도구로 정한다. 공급자가 준 ID와 도구가 어긋나면 사람 확인으로 남긴다
+    (M3 점검 2 리뷰: 구성 A의 답이 E02에 다른 도구를 짝지어도 형식 검증은 통과한다)."""
+    scenario = load("SC-S4-01")
+
+    class MismatchedTool(GraphKnowledge):
+        async def cause_procedures(self, cause_id, severity_id):
+            found = await super().cause_procedures(cause_id, severity_id)
+            for proc in found["resolved_by"]:
+                if proc.get("condition_check"):
+                    proc["condition_check"] = {**proc["condition_check"], "tool": "query_config_change",
+                                               "args": {"system": "SY15"}}
+            return found
+
+    model = RuleModel(intake_of(scenario, systems=("SY15",)))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C11": "confirm"},
+                         knowledge=lambda onto, tracer, llm, results: MismatchedTool(onto, tracer))
+    (out,) = state["outputs"]
+    calls = [c for c in out["tool_calls"] if c["step"] == "9.condition"]
+    assert [(c["tool"], c["check_id"]) for c in calls] == [("query_config_change", "E07")]
+    assert any("판정 근거는 E02인데 도구 query_config_change는 E07다" in n for n in out["needs_human"])

@@ -10,13 +10,15 @@ import pytest
 from common.models import load_model_config
 from eval.grader.grade import load_results
 from eval.runner import __main__ as cli
-from eval.runner.runner import GitState, RunnerError, git_state, plan, run_all
+from eval.runner.runner import GitState, RunnerError, check_out_dir, file_hash, git_state, plan, run_all
+from ontology.seed import load_seed, seed_hash
 
 DEV = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "dev"
 PATHS = [DEV / "SC-S1-01.yaml", DEV / "SC-S7-02.yaml"]
 GIT = GitState(commit="abc1234def", dirty=False, changed=[])
+SEED_HASH = seed_hash(load_seed("org-a"))
 EXPECTED = {"config": "C", "org": "org-a", "split": "dev", "prompt_version": "diagnosis-v6",
-            "git_commit": GIT.commit, "git_dirty": False}
+            "git_commit": GIT.commit, "git_dirty": False, "seed_hash": SEED_HASH}
 
 
 def fake_result(scenario: dict) -> dict:
@@ -36,7 +38,7 @@ def run(todo, out, *, fail_on: str | None = None):
             raise RuntimeError("연결 실패")
         return fake_result(scenario)
     asyncio.run(run_all(todo, out=out, git=GIT, run_one=run_one, prices=load_model_config("org-a").price_record,
-                        log=lambda _: None))
+                        seed_hash=SEED_HASH, log=lambda _: None))
     return calls
 
 
@@ -46,6 +48,8 @@ def test_reps_write_rep_folders_with_run_record(tmp_path):
     run(todo, tmp_path)
     data = json.loads((tmp_path / "r2" / "SC-S7-02.json").read_text(encoding="utf-8"))
     assert data["run"]["git_commit"] == GIT.commit and data["run"]["git_dirty"] is False
+    # 채점기가 같은 시드와 라벨로 채점하는지 볼 수 있게 해시를 남긴다 (M3 점검 2)
+    assert data["run"]["seed_hash"] == SEED_HASH and data["run"]["scenario_hash"] == file_hash(PATHS[1])
     prices = data["run"]["prices"]
     assert prices["checked"] and prices["source"].startswith("https://")
     assert set(prices["models"]) == {"claude-haiku-5-5"} and "input" in prices["models"]["claude-haiku-5-5"]
@@ -141,6 +145,7 @@ def test_git_state_korean_result_folder_and_moves(tmp_path):
 
 
 def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "check_out_dir", lambda out: None)
     monkeypatch.setattr(cli, "git_state", lambda out, inputs=(): GitState("abc", True, ["a.py"]))
     assert cli.main(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path)]) == 1
     assert "--allow-dirty" in capsys.readouterr().err
@@ -152,11 +157,28 @@ def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
 
 def test_cli_allow_dirty_reaches_plan(tmp_path, monkeypatch):
     """--allow-dirty면 실행 목록까지 만든다. 실제 실행은 하지 않는다."""
+    monkeypatch.setattr(cli, "check_out_dir", lambda out: None)
     monkeypatch.setattr(cli, "git_state", lambda out, inputs=(): GitState("abc", True, ["a.py"]))
     args = cli.parse_args(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path), "--allow-dirty",
                            "--reps", "2"])
-    out, git, todo = cli.prepare(args)
-    assert git.dirty and len(todo) == 2
+    out, git, todo, seed = cli.prepare(args)
+    assert git.dirty and len(todo) == 2 and seed == SEED_HASH
+    # 같은 커밋 위의 다른 미커밋 코드가 한 폴더에 섞이지 않게 dirty 상태로는 이어 돌리지 않는다 (M3 점검 2)
+    with pytest.raises(RunnerError, match="함께 쓸 수 없다"):
+        cli.prepare(cli.parse_args(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path),
+                                    "--allow-dirty", "--resume"]))
+
+
+@pytest.mark.parametrize("out", ["", "agents", "eval/results", "eval/resultsx/a", "eval/results/../../agents", "../x"])
+def test_out_dir_outside_results_is_refused(out):
+    """결과 폴더 밖은 변경 검사에서 빠지므로 결과 폴더는 eval/results 아래 새 폴더만 받는다 (M3 점검 2 리뷰)."""
+    with pytest.raises(RunnerError, match="eval/results 아래"):
+        check_out_dir(Path("/repo") / out, root=Path("/repo"))
+
+
+def test_out_dir_under_results_is_accepted():
+    check_out_dir(Path("/repo/eval/results/2026-11-25-x"), root=Path("/repo"))
+    check_out_dir(Path("/repo/eval/results/a/b"), root=Path("/repo"))
 
 
 def test_git_state_ignores_other_result_folders(tmp_path):
@@ -280,3 +302,70 @@ def test_git_state_dotdot_through_link_to_sibling_is_a_link_input(tmp_path):
     assert not git_state(out, root=repo, inputs=[inputs / "real" / ".." / "A.yaml"]).dirty
     state = git_state(out, root=repo, inputs=[inputs / "alias" / ".." / "A.yaml"])
     assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
+
+
+@pytest.mark.parametrize("loaded", [None, {"hash": "old", "org": "org-a"}, {"hash": SEED_HASH, "org": "org-b"}])
+def test_run_refuses_stale_graph(monkeypatch, loaded):
+    """그래프의 시드가 지금 시드 파일과 다르면 LLM을 부르기 전에 멈춘다. 구성 A는 파일, C와 게이트는 그래프를 읽는다."""
+    monkeypatch.setattr(cli, "loaded_seed", lambda driver: loaded)
+    with pytest.raises(RunnerError, match="다시 적재"):
+        cli.check_loaded_seed(None, "org-a", SEED_HASH)
+
+
+def test_run_accepts_matching_graph(monkeypatch):
+    monkeypatch.setattr(cli, "loaded_seed", lambda driver: {"hash": SEED_HASH, "org": "org-a"})
+    cli.check_loaded_seed(None, "org-a", SEED_HASH)
+
+
+def test_out_dir_link_inside_results_pointing_outside_is_refused(tmp_path):
+    """eval/results 안의 링크가 밖을 가리키면 결과가 그곳에 써진다. 링크를 푼 경로도 결과 폴더 아래여야 한다 (PR #23 리뷰)."""
+    results = tmp_path / "repo" / "eval" / "results"
+    results.mkdir(parents=True)
+    (tmp_path / "outside").mkdir()
+    (results / "link").symlink_to(tmp_path / "outside")
+    (results / "inner").mkdir()
+    (results / "ok").symlink_to(results / "inner")
+    with pytest.raises(RunnerError, match="eval/results 아래"):
+        check_out_dir(results / "link" / "run", root=tmp_path / "repo")
+    check_out_dir(results / "ok" / "run", root=tmp_path / "repo")
+
+
+def test_scenario_hash_is_of_the_bytes_that_ran(tmp_path):
+    """해시는 실행에 쓴 바이트로 낸다. 실행 중 파일이 바뀌어도 실행한 내용의 해시가 남는다 (PR #23 리뷰)."""
+    import hashlib
+    path = tmp_path / "SC-S1-01.yaml"
+    original = PATHS[0].read_bytes()
+    path.write_bytes(original)
+    out = tmp_path / "out"
+
+    async def run_one(scenario, p):
+        path.write_bytes(original + b"\n# changed\n")
+        return fake_result(scenario)
+    asyncio.run(run_all([(1, path)], out=out, git=GIT, run_one=run_one, prices=load_model_config("org-a").price_record,
+                        seed_hash=SEED_HASH, log=lambda _: None))
+    run = json.loads((out / "r1" / "SC-S1-01.json").read_text(encoding="utf-8"))["run"]
+    assert run["scenario_hash"] == hashlib.sha256(original).hexdigest() != file_hash(path)
+
+
+def test_rep_folder_link_pointing_outside_is_refused(tmp_path):
+    """반복 폴더(r1)가 결과 폴더 밖을 가리키는 링크면 쓰지 않는다 (PR #23 리뷰)."""
+    out = tmp_path / "out"
+    out.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (out / "r1").symlink_to(outside)
+    with pytest.raises(RunnerError, match="결과 폴더 밖"):
+        run(plan(PATHS[:1], out=out, reps=1, resume=False, expected=EXPECTED), out)
+    assert list(outside.iterdir()) == []
+
+
+def test_result_file_link_is_replaced_not_followed(tmp_path):
+    """결과 파일 자리에 링크가 있으면 원자적 쓰기의 이름 바꾸기가 링크를 새 파일로 바꾼다. 링크 대상은 그대로다."""
+    out = tmp_path / "out"
+    (out / "r1").mkdir(parents=True)
+    victim = tmp_path / "victim.json"
+    victim.write_text("원래 내용", encoding="utf-8")
+    (out / "r1" / "SC-S1-01.json").symlink_to(victim)
+    run([(1, PATHS[0])], out)
+    assert victim.read_text(encoding="utf-8") == "원래 내용"
+    assert not (out / "r1" / "SC-S1-01.json").is_symlink()

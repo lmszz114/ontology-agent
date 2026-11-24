@@ -789,10 +789,16 @@ def build_graph(deps: Deps):
             check = condition_checks[name]
             args = check.get("args") or {}
             key = (check["tool"], json.dumps(args, ensure_ascii=False, sort_keys=True))
+            # 조회한 판정 근거는 7단계처럼 도구 이름으로 정한다. 지식 공급자가 준 ID와 다르면 사람이 알게 남긴다
+            # (구성 A의 답이 E02에 다른 도구를 짝지어도 형식 검증은 통과한다, M3 점검 2 리뷰)
+            called_check = deps.tool_checks.get(check["tool"])
+            if called_check != check["check_id"]:
+                unavailable.append(f"조건 {name}의 판정 근거는 {check['check_id']}인데 도구 {check['tool']}는 "
+                                   f"{called_check or '정의되지 않은 도구'}다")
             if key not in done:
                 result = await call_tool(deps.mock_client, deps.tracer, server="mock_tools", name=check["tool"], args=args)
                 done[key] = {"step": "9.condition", "cause_id": confirmed, "tool": check["tool"],
-                             "check_id": check["check_id"], "args": args, "is_error": result.is_error,
+                             "check_id": called_check, "args": args, "is_error": result.is_error,
                              "text": result.text}
                 condition_calls.append(done[key])
                 if result.is_error:
@@ -800,8 +806,8 @@ def build_graph(deps: Deps):
                     unavailable.append(f"조건 판정 근거 {check['check_id']}를 조회하지 못했다: {result.text}")
             call = done[key]
             text = call["text"] if not call["is_error"] else f"조회하지 못했다 ({call['text']})"
-            condition_lines.append(f"- 조건 {name}: 판정 근거 {check['check_id']}, 기대 결과 \"{check['expect']}\". "
-                                   f"조회 결과: {text}")
+            condition_lines.append(f"- 조건 {name}: 판정 근거 {call['check_id'] or check['tool']}, "
+                                   f"기대 결과 \"{check['expect']}\". 조회 결과: {text}")
 
         verdict = diag["verdicts"].get(confirmed, {}) if confirmed else {}
         content = (

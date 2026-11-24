@@ -19,7 +19,7 @@ from neo4j import Driver, ManagedTransaction
 
 from ontology.db import get_driver
 from ontology.conditions import is_required
-from ontology.seed import load_seed, validate_seed
+from ontology.seed import load_seed, seed_hash, validate_seed
 
 # 정적 지식 계층의 노드 레이블 (설계 3단계 2-1)
 STATIC_LABELS = (
@@ -198,12 +198,33 @@ def _write(tx: ManagedTransaction, graph: Graph) -> dict:
     }
 
 
+# 적재한 시드의 해시를 남기는 노드. 정적 지식이 아니라 적재 기록이라 STATIC_LABELS에 넣지 않는다
+SEED_META = "SeedMeta"
+
+
 def load_static(driver: Driver, seed: dict) -> dict:
-    """정적 지식 계층을 시드대로 맞춘다. 적재한 노드, 관계 수와 지운 노드 수를 돌려준다."""
+    """정적 지식 계층을 시드대로 맞춘다. 적재한 노드, 관계 수와 지운 노드 수를 돌려준다.
+
+    같은 트랜잭션에서 적재한 시드의 해시와 조직을 남긴다. 실행기가 시드 파일과 그래프가 같은지 이 값으로 본다
+    """
     validate_seed(seed)
     graph = build_graph(seed)
+
+    def write(tx: ManagedTransaction) -> dict:
+        result = _write(tx, graph)
+        tx.run(f"MERGE (m:{SEED_META} {{id: 'seed'}}) SET m.hash = $hash, m.org = $org",
+               hash=seed_hash(seed), org=seed["org"]["id"]).consume()
+        return result
+
     with driver.session() as session:
-        return session.execute_write(_write, graph)
+        return session.execute_write(write)
+
+
+def loaded_seed(driver: Driver) -> dict | None:
+    """그래프에 마지막으로 적재한 시드의 해시와 조직. 적재 기록이 없으면 None."""
+    with driver.session() as session:
+        record = session.run(f"MATCH (m:{SEED_META} {{id: 'seed'}}) RETURN m.hash AS hash, m.org AS org").single()
+    return dict(record) if record else None
 
 
 if __name__ == "__main__":

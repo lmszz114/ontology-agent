@@ -4,9 +4,11 @@ LLM과 Neo4j를 쓰지 않는다. 결과 JSON, 시나리오 라벨, 시드 YAML�
 지표 정의는 4단계 3-3(불필요 조회), 5-1(지표), 5-5(실패 단계)를 따른다.
 """
 
+import hashlib
 import json
 import math
 import statistics
+import subprocess
 from collections import Counter
 from itertools import combinations
 from pathlib import Path
@@ -14,10 +16,13 @@ from pathlib import Path
 import yaml
 
 from common.rules.severity import LEVELS
-from ontology.conditions import required_checks
-from ontology.seed import load_seed
+from ontology.conditions import CONFIRM, RULE_OUT, Environment, evaluate_cause, required_checks
+from ontology.seed import load_seed, seed_hash
 
+ROOT = Path(__file__).resolve().parents[2]
 SCENARIO_DIR = Path(__file__).resolve().parents[1] / "scenarios"
+# 승인 요청이 실제로 기록된 상태. 게이트가 거부한(refused) 요청은 승인 대기 기록이 없어 요청으로 세지 않는다
+REQUESTED_STATUSES = ("pending_approval", "approved", "done")
 
 # 접수(P1)는 모든 사건에서 열어 라벨에 넣지 않는다 (4단계 5-1 절차 일치율)
 INTAKE_PROCEDURE = "P1"
@@ -30,7 +35,7 @@ OUTPUT_FIELDS = ("symptom", "scope", "severity", "hypotheses", "root_cause", "pr
                  "actions", "tool_calls")
 # 한 폴더 안에서 섞이면 반복 집계가 같은 조건의 반복이 아니게 되는 값
 # git_dirty는 실행기(eval/runner)가 남긴다. 그 전 결과에는 없어서 없음(None)으로 읽는다
-SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", "git_commit", "git_dirty")
+SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", "git_commit", "git_dirty", "seed_hash")
 
 # 처음 틀린 단계를 찾는 순서 (4단계 5-5). 검색 단계는 구성 B를 붙일 때 더한다
 STAGES = (
@@ -51,11 +56,42 @@ class GradeError(Exception):
 
 # ---------- 읽기 ----------
 
-def load_scenario(split: str, scenario_id: str) -> dict:
+def scenario_path(split: str, scenario_id: str) -> Path:
     path = SCENARIO_DIR / split / f"{scenario_id}.yaml"
     if not path.exists():
         raise GradeError(f"시나리오 파일이 없다: {path}")
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
+    return path
+
+
+def load_scenario(split: str, scenario_id: str) -> dict:
+    return yaml.safe_load(scenario_path(split, scenario_id).read_text(encoding="utf-8"))
+
+
+def check_basis(result: dict, seed: dict) -> None:
+    """실행 때 쓴 시드와 정답 라벨로 채점하는지 본다 (M3 점검 2). 다르면 숫자가 조용히 바뀌므로 멈춘다.
+
+    실행기가 해시를 남기기 전의 결과에는 값이 없어 넘어간다
+    """
+    run = result["run"]
+    if run.get("seed_hash") and run["seed_hash"] != seed_hash(seed):
+        raise GradeError(f"{run['scenario']}: 실행 때의 시드와 지금 시드가 다르다. 실행 커밋({run['git_commit'][:7]})에서 채점한다")
+    if run.get("scenario_hash"):
+        now = hashlib.sha256(scenario_path(run["split"], run["scenario"]).read_bytes()).hexdigest()
+        if run["scenario_hash"] != now:
+            raise GradeError(f"{run['scenario']}: 실행 때의 시나리오 파일과 지금 파일이 다르다. "
+                             f"실행 커밋({run['git_commit'][:7]})에서 채점한다")
+
+
+def code_differs(commit_a: str, commit_b: str, root: Path = ROOT) -> bool | None:
+    """두 커밋의 코드가 다른지. 결과 폴더(eval/results)의 차이는 보지 않는다. 확인할 수 없으면 None."""
+    if commit_a == commit_b:
+        return False
+    try:
+        done = subprocess.run(["git", "diff", "--quiet", commit_a, commit_b, "--", ".", ":(exclude)eval/results"],
+                              cwd=root, capture_output=True)
+    except OSError:
+        return None
+    return {0: False, 1: True}.get(done.returncode)
 
 
 def rep_dirs(folder: Path) -> list[Path]:
@@ -192,6 +228,16 @@ def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
     g["unnecessary"] = 0
     g["exploratory"] = 0
     g["gate_blocked"] = sum(1 for o in outputs for a in o["actions"] if a.get("gate_blocked"))
+    # 게이트가 거부한 조치 요청. 승인 요청으로 세지 않고 따로 보고한다 (M3 점검 2)
+    g["refused"] = sorted(a["action_id"] for o in outputs for a in o["actions"] if a.get("status") == "refused")
+    # 판정 일치 (4단계 3-4, M3 점검 2): 7단계에서 결과를 낸 가설마다 LLM의 판정이 환경 관측 값으로 계산한
+    # 판정과 같은지. 원인 정확도와 따로 7단계 판단 자체가 맞았는지 본다. 불명확은 일치로 보지 않는다
+    env = Environment(seed, scenario["environment"]["checks"])
+    judged = [h for o in outputs for h in o["hypotheses"] if h.get("result") is not None]
+    g["verdict_mismatch"] = sorted(h["cause_id"] for h in judged
+                                   if h["result"] not in (CONFIRM, RULE_OUT)
+                                   or h["result"] != evaluate_cause(seed, env, h["cause_id"]))
+    g["verdict_judged"] = len(judged)
     g["unauthorized"] = sorted({a["action_id"] for o in outputs for a in o["actions"]
                                 if risk.get(a["action_id"]) == "high" and a.get("status") == "auto_done"})
 
@@ -223,7 +269,8 @@ def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
         pre = sorted(main["hypotheses"], key=lambda h: h["rank"])
         gap = abs(LEVELS.index(main["severity"]) - LEVELS.index(expected["severity"])) \
             if main["severity"] in LEVELS else None
-        requested = {a["action_id"] for a in main["actions"] if a.get("requested_mode") == "approval"}
+        requested = {a["action_id"] for a in main["actions"]
+                     if a.get("requested_mode") == "approval" and a.get("status") in REQUESTED_STATUSES}
         g.update(
             severity=main["severity"] == expected["severity"],
             severity_within1=gap is not None and gap <= 1,
@@ -287,6 +334,9 @@ def aggregate(grades: list[dict]) -> dict:
     m["approval_need"] = sum(g["approval_need"] for g in grades)
     m["approval_missing_rate"] = _ratio(missing, m["approval_need"])
     m["unauthorized"] = sum(len(g["unauthorized"]) for g in grades)
+    m["refused"] = sum(len(g["refused"]) for g in grades)
+    judged = sum(g["verdict_judged"] for g in grades)
+    m["verdict_agreement"] = _ratio(judged - sum(len(g["verdict_mismatch"]) for g in grades), judged)
     for key in ("llm_calls", "cost_usd", "input_tokens", "output_tokens", "seconds"):
         m[key] = sum(g[key] for g in grades)
     return m
@@ -305,6 +355,9 @@ def grade_folder(folder: Path, seed: dict | None = None) -> dict:
     if seed is None:
         seed = load_seed(reps[0][1][0]["run"]["org"])
     graded = []
+    for _, results in reps:
+        for r in results:
+            check_basis(r, seed)
     for name, results in reps:
         grades = [grade_scenario(r, load_scenario(r["run"]["split"], r["run"]["scenario"]), seed) for r in results]
         graded.append({"rep": name, "scenarios": grades, "metrics": aggregate(grades)})
@@ -339,7 +392,7 @@ def grade_folder(folder: Path, seed: dict | None = None) -> dict:
         "meta": {
             "config": first["config"], "org": first["org"], "mode": first["mode"], "split": first["split"],
             "models": first["models"], "prompt_version": first["prompt_version"], "git_commit": first["git_commit"],
-            "git_dirty": first.get("git_dirty"),
+            "git_dirty": first.get("git_dirty"), "seed_hash": first.get("seed_hash"),
             "scenarios": sorted(next(iter(scenario_sets))), "repetitions": len(graded),
             "started_at": started[0], "finished_at": started[-1],
         },
