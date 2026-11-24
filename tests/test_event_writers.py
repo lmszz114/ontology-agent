@@ -255,3 +255,16 @@ def test_part_of_replaces_suspected_duplicate_on_the_same_incident(db):
     with db.session() as session:
         rels = session.run("MATCH (:Report {id: 'RP-Y'})-[r]->(:Incident {id: 'INC-1'}) RETURN type(r) AS t").data()
     assert [r["t"] for r in rels] == ["PART_OF"]
+
+
+def test_part_of_keeps_suspicion_on_other_incidents(db):
+    """같은 사건으로 확정해도 다른 사건에 걸린 중복 의심은 남는다 (PR #14 리뷰 제안)."""
+    open_incident(db)
+    events.record_incident(db, incident_id="INC-2", severity_id="SEV3", opened_at=AT)
+    report(db, report_id="RP-Z")
+    for incident in ("INC-1", "INC-2"):
+        events.link_report(db, report_id="RP-Z", incident_id=incident, link="suspected_duplicate")
+    events.link_report(db, report_id="RP-Z", incident_id="INC-1", link="part_of")
+    with db.session() as session:
+        rels = session.run("MATCH (:Report {id: 'RP-Z'})-[r]->(i:Incident) RETURN i.id AS i, type(r) AS t ORDER BY i").data()
+    assert [(r["i"], r["t"]) for r in rels] == [("INC-1", "PART_OF"), ("INC-2", "SUSPECTED_DUPLICATE_OF")]

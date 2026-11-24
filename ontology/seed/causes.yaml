@@ -146,7 +146,7 @@ causes:
     aliases: []
     located_in: {system: SY15, scope: logic}
     checked_by:
-      - {check: E02, when: {delivery: mismatch}, expect: "보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)"}
+      - {check: E02, when: {delivery: [short, over]}, expect: "보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)"}
       - {check: E04, args: {system: SY15}, when: {error_log: present}, expect: "이벤트 시스템에 증상과 관련된 오류 로그가 있다 (지급 처리 오류)"}
     resolved_by:
       - {procedure: P6, condition: 미지급}

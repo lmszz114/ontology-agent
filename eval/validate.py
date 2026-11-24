@@ -35,6 +35,9 @@ FIX_PROCEDURE = "P10"
 URGENT_NOTICE, URGENT_MAINTENANCE = "P3", "P4"
 # 등급이 상향된 사건은 에스컬레이션(P2)을 연다 (R3)
 ESCALATION_PROCEDURE = "P2"
+# 지급 조건을 가르는 판정 근거와 값 (3단계 6장 E02). 보상(P6)과 회수(P7)가 이 조건으로 갈린다
+DELIVERY_CONDITIONS = {"short": "미지급", "absent": "미지급", "over": "과지급"}
+
 # 변경 이력의 종류마다 그 변경이 보여야 하는 판정 근거와 관측 값 (3단계 6장).
 # 시스템 인자가 있는 근거는 변경된 시스템으로 조회한 결과를 본다
 CHANGE_EVIDENCE = {
@@ -64,8 +67,31 @@ def _aware(value) -> datetime | None:
 
 
 def started_at(scenario: dict) -> datetime:
-    """증상 시작 시각. 가장 이른 제보 시각으로 본다."""
-    return min(_aware(r["at"]) for r in scenario["reports"])
+    """증상 시작 시각. 사건으로 묶인 제보 중 가장 이른 시각으로 본다.
+
+    분류하지 않는 제보(unclassified)는 증상과 관계가 없어 시작 시각에 넣지 않는다
+    """
+    grouped = {i for group in scenario["expected"]["incident_groups"] for i in group}
+    return min(_aware(r["at"]) for i, r in enumerate(scenario["reports"]) if i in grouped)
+
+
+def _condition_errors(seed: dict, scenario: dict, env: Environment) -> list[str]:
+    """지급 조건(미지급, 과지급) 라벨이 E02 관측 값과 맞는지. 조건이 붙은 절차를 가진 원인만 본다."""
+    expected = scenario["expected"]
+    cause = next((c for c in seed["causes"] if c["id"] == expected.get("root_cause")), None)
+    if cause is None:
+        return []
+    used = {ref.get("condition") for ref in cause["resolved_by"]} & set(DELIVERY_CONDITIONS.values())
+    if not used:
+        return []
+    observed = DELIVERY_CONDITIONS.get(env.observe("E02")["delivery"])
+    derived = {observed} & used if observed else set()
+    labelled = set(expected.get("resolved_conditions") or []) & set(DELIVERY_CONDITIONS.values())
+    if not derived:
+        return [f"{cause['id']}의 지급 조건 {sorted(used)}를 가를 E02 결과가 환경에 없다"]
+    if labelled != derived:
+        return [f"resolved_conditions의 지급 조건은 E02 관측 값으로 {sorted(derived)}여야 한다 (라벨 {sorted(labelled)})"]
+    return []
 
 
 def _escalation_evidence(scenario: dict) -> bool:
@@ -196,6 +222,10 @@ def _structure_errors(scenario) -> list[str]:
         for name in ("symptom", "scope", "severity", "root_cause", "primary_team"):
             need(isinstance(expected.get(name), str), f"expected.{name}은 문자열이어야 한다")
         # 목록의 원소 형식까지 본다. 뒤에서 정렬하고 집합으로 바꾸므로 형식이 섞이면 예외가 난다
+        # 분류하지 않고 사람에게 넘길 제보(증상 8개 밖)의 번호. 없으면 빈 목록이다
+        unclassified = expected.get("unclassified", [])
+        need(isinstance(unclassified, list) and all(isinstance(i, int) and not isinstance(i, bool) for i in unclassified),
+             "expected.unclassified는 제보 번호(정수)의 목록이어야 한다")
         for name in LIST_LABELS:
             value = expected.get(name)
             if name == "incident_groups":
@@ -248,8 +278,10 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
         check(bool(report.get("reporter")) and bool(report.get("text")), f"제보 {index}: 요청자 또는 원문이 없다")
         check(_aware(report.get("at")) is not None, f"제보 {index}: at은 시간대가 붙은 시각이어야 한다")
     groups = expected.get("incident_groups") or []
-    grouped = sorted(i for group in groups for i in group)
-    check(grouped == list(range(len(reports))), "incident_groups가 제보 전체를 한 번씩 묶지 않는다")
+    # 사건 묶음과 분류하지 않는 제보를 합쳐 모든 제보가 한 번씩 들어가야 한다
+    grouped = sorted([i for group in groups for i in group] + list(expected.get("unclassified") or []))
+    check(grouped == list(range(len(reports))),
+          "incident_groups와 unclassified가 제보 전체를 한 번씩 담지 않는다")
 
     # 환경
     env = None
@@ -267,6 +299,7 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
     if errors:
         return errors
     errors += _change_errors(seed, scenario, env)
+    errors += _condition_errors(seed, scenario, env)
 
     # 증상과 원인
     symptom = next((s for s in seed["symptoms"] if s["id"] == expected.get("symptom")), None)
@@ -292,9 +325,11 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
 
     # 심각도
     escalated = expected.get("escalated", False)
-    if check(isinstance(escalated, bool), "escalated는 true 또는 false여야 한다") and escalated:
-        check(_escalation_evidence(scenario), f"escalated가 true면 같은 사건의 접수가 {int(ESCALATION_WINDOW.total_seconds() // 60)}분 안에 "
-              f"{ESCALATION_COUNT}건 이상인 묶음이 있어야 한다 (R3)")
+    if check(isinstance(escalated, bool), "escalated는 true 또는 false여야 한다"):
+        minutes = int(ESCALATION_WINDOW.total_seconds() // 60)
+        # 상향 기준을 넘는 묶음이 있으면 상향이 정답이고, 없으면 상향하지 않는 것이 정답이다 (R3)
+        check(escalated == _escalation_evidence(scenario),
+              f"escalated는 같은 사건의 접수가 {minutes}분 안에 {ESCALATION_COUNT}건 이상인 묶음이 있을 때만 true다 (R3)")
     scope = expected.get("scope")
     if check(scope in SCOPES, f"scope는 {sorted(SCOPES)} 중 하나여야 한다"):
         severity = base_severity(scope, symptom["core_function"], symptom.get("min_severity"))

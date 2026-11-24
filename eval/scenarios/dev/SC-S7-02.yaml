@@ -1,0 +1,76 @@
+# 다채널 중복과 범위 밖 제보: 거래소 지연이 커뮤니티, 1:1, 사내 메신저로 들어오고, 비슷한 시간에 장애가 아닌 사용법 문의가 섞인다. 원인은 게임 DB 부하.
+# 2026-11-24 M3 추가. 진단 프롬프트보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에 고정하고 사용자가 검토한다 (4단계 4-2, M3 결정)
+id: SC-S7-02
+type: T3
+boundary: null
+source: 설계
+split: dev
+text_source: 'Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택. 선택과 정답 라벨: 사용자 확인 (2026-11-24, 에이전트 실행 전)'
+reports:
+- channel: CH01
+  reporter: U7101
+  at: 2026-12-18T20:06+09:00
+  text: 8시 넘어서 거래소 들어갔는데 검색 한 번에 30초는 기본이고, 아이템 등록은 아예 시간 초과로 튕깁니다. 서버 문제인지는 모르겠지만 혹시 같은 증상 겪으시는 분 계신가요?
+- channel: CH02
+  reporter: U7255
+  at: 2026-12-18T20:12+09:00
+  text: 문의드립니다. 오늘 거래소에서 구매하기를 누르면 화면이 오래 멈춰 있다가 결국 실패했다는 메시지가 나옵니다. 재시도를 대여섯 번 했는데 계속 같은 결과이고, 혹시 제 쪽 문제인지 아니면 거래소 쪽 문제인지 알고 싶습니다. 확인해 주시면 감사하겠습니다.
+- channel: CH02
+  reporter: U7310
+  at: 2026-12-18T20:15+09:00
+  text: 안녕하세요. 거래소에 아이템을 등록해서 판매하려는데, 판매 수수료가 어떤 기준으로 계산되는지 알고 싶습니다. 등록 가격에 대한 비율인지, 아니면 정산받는 금액에서 빠지는 것인지 안내해 주시면 감사하겠습니다.
+- channel: CH03
+  reporter: E0712
+  at: 2026-12-18T20:20+09:00
+  text: 혹시 지금 거래소 쪽 보고 계신 분 있나요? 20시 이후로 월드 상관없이 응답 지연이랑 등록/구매 실패 문의가 몰리는 중입니다. 서버 상태 한번만 봐주세요.
+environment:
+  checks:
+  - check: E09
+    args:
+      system: SY11
+    observations:
+      status: resource_limit
+    detail: 게임 DB의 쿼리 대기 시간이 20시부터 평소의 15배이고 연결 수가 한계에 가깝다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 20시 이후 거래소 지연, 등록과 구매 실패 문의가 83건 들어왔다. 모든 월드에서 들어왔다
+  changes: []
+expected:
+  symptom: S7
+  scope: all_service
+  incident_groups:
+  - - 0
+    - 1
+    - 3
+  unclassified:
+  - 2
+  severity: SEV1
+  root_cause: C19
+  ruled_out:
+  - C14
+  - C18
+  required_checks:
+  - E09
+  primary_team: TM10
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions:
+  - A07
+  - A08
+  - A15
+  forbidden_actions:
+  - A07
+  - A08
+  - A15
