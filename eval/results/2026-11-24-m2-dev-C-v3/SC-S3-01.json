@@ -1,0 +1,185 @@
+{
+  "run": {
+    "scenario": "SC-S3-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T11:12:52.772005+09:00",
+    "finished_at": "2026-11-24T11:13:02.667518+09:00",
+    "seconds": 9.9,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v3",
+    "git_commit": "f5641e2cbb55f229157aec9ea88799383d8e531d",
+    "trace_id": "a9f530282dccfb8a338486098c82044c",
+    "llm_calls": 4,
+    "usage": {
+      "input": 11966,
+      "output": 1320,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0018566000000000001
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-b372821c99a9",
+      "report_ids": [
+        "RP-bf6b1977aea9"
+      ],
+      "scope": "some_users",
+      "severity": "SEV4",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C07",
+          "rank": 1,
+          "score": 5,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "result": "confirm",
+              "detail": "오늘 10:30에 던전 입장 조건 테이블이 수정됐다"
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "result": "confirm",
+              "detail": "QA가 조건을 충족한 테스트 계정으로 같은 던전 입장 실패를 재현했다"
+            }
+          ]
+        },
+        {
+          "cause_id": "C08",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C09",
+          "rank": 3,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C10",
+          "rank": 4,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C07",
+      "primary_team": "TM01",
+      "collaborators": [
+        {
+          "team_id": "TM02",
+          "why": "같은 시스템의 다른 부분 담당"
+        },
+        {
+          "team_id": "TM03",
+          "why": "같은 시스템의 다른 부분 담당"
+        }
+      ],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e3c6e6b007a0"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-910ee7e74325"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-bb4e8c3061d7"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-5e657de821ef"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-8064a2b2f572"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-f2c14d44487a"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-90f7fbadd6d6"
+        }
+      ],
+      "tool_calls": [
+        {
+          "cause_id": "C07",
+          "tool": "query_table_change",
+          "check_id": "E05",
+          "args": {
+            "area": "content"
+          },
+          "is_error": false
+        },
+        {
+          "cause_id": "C07",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 some_users, 심각도 SEV4)\n-> 원인 C07 콘텐츠 테이블 값 오류 (점수 5): confirm, 근거 ['E05', 'E12']. E05 결과, 오늘 10:30에 콘텐츠 영역의 던전 입장 조건 테이블이 수정됐고 이는 증상 시작(11:40) 이전이므로 expect('증상 시작 전 해당 콘텐츠 테이블 변경 이력 있음')와 일치한다. E12 결과, QA가 조건을 충족한 테스트 계정으로 같은 던전 입장 실패를 재현했으므로 expect('QA가 같은 조건에서 재현')와 일치한다. 필수 근거 2건이 모두 expect대로 나와 C07 콘텐츠 테이블 값 오류를 확정한다. 다만 제보의 '오전부터'와 증상 시작 시각(11:40) 사이에 차이가 있어, 수정된 구체 값이 조건 불일치를 일으킨 것인지는 테이블 값 대조로 추가 확인하는 것이 바람직하다.\n-> 1차 담당 TM01",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
