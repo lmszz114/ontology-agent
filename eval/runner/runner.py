@@ -206,6 +206,10 @@ async def run_all(todo: list[tuple[int, Path]], *, out: Path, git: GitState, run
                 "seed_hash": seed_hash, "scenario_hash": hashlib.sha256(raw).hexdigest()}
         folder = out / f"r{rep}"
         folder.mkdir(parents=True, exist_ok=True)
+        # 반복 폴더가 미리 만들어 둔 링크로 결과 폴더 밖을 가리키면 쓰지 않는다 (PR #23 리뷰). 결과 파일 자체가 링크면
+        # write_text_atomic의 이름 바꾸기가 링크를 새 파일로 바꿔서 대상에 쓰지 않는다
+        if not folder.resolve().is_relative_to(Path(out).resolve()):
+            raise RunnerError(f"반복 폴더 {folder}가 결과 폴더 밖({folder.resolve()})을 가리킨다")
         target = folder / f"{scenario['id']}.json"
         write_text_atomic(target, json.dumps(result, ensure_ascii=False, indent=2, default=str) + "\n")
         written.append(target)

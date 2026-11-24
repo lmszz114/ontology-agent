@@ -345,3 +345,27 @@ def test_scenario_hash_is_of_the_bytes_that_ran(tmp_path):
                         seed_hash=SEED_HASH, log=lambda _: None))
     run = json.loads((out / "r1" / "SC-S1-01.json").read_text(encoding="utf-8"))["run"]
     assert run["scenario_hash"] == hashlib.sha256(original).hexdigest() != file_hash(path)
+
+
+def test_rep_folder_link_pointing_outside_is_refused(tmp_path):
+    """반복 폴더(r1)가 결과 폴더 밖을 가리키는 링크면 쓰지 않는다 (PR #23 리뷰)."""
+    out = tmp_path / "out"
+    out.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (out / "r1").symlink_to(outside)
+    with pytest.raises(RunnerError, match="결과 폴더 밖"):
+        run(plan(PATHS[:1], out=out, reps=1, resume=False, expected=EXPECTED), out)
+    assert list(outside.iterdir()) == []
+
+
+def test_result_file_link_is_replaced_not_followed(tmp_path):
+    """결과 파일 자리에 링크가 있으면 원자적 쓰기의 이름 바꾸기가 링크를 새 파일로 바꾼다. 링크 대상은 그대로다."""
+    out = tmp_path / "out"
+    (out / "r1").mkdir(parents=True)
+    victim = tmp_path / "victim.json"
+    victim.write_text("원래 내용", encoding="utf-8")
+    (out / "r1" / "SC-S1-01.json").symlink_to(victim)
+    run([(1, PATHS[0])], out)
+    assert victim.read_text(encoding="utf-8") == "원래 내용"
+    assert not (out / "r1" / "SC-S1-01.json").is_symlink()
