@@ -26,6 +26,7 @@ from mcp import Client, StdioServerParameters
 
 from agents.diagnosis.graph import KST, Deps, build_graph, initial_state
 from agents.diagnosis.prompts import PROMPT_VERSION
+from common.files import write_text_atomic
 from common.knowledge import GraphKnowledge
 from common.models import LLM, load_model_config, make_anthropic_client
 from common.models.config import USAGE_FIELDS
@@ -137,7 +138,7 @@ async def main_async(args) -> int:
                 result = await run_scenario(scenario, path, org=args.org, tracer=tracer, llm=llm, driver=driver)
                 text = json.dumps(result, ensure_ascii=False, indent=2, default=str)
                 if out:
-                    (out / f"{scenario['id']}.json").write_text(text + "\n", encoding="utf-8")
+                    write_text_atomic(out / f"{scenario['id']}.json", text + "\n")
                     print(f"{scenario['id']}: {result['run']['llm_calls']} calls, ${result['run']['cost_usd']:.5f}")
                 else:
                     print(text)

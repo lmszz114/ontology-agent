@@ -22,6 +22,7 @@ from pathlib import Path
 
 import yaml
 
+from common.files import write_text_atomic
 from common.models import LLM, load_model_config, make_anthropic_client
 from common.tracing import Tracer
 
@@ -66,8 +67,9 @@ def main() -> int:
 
     def save() -> None:
         # 슬롯마다 저장한다. 중간에 멈춰도 이미 비용을 낸 결과가 남는다
-        Path(args.out).write_text(yaml.safe_dump({"prompt_version": PROMPT_VERSION, "cost_usd": round(cost, 5),
-                                                  "slots": out}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        # 임시 파일에 다 쓴 뒤 바꾼다. 쓰는 도중 멈춰도 앞 슬롯까지 저장된 파일이 깨지지 않는다
+        write_text_atomic(args.out, yaml.safe_dump({"prompt_version": PROMPT_VERSION, "cost_usd": round(cost, 5),
+                                                    "slots": out}, allow_unicode=True, sort_keys=False))
 
     try:
         with tracer.run("generate_reports", tags=["mode:generation"], metadata={"prompt_version": PROMPT_VERSION},
