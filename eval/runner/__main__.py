@@ -75,7 +75,7 @@ async def main_async(args: argparse.Namespace) -> int:
             async def run_one(scenario: dict, path: Path) -> dict:
                 return await run_scenario(scenario, path, config=args.config, org=args.org, tracer=tracer, llm=llm,
                                           driver=driver)
-            await run_all(todo, out=out, git=git, run_one=run_one)
+            await run_all(todo, out=out, git=git, run_one=run_one, prices=llm.config.price_record)
         finally:
             tracer.flush()
     return 0

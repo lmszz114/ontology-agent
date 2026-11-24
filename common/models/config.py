@@ -79,7 +79,10 @@ def _rates(where: str, raw: dict) -> Rates:
 
 def load_prices(path: Path = PRICES_PATH) -> dict[str, ModelPrice]:
     """단가 파일을 읽는다. 모델 ID -> 단가."""
-    data = _read(path)
+    return _parse_prices(_read(path), path)
+
+
+def _parse_prices(data: dict, path: Path) -> dict[str, ModelPrice]:
     for key in ("checked", "source", "models"):
         if key not in data:
             raise ModelConfigError(f"{path}: {key}가 없다")
@@ -104,20 +107,6 @@ def load_prices(path: Path = PRICES_PATH) -> dict[str, ModelPrice]:
             long=_rates(f"{model}.long_prompt", long_rates),
         )
     return prices
-
-
-def price_record(models: list[str], path: Path = PRICES_PATH) -> dict:
-    """실행 결과에 남길 단가. 쓴 모델의 단가와 단가 파일의 확인 날짜, 출처다 (4단계 10장, 한계 L14).
-
-    단가 파일이 나중에 바뀌어도 그 실행의 비용을 어떤 단가로 계산했는지 결과 파일만 보고 알 수 있다.
-    """
-    data = _read(path)
-    load_prices(path)  # 형식이 틀린 단가를 남기지 않는다
-    missing = [m for m in models if m not in data["models"]]
-    if missing:
-        raise PricingError(f"단가가 없는 모델이다: {missing}")
-    return {"checked": str(data["checked"]), "source": data["source"],
-            "models": {m: data["models"][m] for m in models}}
 
 
 def usage_from_response(usage) -> dict[str, int]:
@@ -159,6 +148,21 @@ class ModelConfig:
     package: str
     tasks: dict[str, str]
     prices: dict[str, ModelPrice]
+    # 비용 계산에 쓰는 단가와 같은 시점에 읽은 단가 파일 내용 (확인 날짜, 출처, 모델별 원래 값)
+    price_file: dict | None = None
+
+    def price_record(self, models: list[str]) -> dict:
+        """실행 결과에 남길 단가 (4단계 10장, 한계 L14). 쓴 모델의 단가와 확인 날짜, 출처다.
+
+        파일을 다시 읽지 않는다. 비용을 계산한 단가와 기록하는 단가가 같아야 한다.
+        """
+        if self.price_file is None:
+            raise PricingError("단가 파일 내용이 없다")
+        missing = [m for m in models if m not in self.prices]
+        if missing:
+            raise PricingError(f"단가가 없는 모델이다: {missing}")
+        return {"checked": str(self.price_file["checked"]), "source": self.price_file["source"],
+                "models": {m: self.price_file["models"][m] for m in models}}
 
     def model_for(self, task: str) -> str:
         if task not in self.tasks:
@@ -205,8 +209,10 @@ def load_model_config(
     extra = set(tasks) - TASKS
     if missing or extra:
         raise ModelConfigError(f"{path}: 작업이 설계와 다르다. 빠짐 {sorted(missing)}, 모름 {sorted(extra)}")
-    prices = load_prices(prices_path)
+    price_data = _read(prices_path)
+    prices = _parse_prices(price_data, prices_path)
     for task, model in tasks.items():
         if model not in prices:
             raise ModelConfigError(f"{path}: {task}의 모델 {model!r}에 단가가 없다")
-    return ModelConfig(package=package, tasks=dict(tasks), prices=prices)
+    price_file = {"checked": price_data["checked"], "source": price_data["source"], "models": price_data["models"]}
+    return ModelConfig(package=package, tasks=dict(tasks), prices=prices, price_file=price_file)

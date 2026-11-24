@@ -882,7 +882,8 @@ def test_runner_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypatch):
 
     async def run_one(s, p):
         return await run_scenario(s, p, config="C", org="org-a", tracer=tracer, llm=llm, driver=db)
-    asyncio.run(run_all(todo, out=tmp_path, git=git, run_one=run_one, log=lambda _: None))
+    asyncio.run(run_all(todo, out=tmp_path, git=git, run_one=run_one, prices=llm.config.price_record,
+                        log=lambda _: None))
 
     result = grade_folder(tmp_path, seed)
     assert result["meta"]["config"] == "C" and result["meta"]["git_dirty"] is False

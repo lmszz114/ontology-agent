@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from common.models import load_model_config
 from eval.grader.grade import load_results
 from eval.runner import __main__ as cli
 from eval.runner.runner import GitState, RunnerError, git_state, plan, run_all
@@ -34,7 +35,8 @@ def run(todo, out, *, fail_on: str | None = None):
         if scenario["id"] == fail_on:
             raise RuntimeError("연결 실패")
         return fake_result(scenario)
-    asyncio.run(run_all(todo, out=out, git=GIT, run_one=run_one, log=lambda _: None))
+    asyncio.run(run_all(todo, out=out, git=GIT, run_one=run_one, prices=load_model_config("org-a").price_record,
+                        log=lambda _: None))
     return calls
 
 
@@ -92,6 +94,26 @@ def _repo(tmp_path: Path) -> Path:
     return repo
 
 
+def test_grades_file_is_not_a_result(tmp_path):
+    """반복 폴더 하나를 채점하면 그 안에 grades.json이 생긴다. 이어서 돌릴 때 결과로 읽지 않는다."""
+    run(plan(PATHS[:1], out=tmp_path, reps=1, resume=False, expected=EXPECTED), tmp_path)
+    (tmp_path / "r1" / "grades.json").write_text("{}", encoding="utf-8")
+    assert [(r, p.stem) for r, p in plan(PATHS, out=tmp_path, reps=1, resume=True, expected=EXPECTED)] == \
+        [(1, "SC-S7-02")]
+
+
+def test_price_record_uses_snapshot_read_with_costs(tmp_path):
+    """단가 파일이 실행 중에 바뀌어도 비용 계산에 쓴 단가를 기록한다."""
+    prices = tmp_path / "prices.yaml"
+    source = Path(__file__).resolve().parents[1] / "common" / "models" / "prices.yaml"
+    prices.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    config = load_model_config("org-a", prices_path=prices)
+    prices.write_text(source.read_text(encoding="utf-8").replace("input: 0.10", "input: 9.99"), encoding="utf-8")
+    record = config.price_record(["claude-haiku-5-5"])
+    assert record["models"]["claude-haiku-5-5"]["input"] == 0.10
+    assert record["models"]["claude-haiku-5-5"]["input"] == config.prices["claude-haiku-5-5"].base.input
+
+
 def test_git_state_ignores_result_folder(tmp_path):
     repo = _repo(tmp_path)
     out = repo / "eval" / "results" / "x"
@@ -103,6 +125,19 @@ def test_git_state_ignores_result_folder(tmp_path):
     (repo / "new.py").write_text("", encoding="utf-8")
     state = git_state(out, root=repo)
     assert state.dirty and sorted(state.changed) == ["a.py", "new.py"]
+
+
+def test_git_state_korean_result_folder_and_moves(tmp_path):
+    """한글 경로는 Git이 이스케이프해 출력한다. 결과 폴더가 한글이어도 그 안의 파일은 변경이 아니다.
+    추적 중인 파일을 결과 폴더로 옮기면 원래 경로가 바뀐 것이므로 변경이다."""
+    repo = _repo(tmp_path)
+    out = repo / "결과폴더"
+    (out / "r1").mkdir(parents=True)
+    (out / "r1" / "SC-S1-01.json").write_text("{}", encoding="utf-8")
+    assert not git_state(out, root=repo).dirty
+    subprocess.run(["git", "mv", "a.py", "결과폴더/a.py"], cwd=repo, check=True, capture_output=True)
+    state = git_state(out, root=repo)
+    assert state.dirty and state.changed == ["결과폴더/a.py <- a.py"]
 
 
 def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
