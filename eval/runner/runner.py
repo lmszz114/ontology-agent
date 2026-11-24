@@ -41,10 +41,10 @@ RESULTS_DIR = Path("eval") / "results"
 def git_state(out: Path, root: Path = ROOT, inputs: list[Path] | tuple[Path, ...] = ()) -> GitState:
     """커밋과 커밋하지 않은 변경. 결과 폴더(이번 --out과 eval/results 전체) 안의 파일은 변경으로 보지 않는다.
 
-    inputs(실행에 넣는 시나리오 파일)는 git status와 따로, 내용이 커밋(HEAD)과 같은지 직접 비교한다.
-    결과의 커밋으로 재현할 수 있는 입력이어야 하기 때문이다 (PR #20 리뷰). 링크를 풀어 실제 대상을 보고,
-    대상이 저장소 밖이거나 HEAD에 없거나 내용이 다르면 변경이다. 추적하지 않은 파일, 무시 규칙에 걸린 파일,
-    결과 폴더 안의 파일, 저장소 밖을 가리키는 링크가 모두 여기에 걸린다.
+    inputs(실행에 넣는 시나리오 파일)는 git status와 따로, 넘긴 경로의 내용이 커밋(HEAD)의 같은 경로와 같은지
+    직접 비교한다. 결과의 커밋으로 재현할 수 있는 입력이어야 하기 때문이다 (PR #20 리뷰). 저장소 밖이거나,
+    심볼릭 링크를 거치거나, HEAD에 없거나, 내용이 다르면 변경이다. 추적하지 않은 파일, 무시 규칙에 걸린 파일,
+    결과 폴더 안의 파일이 모두 여기에 걸린다.
     """
     def git(*args: str) -> str:
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, check=True).stdout
@@ -72,17 +72,24 @@ def git_state(out: Path, root: Path = ROOT, inputs: list[Path] | tuple[Path, ...
 
 
 def _input_change(path: Path, root: Path) -> str | None:
-    """입력 파일이 커밋(HEAD)의 내용과 같으면 None, 다르면 변경 설명. 링크는 풀어서 실제 대상을 본다."""
-    root_real = root.resolve()
-    target = Path(path).resolve()
-    if not target.is_relative_to(root_real):
+    """입력 파일이 커밋(HEAD)의 같은 경로 내용과 같으면 None, 다르면 변경 설명.
+
+    비교 기준은 실행에 넘긴 경로다. 링크를 거치는 입력은 HEAD에서 같은 경로로 읽은 내용과 맞는지 확인하기
+    어렵고 경우가 많아 구멍이 생기기 쉽다. 저장소에 링크로 된 시나리오가 없으므로 링크를 거친 입력은 변경으로 본다
+    (PR #20 리뷰: 커밋된 A.yaml을 다른 내용의 B.yaml을 가리키는 링크로 바꾸는 경우).
+    """
+    root_abs = Path(os.path.abspath(root))
+    given = Path(os.path.abspath(path))
+    if not given.is_relative_to(root_abs):
         return f"{path} (저장소 밖의 입력)"
-    rel = target.relative_to(root_real).as_posix()
-    shown = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=root, capture_output=True)
+    rel = given.relative_to(root_abs)
+    if given.resolve() != root_abs.resolve() / rel:
+        return f"{rel.as_posix()} (심볼릭 링크를 거친 입력)"
+    shown = subprocess.run(["git", "show", f"HEAD:{rel.as_posix()}"], cwd=root, capture_output=True)
     if shown.returncode != 0:
-        return f"{rel} (커밋에 없는 입력)"
-    if shown.stdout != target.read_bytes():
-        return rel
+        return f"{rel.as_posix()} (커밋에 없는 입력)"
+    if shown.stdout != given.read_bytes():
+        return rel.as_posix()
     return None
 
 

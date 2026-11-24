@@ -224,7 +224,7 @@ def test_git_state_input_checks_content_against_head(tmp_path):
     link.symlink_to(outside)
     _commit_all(repo)
     state = git_state(out, root=repo, inputs=[link])
-    assert state.dirty and "저장소 밖" in state.changed[0]
+    assert state.dirty and state.changed == ["eval/scenarios/dev/SC-L.yaml (심볼릭 링크를 거친 입력)"]
     # 무시 규칙에 걸린 커밋하지 않은 입력은 git status에 나오지 않는다. 내용 비교로 잡는다
     (repo / ".gitignore").write_text("ignored/\n", encoding="utf-8")
     _commit_all(repo)
@@ -234,3 +234,20 @@ def test_git_state_input_checks_content_against_head(tmp_path):
     assert not git_state(out, root=repo).dirty
     state = git_state(out, root=repo, inputs=[hidden])
     assert state.dirty and state.changed == ["ignored/SC-H.yaml (커밋에 없는 입력)"]
+
+
+def test_git_state_input_replaced_by_link_to_other_committed_file(tmp_path):
+    """커밋된 A.yaml을 다른 내용의 B.yaml을 가리키는 링크로 바꾸면 변경이다. B.yaml이 HEAD와 같아도 그렇다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    folder = repo / "eval" / "results" / "inputs"
+    folder.mkdir(parents=True)
+    a, b = folder / "A.yaml", folder / "B.yaml"
+    a.write_text("id: A\n", encoding="utf-8")
+    b.write_text("id: B\n", encoding="utf-8")
+    _commit_all(repo)
+    out = repo / "eval" / "results" / "x"
+    assert not git_state(out, root=repo, inputs=[a]).dirty
+    a.unlink()
+    a.symlink_to(b)
+    state = git_state(out, root=repo, inputs=[a])
+    assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
