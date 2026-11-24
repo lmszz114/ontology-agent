@@ -58,7 +58,10 @@ def meta_lines(meta: dict) -> list[str]:
 NOTES = [
     "- 채점기(eval/grader)가 결과 파일, 시나리오 정답 라벨, 시드만 읽어 계산했다. LLM을 쓰지 않는다",
     "- 원인 Top-1, Top-3은 근거 확인을 마친 뒤의 최종 순위다. 확정 원인을 맨 앞에 두고 배제된 원인은 뺀다 (4단계 5-1)",
-    "- 증상 분류는 주 사건의 증상과 분류하지 않은 제보(unclassified)가 모두 라벨과 같아야 맞다",
+    "- 증상 분류는 정답 사건마다 짝지은 결과 사건의 증상과 분류하지 않은 제보(unclassified)가 모두 라벨과 같아야 맞다",
+    ("- 정답 사건마다 제보가 가장 많이 겹치는 결과 사건을 짝짓는다. 사건이 여럿이면 모든 사건이 맞아야 그 시나리오가 맞다. "
+     "사건이 없는 시나리오(범위 밖)는 원인, 팀, 심각도, 절차 지표에서 빼고 표에 -로 쓴다"),
+    "- 원인이 확정되지 않아야 정답인 사건은 결과도 원인을 확정하지 않고 담당 팀을 비워야 Top-1, Top-3, 담당 팀이 맞다",
     "- 절차 일치율은 접수(P1)를 빼고 비교한다",
     "- 근거 확인 충족률은 정답 원인의 필수 판정 근거 중 7단계에서 성공한 조회의 비율이다. 원인이 인자를 정한 근거는 그 인자로 조회해야 센다",
     ("- 불필요 조회는 결과를 낸 어떤 가설의 판정 근거에도 맞지 않는 7단계 조회다. 실패한 조회도 센다. "
@@ -95,7 +98,10 @@ def folder_markdown(result: dict) -> str:
               "| --- | --- | " + " | ".join("---" for _ in RATE_KEYS) + " | --- |"]
     for sid, s in sorted(result["per_scenario"].items()):
         failures = ", ".join(f or "없음" for f in s["first_failures"])
-        lines.append(f"| {sid} | {s['type']} | " + " | ".join(f"{s['correct'].get(k, 0)}/{s['runs']}" for k, _ in RATE_KEYS)
+        # 해당 없는 지표(사건이 없는 시나리오의 원인, 팀 등)는 -로 쓴다. 예전 결과에는 applicable이 없어 반복 수로 본다
+        applicable = s.get("applicable") or {k: s["runs"] for k, _ in RATE_KEYS}
+        lines.append(f"| {sid} | {s['type']} | " + " | ".join(
+            f"{s['correct'].get(k, 0)}/{applicable.get(k, 0)}" if applicable.get(k, 0) else "-" for k, _ in RATE_KEYS)
                      + f" | {failures} |")
 
     for rep in reps:
@@ -104,7 +110,7 @@ def folder_markdown(result: dict) -> str:
                   "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
         for g in rep["scenarios"]:
             lines.append(" | ".join([
-                f"| {g['scenario']}", " > ".join(g["ranking"]) or "없음",
+                f"| {g['scenario']}", " / ".join(" > ".join(r) or "없음" for r in g.get("rankings", [g["ranking"]])) or "사건 없음",
                 f"{g['required']['covered']}/{g['required']['total']}", str(g["unnecessary"]), str(g["exploratory"]),
                 ", ".join(g["verdict_mismatch"]) or "없음", ", ".join(g["approval_missing"]) or "없음", ", ".join(g["unauthorized"]) or "없음",
                 g["first_failure"] or "없음", f"{g['cost_usd']:.5f} |"]))
