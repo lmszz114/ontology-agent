@@ -5,6 +5,7 @@ LLM과 Neo4j를 쓰지 않는다. 결과 JSON, 시나리오 라벨, 시드 YAML�
 """
 
 import json
+import math
 import statistics
 from collections import Counter
 from itertools import combinations
@@ -69,6 +70,15 @@ def _check_fields(where: str, data: dict, fields: tuple[str, ...]) -> None:
         raise GradeError(f"{where}: 필드가 없다 {missing}")
 
 
+def _check_measures(where: str, run: dict) -> None:
+    """측정값이 유한한 수인지. NaN이나 무한대가 섞이면 합계와 평균이 깨지고 grades.json이 표준 JSON이 아니게 된다."""
+    values = {k: run[k] for k in ("llm_calls", "cost_usd", "seconds")} | {f"usage.{k}": v for k, v in run["usage"].items()}
+    bad = [k for k, v in values.items()
+           if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)]
+    if bad:
+        raise GradeError(f"{where}: 측정값이 유한한 수가 아니다 {bad}")
+
+
 def load_results(folder: Path) -> list[tuple[str, list[dict]]]:
     """(반복 이름, 결과 목록)을 돌려준다. 형식이 틀리거나 실행 조건이 섞이면 멈춘다."""
     folder = Path(folder)
@@ -85,6 +95,7 @@ def load_results(folder: Path) -> list[tuple[str, list[dict]]]:
             where = str(path)
             _check_fields(where, data, ("run", "outputs"))
             _check_fields(where + " run", data["run"], RUN_FIELDS)
+            _check_measures(where, data["run"])
             for i, output in enumerate(data["outputs"]):
                 _check_fields(f"{where} outputs[{i}]", output, OUTPUT_FIELDS)
             for key in SAME_IN_FOLDER:
@@ -117,6 +128,11 @@ def report_indexes(output: dict, scenario: dict) -> list[int]:
 
 def _pairs(groups: list[list[int]]) -> set[tuple[int, int]]:
     return {tuple(sorted(p)) for g in groups for p in combinations(g, 2)}
+
+
+def _partition(groups: list[list[int]]) -> list[tuple[int, ...]]:
+    """묶음 구성을 순서와 상관없이 비교할 수 있게 정렬한다. 같은 제보가 두 묶음에 들어가도 다르게 나온다."""
+    return sorted(tuple(sorted(g)) for g in groups)
 
 
 def final_ranking(output: dict) -> list[str]:
@@ -164,7 +180,8 @@ def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
         "pairs": {"tp": len(label_pairs & predicted_pairs), "fp": len(predicted_pairs - label_pairs),
                   "fn": len(label_pairs - predicted_pairs)},
     }
-    g["grouping"] = predicted_pairs == label_pairs and all(ix for ix in indexes)
+    # 묶음 판정은 묶음 구성 전체를 비교한다. 쌍만 비교하면 혼자인 제보가 빠져도 맞다고 나온다
+    g["grouping"] = _partition(indexes) == _partition(expected["incident_groups"])
     g["symptom"] = (main is not None and main["symptom"] == expected["symptom"]
                     and predicted_unclassified == sorted(expected.get("unclassified") or []))
 
@@ -257,8 +274,8 @@ def aggregate(grades: list[dict]) -> dict:
     tp, fp, fn = (sum(g["pairs"][k] for g in grades) for k in ("tp", "fp", "fn"))
     precision, recall = _ratio(tp, tp + fp), _ratio(tp, tp + fn)
     m["dup_precision"], m["dup_recall"] = precision, recall
-    m["dup_f1"] = (2 * precision * recall / (precision + recall)
-                   if precision is not None and recall is not None and precision + recall else None)
+    # 쌍을 모두 틀린 반복은 0이다. 비교할 쌍이 아예 없을 때만 값이 없다
+    m["dup_f1"] = _ratio(2 * tp, 2 * tp + fp + fn)
     m["required_coverage"] = _ratio(sum(g["required"]["covered"] for g in grades),
                                     sum(g["required"]["total"] for g in grades))
     m["unnecessary"] = sum(g["unnecessary"] for g in grades)

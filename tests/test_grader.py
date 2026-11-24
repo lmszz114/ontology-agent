@@ -263,3 +263,35 @@ def test_write_text_atomic_keeps_original_on_failure(tmp_path, monkeypatch):
         write_text_atomic(path, "second")
     assert path.read_text(encoding="utf-8") == "first"
     assert [p.name for p in tmp_path.iterdir()] == ["a.txt"]
+
+
+def test_missing_single_report_fails_grouping():
+    """정답이 [[0, 1, 3]]인데 3번 제보가 어느 사건에도, 분류하지 않은 목록에도 없으면 묶음이 틀리다."""
+    r = perfect_s7_02()
+    r["outputs"][0]["report_indexes"] = [0, 1]
+    g = grade(r)
+    assert not g["grouping"]
+    single = {"run": _run("SC-S1-01"), "outputs": [{
+        "symptom": "S1", "scope": "some_users", "severity": "SEV3", "root_cause": "C02", "primary_team": "TM01",
+        "hypotheses": [], "procedures": [], "actions": [], "tool_calls": [], "report_indexes": []}]}
+    # 쌍이 없는 시나리오에서도 제보가 빠지면 틀리다
+    assert not grade(single)["grouping"]
+
+
+def test_f1_is_zero_when_every_pair_is_wrong():
+    # 정답 쌍은 (0,1), (0,3), (1,3)이다. 예측 쌍 (0,2) 하나는 틀렸고 정답 쌍은 하나도 맞히지 못했다
+    r = perfect_s7_02()
+    r["outputs"][0]["report_indexes"] = [0, 2]
+    for ix in ([1], [3]):
+        r["outputs"].append(copy.deepcopy(r["outputs"][0]) | {"report_indexes": ix})
+    m = aggregate([grade(r)])
+    assert (m["dup_precision"], m["dup_recall"], m["dup_f1"]) == (0, 0, 0)
+
+
+@pytest.mark.parametrize("field,value", [("seconds", float("inf")), ("cost_usd", float("nan")), ("llm_calls", "4")])
+def test_non_finite_measure_stops(tmp_path, field, value):
+    r = perfect_s7_02()
+    r["run"][field] = value
+    _write(tmp_path, r)
+    with pytest.raises(GradeError, match=field):
+        load_results(tmp_path)
