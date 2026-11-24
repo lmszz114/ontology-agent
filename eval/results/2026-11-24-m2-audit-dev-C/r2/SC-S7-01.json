@@ -1,0 +1,211 @@
+{
+  "run": {
+    "scenario": "SC-S7-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T13:37:33.013108+09:00",
+    "finished_at": "2026-11-24T13:37:45.723399+09:00",
+    "seconds": 12.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "git_commit": "7c2305e85b52dfbd1ebcc0858812fca94e09f3ef",
+    "trace_id": "7d2a6e3b5cb6d138ee47769f6ce81018",
+    "llm_calls": 5,
+    "usage": {
+      "input": 14008,
+      "output": 1291,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0020463
+  },
+  "outputs": [
+    {
+      "symptom": "S7",
+      "incident_id": "INC-8b116faf8053",
+      "report_ids": [
+        "RP-f9aed1b79899"
+      ],
+      "scope": "one_world",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C18",
+          "rank": 1,
+          "score": 5,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY14"
+              },
+              "result": "confirm",
+              "detail": "2월드 거래소에 18:10부터 등록 요청 처리 오류가 계속 남고 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E06",
+              "tool": "query_deploy_history",
+              "args": {
+                "system": "SY14"
+              },
+              "result": "confirm",
+              "detail": "오늘 18:05에 거래소 서버 배포가 있었고 정상으로 끝났다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C19",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C14",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C18",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-950e8330c9eb"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-71ad39b399f1"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3151189c2b1a"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ae8c633581f7"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0f6aeafe44af"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-05ef091f7b96"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-3c8c429933cd"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-de0279999b4c"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7ba01b03a0d8"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-cb3a5bd463cd"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C18",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY14"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C18",
+          "tool": "query_deploy_history",
+          "check_id": "E06",
+          "args": {
+            "system": "SY14"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S7 거래소 장애 (영향 범위 one_world, 심각도 SEV2)\n-> 원인 C18 거래소 서버 오류 (점수 5): confirm, 근거 ['E04', 'E06']. E04(SY14 서버 오류 로그): 2월드 거래소에서 18:10부터 등록 요청 처리 오류가 계속 남아 있어, 증상과 관련된 오류 로그가 있다는 expect와 일치한다. E06(SY14 배포 이력): 증상 시작 18:40 이전인 18:05에 거래소 서버 배포가 있었다는 expect와 일치한다. 두 required 근거가 모두 expect대로 나와 확정한다. 다만 배포는 '정상으로 끝났다'고 기록되어 있고, 오류는 18:10부터 시작되었으며 제보 시점(18:40)보다 앞서므로 배포와 오류 발생 사이의 인과관계는 로그상 시간 순서로만 뒷받침된다. 원인 세부(배포 변경 내용)는 이 판정 범위 밖이다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

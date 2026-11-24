@@ -1,0 +1,224 @@
+{
+  "run": {
+    "scenario": "SC-S5-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T13:37:01.418208+09:00",
+    "finished_at": "2026-11-24T13:37:18.385201+09:00",
+    "seconds": 17.0,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "git_commit": "7c2305e85b52dfbd1ebcc0858812fca94e09f3ef",
+    "trace_id": "3537d26ed4e7f5a41f20e0b83a555ad4",
+    "llm_calls": 6,
+    "usage": {
+      "input": 20678,
+      "output": 2656,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0033958
+  },
+  "outputs": [
+    {
+      "symptom": "S5",
+      "incident_id": "INC-885138609bb3",
+      "report_ids": [
+        "RP-ae167ee6d100"
+      ],
+      "scope": "some_users",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C13",
+          "rank": 1,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "rule_out",
+              "detail": "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "args": {},
+              "result": "rule_out",
+              "detail": "QA가 같은 조건에서 재현하지 못했다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C14",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E11",
+              "tool": "query_account_activity",
+              "args": {},
+              "result": "confirm",
+              "detail": "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C14",
+      "primary_team": "TM11",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P7",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-8e3369cf5c3f"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7d6f3d97ea6f"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-78293c1bf7f0"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-66cc6902ddcc"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-f6abdaf15dde"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-c92511a8af80"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-75c084685e3a"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-a8e56edbd9ec"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-10a89e9e59f9"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-b3d22ad05fa5"
+        },
+        {
+          "action_id": "A11",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-5fb454b602cc"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C13",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C13",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C14",
+          "tool": "query_account_activity",
+          "check_id": "E11",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S5 아이템 복사, 재화 비정상 증식 (영향 범위 some_users, 심각도 SEV2)\n-> 원인 C13 복사 버그 (점수 2): rule_out, 근거 ['E04', 'E12']. E04(SY10 서버 오류 로그 조회) 결과 월드 서버에 증상과 관련된 오류 로그가 없고 처리 지연 로그도 없었다. 필수 근거 E04의 기대값은 '관련 오류 로그 존재'이므로 불일치다. E12(QA 재현 확인) 결과 QA가 같은 조건에서 재현하지 못했다. 필수 근거 E12의 기대값은 '복사 재현'이므로 역시 불일치다. 필수 근거 중 하나라도 기대와 다르므로 C13 복사 버그는 배제한다. E10은 참고용(required false)이라 판정에 사용하지 않았다.\n-> 원인 C14 어뷰징 (불법 프로그램, 악용) (점수 2): confirm, 근거 ['E11']. 필수 판정 근거 E11(계정별 거래, 행동 집중도 조회)을 조회했다. 결과는 최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다는 것이었다. 기대값인 '소수 계정에 거래와 행동이 집중돼 있다'와 일치하므로 필수 조건을 모두 충족한다. 참고용 E10(재화 유통량)은 확정 조건이 아니어서 조회하지 않았다. 이미 조회한 K1(월드 서버 오류 로그 없음)과 K2(QA 재현 실패)는 이번 확정 판단의 근거로 쓰지 않았다. 다만 K2는 재현 실패가 어뷰징과 모순되지 않는다는 점에서 참고할 만하다. 판정은 확정이지만 '복사' 방식(불법 프로그램인지 게임 내 악용인지)은 이 근거만으로 구분되지 않는다.\n-> 1차 담당 TM11",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

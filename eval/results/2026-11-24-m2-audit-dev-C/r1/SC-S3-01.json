@@ -1,0 +1,224 @@
+{
+  "run": {
+    "scenario": "SC-S3-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T13:34:10.813428+09:00",
+    "finished_at": "2026-11-24T13:34:19.881404+09:00",
+    "seconds": 9.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "git_commit": "7c2305e85b52dfbd1ebcc0858812fca94e09f3ef",
+    "trace_id": "4e7d345888fdb0ea56e3db7c8909c0af",
+    "llm_calls": 4,
+    "usage": {
+      "input": 12789,
+      "output": 1019,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0017884
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-2659492c73cf",
+      "report_ids": [
+        "RP-ab31c96ad364"
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C07",
+          "rank": 1,
+          "score": 5,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "args": {
+                "area": "content"
+              },
+              "result": "confirm",
+              "detail": "오늘 10:30에 던전 입장 조건 테이블이 수정됐다",
+              "reused": false
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "args": {},
+              "result": "confirm",
+              "detail": "QA가 조건을 충족한 테스트 계정으로 같은 던전 입장 실패를 재현했다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C08",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C09",
+          "rank": 3,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C10",
+          "rank": 4,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C07",
+      "primary_team": "TM01",
+      "collaborators": [
+        {
+          "team_id": "TM02",
+          "why": "같은 시스템의 다른 부분 담당"
+        },
+        {
+          "team_id": "TM03",
+          "why": "같은 시스템의 다른 부분 담당"
+        }
+      ],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-b9d66bf59c33"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1f8fc917f4ca"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-8d705f844bd7"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ebaa9369f786"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-b9e3619f8e7c"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-98075f27f442"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-c2267c1bd6f8"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-c88c48ccd522"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-b5ad7b1d1a83"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-de6f1a92154c"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C07",
+          "tool": "query_table_change",
+          "check_id": "E05",
+          "args": {
+            "area": "content"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C07",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C07 콘텐츠 테이블 값 오류 (점수 5): confirm, 근거 ['E05', 'E12']. E05 조회 결과 증상 시작(11:40) 전인 오늘 10:30에 던전 입장 조건이 포함된 content 테이블이 수정된 이력이 있어 expect와 일치한다. E12 결과 QA가 조건을 충족한 테스트 계정으로 같은 던전 입장 실패를 재현해 expect와 일치한다. required 근거 두 개가 모두 expect대로 나와 C07 콘텐츠 테이블 값 오류를 확정한다. 제보의 '조건이 맞지 않는다'는 증상과도 부합한다.\n-> 1차 담당 TM01",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

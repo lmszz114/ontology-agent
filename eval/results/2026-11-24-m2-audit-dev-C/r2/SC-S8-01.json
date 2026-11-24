@@ -1,0 +1,176 @@
+{
+  "run": {
+    "scenario": "SC-S8-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-24T13:37:48.085258+09:00",
+    "finished_at": "2026-11-24T13:37:59.059405+09:00",
+    "seconds": 11.0,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v6",
+    "git_commit": "7c2305e85b52dfbd1ebcc0858812fca94e09f3ef",
+    "trace_id": "d5bd443944480e167234e4e7e49419fc",
+    "llm_calls": 4,
+    "usage": {
+      "input": 12490,
+      "output": 1420,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0019590000000000002
+  },
+  "outputs": [
+    {
+      "symptom": "S8",
+      "incident_id": "INC-389c847b47ae",
+      "report_ids": [
+        "RP-974d3fd9eee7"
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C20",
+          "rank": 1,
+          "score": 3,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "confirm",
+              "detail": "3월드 서버 호스트의 CPU 사용률이 21:00부터 한계에 닿아 있다. 네트워크 지표는 정상이다",
+              "reused": false
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "confirm",
+              "detail": "21:00부터 3월드 공성전이 진행 중이다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C21",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C20",
+      "primary_team": "TM10",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-94864006a7c6"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-bec9f6f440d5"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e2383f960f49"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-be1b5e96cdad"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1d8be83ac5aa"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-f50a5571ac64"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-21867fc66fb5"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_content_schedule",
+          "check_id": "E14",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S8 대규모 콘텐츠 중 서버 과부하 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C20 서버 자원 부족 (점수 3): confirm, 근거 ['E09', 'E14']. E09(query_resource_metrics, SY05) 결과 3월드 서버 호스트의 CPU 사용률이 21:00부터 한계에 닿아 있었다. 기대값인 자원 지표가 한계에 가깝거나 넘었다는 조건과 일치한다. 네트워크 지표는 정상이었지만 이 근거의 기대값과는 무관하다. E14(query_content_schedule) 결과 21:00부터 3월드 공성전이 진행 중이었다. 기대값인 대규모 콘텐츠 진행 시간과 겹친다는 조건과 일치한다. 두 확정 근거가 모두 기대대로 나왔고, 자원 한계 시점과 공성전 시작 시점이 제보 증상 시작 시각(21:15)과 시간상 맞는다. 따라서 C20 서버 자원 부족 가설은 확정이다.\n-> 1차 담당 TM10",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
