@@ -297,6 +297,12 @@ def link_report(driver: Driver, *, report_id: str, incident_id: str, link: str, 
         if not tx.run("MATCH (r:Report {id: $id}) RETURN r.id", id=report_id).single():
             raise RecordError(f"없는 Report다: {report_id}")
         rel = REPORT_LINKS[link]
+        # 이미 같은 연결이 있으면 관계와 접수 수를 다시 늘리지 않는다. 잠금을 건 뒤에 확인한다
+        if tx.run(
+            f"MATCH (:Report {{id: $report}})-[:{rel}]->(:Incident {{id: $incident}}) RETURN 1",
+            report=report_id, incident=incident_id,
+        ).single():
+            return
         tx.run(
             f"MATCH (r:Report {{id: $report}}), (i:Incident {{id: $incident}}) "
             f"CREATE (r)-[:{rel} {{linked_by: $by}}]->(i)",

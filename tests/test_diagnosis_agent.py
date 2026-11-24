@@ -371,3 +371,122 @@ def test_out_of_scope_report_goes_to_human(db, seed):
     assert state["outputs"] == [] and len(state["unclassified"]) == 1
     assert model.calls == ["intake"]
     assert graph_count(db, "MATCH (r:Report) WHERE NOT (r)-[:INDICATES]->() RETURN count(r)") == 1
+
+
+# --- 리뷰 반영 (PR #12) ---------------------------------------------------------------
+
+def test_non_object_answer_is_asked_again(db, seed):
+    """JSON을 읽었어도 객체가 아니거나 필드가 빠지면 다시 묻는다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario), overrides={"intake": [lambda p: text([])]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+    assert model.calls[:2] == ["intake", "intake"] and state["outputs"][0]["root_cause"] == "C02"
+    missing = lambda p: text({"symptom_id": "S1", "scope": "some_users", "system_ids": ["SY12"]})  # noqa: E731
+    model = RuleModel(intake_of(scenario), overrides={"intake": [missing]})
+    run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+    assert model.calls[:2] == ["intake", "intake"]
+
+
+def test_urgent_procedures_are_candidates_without_confirmed_cause(db, seed):
+    """SEV1, SEV2면 원인이 확정되지 않아도 긴급 공지(P3)와 긴급 점검(P4)이 후보다 (R3 TRIGGERS, R7)."""
+    scenario = load("SC-S2-01")  # SEV1
+    model = RuleModel(intake_of(scenario, systems=("SY01", "SY09")))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    assert out["root_cause"] is None and out["severity"] == "SEV1"
+    assert out["procedures"] == ["P1", "P3", "P4"]
+
+
+@pytest.mark.parametrize("change, message", [
+    (lambda a: a["actions"].pop(), "조치가 빠졌다"),
+    (lambda a: a["actions"].append(dict(a["actions"][0])), "두 번 요청"),
+])
+def test_actions_must_match_chosen_procedures(db, seed, change, message):
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+
+    def broken(params):
+        answer = json.loads(RuleModel.procedure(model, params).content[0].text)
+        change(answer)
+        return text(answer)
+
+    model.overrides["procedure"] = [broken]
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+    assert model.calls.count("procedure") == 2
+    runs = [r["action_id"] for r in state["outputs"][0]["actions"]]
+    assert len(runs) == len(set(runs)) and set(runs) == set(scenario["expected"]["auto_actions"]) | set(scenario["expected"]["approval_actions"])
+
+
+def test_conditional_procedure_needs_reported_condition(db, seed):
+    """조건이 붙은 절차(과지급이면 회수 P7)를 고르면 충족한 조건도 적어야 한다."""
+    scenario = load("SC-S4-01")
+    model = RuleModel(intake_of(scenario, systems=("SY15", "SY13")))
+
+    def no_condition(params):
+        answer = json.loads(RuleModel.procedure(model, params).content[0].text)
+        answer["resolved_conditions"] = []
+        return text(answer)
+
+    model.overrides["procedure"] = [no_condition]
+    state, _ = run_agent(db, seed, scenario, model, verdicts={scenario["expected"]["root_cause"]: "confirm"},
+                         conditions=["과지급"])
+    assert model.calls.count("procedure") == 2
+    assert "P7" in state["outputs"][0]["procedures"]
+
+
+def test_reused_evidence_is_linked_to_the_later_hypothesis(db, seed):
+    """앞 가설에서 조회한 결과를 다시 부르지 않고 쓴 가설에도 근거가 남는다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+
+    def answer_from_cache(params):
+        # C01을 확인할 때 도구를 다시 부르지 않고 앞에서 조회한 E01 결과로 판단한다
+        return text({"result": "confirm", "used_checks": ["E01"], "reason": "앞의 결제 기록 조회 결과"})
+
+    original = model.check
+
+    def check(params):
+        first = params["messages"][0]["content"]
+        if "확인할 원인 가설: C01" in first:
+            return answer_from_cache(params)
+        return original(params)
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "rule_out"})
+    (out,) = state["outputs"]
+    c01 = next(h for h in out["hypotheses"] if h["cause_id"] == "C01")
+    assert [(f["check_id"], f["reused"]) for f in c01["findings"]] == [("E01", True)]
+    assert graph_count(db, "MATCH (f:Finding {cause_id: 'C01'}) RETURN count(f)") == 1
+    # 실제 호출 이력에는 C02를 확인할 때 부른 것만 있다
+    assert {t["cause_id"] for t in out["tool_calls"]} == {"C02"}
+
+
+def burst(scenario: dict, times: list[int]) -> dict:
+    """같은 요청자가 보낸 제보 여러 건. times는 첫 제보로부터의 분이고, 이 순서로 넣는다."""
+    first = scenario["reports"][0]
+    start = datetime.fromisoformat(first["at"])
+    return dict(scenario, reports=[dict(first, at=(start + timedelta(minutes=m)).isoformat()) for m in times])
+
+
+def test_escalation_counts_reports_up_to_this_one(db, seed):
+    """30분 안에 20건이 몰리면 한 단계 올리고 P2를 반드시 연다 (R3)."""
+    scenario = burst(load("SC-S1-01"), list(range(20)))
+    state, _ = run_agent(db, seed, scenario, RuleModel(intake_of(scenario)), verdicts={"C02": "confirm"})
+    (out,) = state["outputs"]
+    assert out["escalated"] and out["severity"] == "SEV2" and "P2" in out["procedures"]
+
+
+def test_later_reports_do_not_count_for_an_earlier_one(db, seed):
+    """입력 순서가 시각 순서와 달라도 이번 제보보다 늦게 접수된 제보는 세지 않는다."""
+    scenario = burst(load("SC-S1-01"), [0] + [120] * 18 + [10])
+    state, _ = run_agent(db, seed, scenario, RuleModel(intake_of(scenario)), verdicts={"C02": "confirm"})
+    (out,) = state["outputs"]
+    assert not out["escalated"] and out["severity"] == "SEV3"
+
+
+def test_test_split_is_refused_before_any_call(tmp_path):
+    from agents.diagnosis.run import check_dev_only
+    path = tmp_path / "SC-T.yaml"
+    path.write_text("split: test\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="dev 시나리오만"):
+        check_dev_only([path])

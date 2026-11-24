@@ -44,7 +44,7 @@ MAX_TOOL_ROUNDS = 8
 
 URGENT_LEVELS = {"SEV1", "SEV2"}
 INTAKE_PROCEDURE, ESCALATION_PROCEDURE = "P1", "P2"
-URGENT_MAINTENANCE, FIX_PROCEDURE = "P4", "P10"
+URGENT_NOTICE, URGENT_MAINTENANCE, FIX_PROCEDURE = "P3", "P4", "P10"
 CAUSE_FIX_ACTION = "A15"
 # R7: 원인 수정(A15)의 반영 시점. 시드의 승인 조건 값과 같아야 한다
 FIX_TIMING = {True: "긴급 점검 반영", False: "정기 점검 반영"}
@@ -128,7 +128,7 @@ def _ask_json(
         except ValueError:
             data, errors = None, [f"JSON으로 읽을 수 없는 답이다 (stop_reason={result.message.stop_reason})"]
         else:
-            errors = validate(data)
+            errors = _structure_errors(data, schema) or validate(data)
         if not errors:
             return data, []
         messages += [
@@ -136,6 +136,28 @@ def _ask_json(
             {"role": "user", "content": prompts.RETRY.format(errors="\n".join(f"- {e}" for e in errors))},
         ]
     return None, errors
+
+
+def _structure_errors(data: Any, schema: dict) -> list[str]:
+    """JSON을 읽은 뒤 단계별 검증 전에 모양을 본다. 객체가 아니거나 필수 필드가 없거나 타입이 다르면 문제다.
+
+    JSON 형식 출력은 API가 보장하지만, 읽기에 성공한 것만으로 필드와 타입이 맞다고 볼 수 없다.
+    단계별 검증기가 모양이 틀린 값에서 예외를 내지 않게 여기서 먼저 막는다.
+    """
+    if not isinstance(data, dict):
+        return [f"답은 JSON 객체여야 한다: {type(data).__name__}"]
+    types = {"string": str, "array": list, "object": dict}
+    errors = []
+    for name in schema.get("required", []):
+        spec = schema["properties"][name]
+        if name not in data:
+            errors.append(f"{name} 필드가 없다")
+        elif spec.get("type") in types and not isinstance(data[name], types[spec["type"]]):
+            errors.append(f"{name}은 {spec['type']}이어야 한다")
+        elif spec.get("type") == "array" and spec.get("items", {}).get("type") == "object":
+            for item in data[name]:
+                errors += [f"{name}의 항목: {e}" for e in _structure_errors(item, spec["items"])]
+    return errors
 
 
 def _schema(properties: dict, required: list[str] | None = None) -> dict:
@@ -300,10 +322,11 @@ def build_graph(deps: Deps):
             summary = dict(incidents.get(incident_id) or {"incident_id": incident_id})
             summary["report_ids"] = [*summary.get("report_ids", []), work["report_id"]]
             summary["reports"] = [*summary.get("reports", []), work]
-            # 같은 사건에 짧은 시간 동안 접수가 몰리면 한 단계 상향한다 (R3, 상향은 한 번만)
+            # 같은 사건에 짧은 시간 동안 접수가 몰리면 한 단계 상향한다 (R3, 상향은 한 번만).
+            # 창은 이번 제보 시각을 끝으로 하는 30분이다. 입력 순서와 상관없이 이번 제보보다 늦은 접수는 세지 않는다
             recent = [
                 r for c in work["candidates"] if c["incident_id"] == incident_id for r in c["reports"]
-                if datetime.fromisoformat(r["received_at"]) >= work["at"] - ESCALATION_WINDOW
+                if work["at"] - ESCALATION_WINDOW <= datetime.fromisoformat(r["received_at"]) <= work["at"]
             ]
             if len(recent) + 1 >= ESCALATION_COUNT and not summary.get("escalated") and "severity" in summary:
                 summary["severity"] = escalate(summary["severity"])
@@ -374,8 +397,8 @@ def build_graph(deps: Deps):
         tool_results = dict(diag["tool_results"])
         tool_calls = list(diag["tool_calls"])
 
-        known = "\n".join(f"- {name} {json.dumps(args, ensure_ascii=False)}: {text}"
-                          for (name, args), text in ((json.loads(k), v) for k, v in tool_results.items()))
+        known = "\n".join(f"- {r['check_id']} {r['tool']} {json.dumps(r['args'], ensure_ascii=False)}: {r['text']}"
+                           for r in tool_results.values())
         content = (
             "사건 제보:\n" + "\n".join(_report_block({**r, "at": r["at"].isoformat()}) for r in incident["reports"])
             + f"\n\n증상 {incident['symptom_id']}, 영향 범위 {incident['scope']}, 증상 시작 {incident['opened_at'].isoformat()}"
@@ -411,29 +434,38 @@ def build_graph(deps: Deps):
                 out = await call_tool(deps.mock_client, deps.tracer, server="mock_tools", name=use.name, args=use.input)
                 key = json.dumps([use.name, use.input], ensure_ascii=False, sort_keys=True)
                 if not out.is_error:
-                    tool_results[key] = out.text
+                    tool_results[key] = {"tool": use.name, "args": use.input,
+                                         "check_id": deps.tool_checks.get(use.name), "text": out.text}
                 called.append({"tool": use.name, "args": use.input, "check_id": deps.tool_checks.get(use.name),
                                "is_error": out.is_error, "text": out.text})
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
 
-        if data is None or data.get("result") not in ("confirm", "rule_out", "inconclusive"):
+        if data is None or _structure_errors(data, schema) or data["result"] not in ("confirm", "rule_out", "inconclusive"):
             verdict = {"result": "inconclusive", "reason": "판정 근거 단계의 답을 읽을 수 없다", "used_checks": []}
         else:
             verdict = data
         status = {"confirm": "confirmed", "rule_out": "ruled_out", "inconclusive": "candidate"}[verdict["result"]]
         events.record_hypothesis(deps.driver, incident_id=diag["incident_id"], cause_id=cause_id,
                                  score=hypothesis["score"], rank=hypothesis["rank"], status=status)
+        # 이 가설의 근거: 이번에 새로 부른 성공 결과와, 판단에 썼다고 답한 근거 중 앞 가설에서 조회해 둔 결과.
+        # 실제 호출 이력(tool_calls)과 따로 둔다. 재사용한 결과도 이 가설의 Finding과 출력에 남긴다
+        evidence = [{"check_id": c["check_id"], "tool": c["tool"], "args": c["args"], "text": c["text"], "reused": False}
+                    for c in called if c["check_id"] and not c["is_error"]]
+        have = {e["check_id"] for e in evidence}
+        for cached in tool_results.values():
+            if cached["check_id"] in set(verdict.get("used_checks") or []) - have:
+                evidence.append({**cached, "reused": True})
+                have.add(cached["check_id"])
         checked_at = deps.now()
-        for call in called:
-            if call["check_id"] and not call["is_error"]:
-                events.record_finding(
-                    deps.driver, finding_id=_new_id("FD"), incident_id=diag["incident_id"], check_id=call["check_id"],
-                    cause_id=cause_id, result=verdict["result"], detail=call["text"], checked_at=checked_at,
-                )
+        for e in evidence:
+            events.record_finding(
+                deps.driver, finding_id=_new_id("FD"), incident_id=diag["incident_id"], check_id=e["check_id"],
+                cause_id=cause_id, result=verdict["result"], detail=e["text"], checked_at=checked_at,
+            )
         tool_calls += [dict(c, cause_id=cause_id) for c in called]
         verdicts = dict(diag["verdicts"])
-        verdicts[cause_id] = {**verdict, "status": status, "checks": checks}
+        verdicts[cause_id] = {**verdict, "status": status, "checks": checks, "evidence": evidence}
         diag |= {"tool_results": tool_results, "tool_calls": tool_calls, "verdicts": verdicts,
                  "checked": diag["checked"] + 1}
         if verdict["result"] == "confirm":
@@ -472,7 +504,11 @@ def build_graph(deps: Deps):
                 content = (
                     "사건 제보:\n" + "\n".join(_report_block({**r, "at": r["at"].isoformat()})
                                             for r in state["incidents"][incident_id]["reports"])
-                    + f"\n\n확정 원인 {confirmed}, 판단 이유: {verdict['reason']}\n\n조건부 협업 팀:\n{listing}"
+                    + f"\n\n확정 원인 {confirmed}, 판단 이유: {verdict['reason']}"
+                    + "\n\n조회 결과:\n" + "\n".join(
+                        f"- {r['check_id']} {r['tool']} {json.dumps(r['args'], ensure_ascii=False)}: {r['text']}"
+                        for r in diag["tool_results"].values())
+                    + f"\n\n조건부 협업 팀:\n{listing}"
                 )
                 data, errors = _ask_json(
                     deps, task="diagnosis", name="8.collaboration", system=prompts.COLLABORATION, content=content,
@@ -532,7 +568,13 @@ def build_graph(deps: Deps):
 
         add(await deps.knowledge.procedure(INTAKE_PROCEDURE), always=True)
         if incident.get("escalated"):
-            add(await deps.knowledge.procedure(ESCALATION_PROCEDURE))
+            # 등급이 상향되면 에스컬레이션을 반드시 연다 (R3)
+            add(await deps.knowledge.procedure(ESCALATION_PROCEDURE), always=True)
+        if sev in URGENT_LEVELS:
+            # 긴급 공지(P3)는 원인이 아니라 등급에 걸린 절차다 (R3 TRIGGERS). 긴급 점검(P4)도 SEV1, SEV2의 후보다 (R7).
+            # 원인이 확정되지 않아도 후보에 둔다
+            add(await deps.knowledge.procedure(URGENT_NOTICE))
+            add(await deps.knowledge.procedure(URGENT_MAINTENANCE))
         if confirmed:
             found = await deps.knowledge.cause_procedures(confirmed, sev)
             add(await deps.knowledge.procedure(FIX_PROCEDURE), always=True)
@@ -540,9 +582,7 @@ def build_graph(deps: Deps):
                 add(proc, condition=proc.get("condition"))
             for proc in found.get("triggered_by_severity", []):
                 add(proc)
-            if sev in URGENT_LEVELS:
-                add(await deps.knowledge.procedure(URGENT_MAINTENANCE))
-        # 원인이 확정되지 않으면 원인에 걸린 절차를 고를 근거가 없다. 접수(와 상향) 절차만 후보로 둔다
+        # 원인이 확정되지 않으면 원인에 걸린 절차를 고를 근거가 없다. 접수, 상향, 등급 절차만 후보로 둔다
 
         allowed_conditions = sorted({c for p in candidates.values() for c in p["conditions"]})
         action_ids = sorted({a["action_id"] for p in candidates.values() for a in p["actions"]})
@@ -569,12 +609,24 @@ def build_graph(deps: Deps):
             if missing:
                 errors.append(f"항상 여는 절차가 빠졌다: {missing}")
             in_chosen = {a["action_id"] for p in chosen if p in candidates for a in candidates[p]["actions"]}
-            stray = sorted({a["action_id"] for a in data.get("actions") or []} - in_chosen)
+            requested = [a["action_id"] for a in data.get("actions") or []]
+            stray = sorted(set(requested) - in_chosen)
             if stray:
                 errors.append(f"고른 절차에 없는 조치다: {stray}")
-            bad_cond = sorted(set(data.get("resolved_conditions") or []) - set(allowed_conditions))
+            missing_actions = sorted(in_chosen - set(requested))
+            if missing_actions:
+                errors.append(f"고른 절차의 조치가 빠졌다: {missing_actions}")
+            duplicated = sorted({a for a in requested if requested.count(a) > 1})
+            if duplicated:
+                errors.append(f"같은 조치를 두 번 요청했다: {duplicated}")
+            reported = set(data.get("resolved_conditions") or [])
+            bad_cond = sorted(reported - set(allowed_conditions))
             if bad_cond:
                 errors.append(f"후보 절차에 없는 조건이다: {bad_cond}")
+            unmet = sorted(p for p in chosen if candidates.get(p, {}).get("conditions")
+                           and not set(candidates[p]["conditions"]) & reported)
+            if unmet:
+                errors.append(f"조건이 붙은 절차인데 충족한 조건을 적지 않았다: {unmet}")
             return errors
 
         verdict = diag["verdicts"].get(confirmed, {}) if confirmed else {}
@@ -629,8 +681,8 @@ def build_graph(deps: Deps):
                 "cause_id": h["cause_id"], "rank": h["rank"], "score": h["score"],
                 "status": v["status"] if v else "candidate",
                 "result": v["result"] if v else None,
-                "findings": [{"check_id": c["check_id"], "tool": c["tool"], "result": v["result"], "detail": c["text"]}
-                             for c in diag["tool_calls"] if c["cause_id"] == h["cause_id"] and not c["is_error"]] if v else [],
+                "findings": [{"check_id": e["check_id"], "tool": e["tool"], "result": v["result"], "detail": e["text"],
+                              "reused": e["reused"]} for e in v["evidence"]] if v else [],
             })
         output = {
             "symptom": incident["symptom_id"],
@@ -687,7 +739,7 @@ def _explain(incident: dict, diag: dict, symptom_by_id: dict) -> str:
         v = diag["verdicts"].get(h["cause_id"])
         if not v:
             continue
-        used = [c["check_id"] for c in diag["tool_calls"] if c["cause_id"] == h["cause_id"] and c["check_id"]]
+        used = [e["check_id"] for e in v["evidence"]]
         lines.append(f"-> 원인 {h['cause_id']} {h['name']} (점수 {h['score']}): {v['result']}, 근거 {used}. {v['reason']}")
     if diag.get("primary_team"):
         lines.append(f"-> 1차 담당 {diag['primary_team']}")

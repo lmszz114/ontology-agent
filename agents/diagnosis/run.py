@@ -104,12 +104,24 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, org: str, tracer:
     }
 
 
+def check_dev_only(paths: list[Path]) -> None:
+    """dev 시나리오만 받는다. test 세트는 최종 실행(M8)에만 쓴다 (4단계 4-2). 파일을 직접 지정해도 막는다.
+
+    키 확인과 LLM 호출 전에 부른다.
+    """
+    for path in paths:
+        split = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("split")
+        if split != "dev":
+            raise SystemExit(f"{path}: dev 시나리오만 돌릴 수 있다 (split={split})")
+
+
 async def main_async(args) -> int:
     if args.scenario:
         paths = [Path(p) for p in args.scenario]
     else:
         paths = sorted((ROOT / "eval" / "scenarios" / args.split).glob("*.yaml"))
         load_scenarios(args.split)  # 형식이 틀린 파일이 있으면 여기서 멈춘다
+    check_dev_only(paths)
     tracer = Tracer.from_env()
     llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
     out = Path(args.out) if args.out else None
@@ -119,6 +131,9 @@ async def main_async(args) -> int:
         try:
             for path in paths:
                 scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
+                if scenario.get("split") != "dev":
+                    # test 세트는 최종 실행(M8)에만 쓴다 (4단계 4-2). 파일을 직접 지정해도 막는다
+                    raise SystemExit(f"{path}: dev 시나리오만 돌릴 수 있다 (split={scenario.get('split')})")
                 result = await run_scenario(scenario, path, org=args.org, tracer=tracer, llm=llm, driver=driver)
                 text = json.dumps(result, ensure_ascii=False, indent=2, default=str)
                 if out:

@@ -211,3 +211,15 @@ def test_started_after_and_severity_change(db):
     assert (row["g"], row["s"]) == (30, "SEV2")
     with pytest.raises(RecordError, match="정의되지 않은 심각도"):
         events.set_incident_severity(db, incident_id="INC-1", severity_id="SEV9")
+
+
+def test_linking_the_same_report_twice_changes_nothing(db):
+    open_incident(db)
+    report(db)
+    for _ in range(2):
+        events.link_report(db, report_id="RP-1", incident_id="INC-1", link="part_of")
+    with db.session() as session:
+        row = session.run("MATCH (i:Incident {id: 'INC-1'}) RETURN i.report_count AS n, "
+                          "COUNT { (:Report)-[:PART_OF]->(i) } AS links").single()
+    assert (row["n"], row["links"]) == (1, 1)
+    assert len(events.open_incidents(db, since=AT - timedelta(hours=1))[0]["reports"]) == 1
