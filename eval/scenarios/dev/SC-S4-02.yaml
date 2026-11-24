@@ -14,7 +14,7 @@ reports:
 environment:
   checks:
     - check: E02
-      observations: {delivery: mismatch}
+      observations: {delivery: short}
       detail: "이벤트 달성자 중 일부에게 보상 지급 기록이 없다. 설정된 보상과 지급 기록이 다르다"
     - check: E04
       args: {system: SY15}

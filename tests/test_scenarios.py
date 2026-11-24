@@ -96,7 +96,11 @@ def broken(scenarios, sid, mutate):
     ("SC-S8-01", lambda s: s["expected"].update(scope="one_world", severity="SEV2"), "severity"),
     ("SC-S8-01", lambda s: s["expected"].update(procedures=["P3", "P10"]), "procedures"),
     ("SC-S7-01", lambda s: s["expected"].update(procedures=["P3", "P4", "P5", "P10"]), "procedures"),
-    ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["미지급"]), "procedures"),
+    # 지급 조건은 E02 관측 값과 맞아야 한다 (M3 결정)
+    ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["미지급"]), "지급 조건"),
+    ("SC-S4-02", lambda s: s["expected"].update(resolved_conditions=["과지급"]), "지급 조건"),
+    ("SC-S4-01", lambda s: s["environment"].update(checks=[c for c in s["environment"]["checks"] if c["check"] != "E02"]),
+     "E02 결과가 환경에 없다"),
     ("SC-S4-01", lambda s: s["expected"].update(resolved_conditions=["과지급", "환불"]), "resolved_conditions"),
     ("SC-S4-02", lambda s: s["expected"]["auto_actions"].append("A10"), "auto_actions"),
     ("SC-S4-02", lambda s: s["expected"].update(approval_actions=["A15"]), "approval_actions"),
@@ -104,7 +108,7 @@ def broken(scenarios, sid, mutate):
     # 형식과 참조
     ("SC-S1-01", lambda s: s["reports"][0].update(channel="CH99"), "채널"),
     ("SC-S1-01", lambda s: s["reports"][0].update(at="2026-12-07T20:14"), "시간대"),
-    ("SC-S1-01", lambda s: s["expected"].update(incident_groups=[[0, 1]]), "incident_groups"),
+    ("SC-S1-01", lambda s: s["expected"].update(incident_groups=[[0, 1]]), "한 번씩 담지"),
     ("SC-S1-01", lambda s: s["expected"].update(symptom="S9"), "증상"),
     ("SC-S1-01", lambda s: s.update(type="T9"), "type"),
     ("SC-S1-01", lambda s: s.pop("text_source"), "text_source"),
@@ -113,10 +117,12 @@ def broken(scenarios, sid, mutate):
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(kind="hotfix"), "종류"),
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(system="거래소"), "시스템"),
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(at="어제"), "시간대"),
+    ("SC-S1-01", lambda s: s["expected"].update(unclassified=[0]), "한 번씩 담지"),
+    ("SC-S1-01", lambda s: s["expected"].update(unclassified="0"), "unclassified"),
     # 등급 상향 (R3)
     ("SC-S8-01", lambda s: s["expected"].update(escalated="no"), "escalated"),
     ("SC-S8-01", lambda s: s["expected"].update(escalated=True, severity="SEV2", procedures=["P2", "P3", "P4", "P10"]),
-     "escalated가 true면"),
+     "때만 true다"),
     # 변경 이력과 판정 근거 (3단계 6장)
     ("SC-S3-01", lambda s: s["environment"].update(changes=[]), "그런 변경 이력이 없다"),
     ("SC-S3-01", lambda s: s["environment"]["changes"][0].update(at="2026-12-10T12:00+09:00"), "그런 변경 이력이 없다"),
@@ -209,7 +215,7 @@ def test_command_reports_success_for_the_real_scenarios(capsys):
     from eval import validate
 
     assert validate.main() == 0
-    assert capsys.readouterr().out.strip() == "시나리오 파일 10개, 문제 0건"
+    assert capsys.readouterr().out.strip() == "시나리오 파일 14개, 문제 0건"
 
 
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):
@@ -237,3 +243,21 @@ def test_escalated_label_needs_the_escalation_procedure(seed, scenarios):
         s["expected"]["auto_actions"] = sorted(set(s["expected"]["auto_actions"]) | {"A06"})
     errors = validate_scenario(seed, broken(scenarios, "SC-S8-01", with_p2))
     assert not errors, errors
+
+
+def test_dev_set_has_multi_report_scenarios(scenarios):
+    """M3에서 더한 다채널 중복(T3)과 심각도 변화(T4) 시나리오가 각각 둘 있다. 상향 여부가 둘 다 있다."""
+    by_type = {}
+    for s in scenarios.values():
+        by_type.setdefault(s["type"], []).append(s)
+    assert len(by_type["T3"]) == 2 and len(by_type["T4"]) == 2
+    assert sorted(bool(s["expected"].get("escalated")) for s in by_type["T4"]) == [False, True]
+    assert any(s["expected"].get("unclassified") for s in by_type["T3"])
+
+
+def test_reports_over_the_threshold_must_be_labelled_escalated(seed, scenarios):
+    """30분 안 20건 묶음이 있는데 상향하지 않았다고 적으면 막는다 (R3)."""
+    def mutate(s):
+        s["reports"] = [dict(r, at=s["reports"][0]["at"]) for r in s["reports"]]
+    errors = validate_scenario(seed, broken(scenarios, "SC-S3-02", mutate))
+    assert any("때만 true다" in e for e in errors), errors
