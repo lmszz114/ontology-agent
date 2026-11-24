@@ -18,7 +18,7 @@ from pathlib import Path
 
 import yaml
 
-from common.rules.severity import SCOPES, base_severity, escalate
+from common.rules.severity import ESCALATION_COUNT, ESCALATION_WINDOW, SCOPES, base_severity, escalate
 from common.writers.events import CHANGE_KINDS
 from ontology.conditions import CONFIRM, ConditionError, Environment, evaluate_cause, required_checks
 from ontology.seed import load_seed, resolve_owner_teams
@@ -33,6 +33,17 @@ INTAKE_PROCEDURE = "P1"
 # 원인 수정과 반영(P10)은 원인이 확정되면 항상 연다 (R7)
 FIX_PROCEDURE = "P10"
 URGENT_NOTICE, URGENT_MAINTENANCE = "P3", "P4"
+# 등급이 상향된 사건은 에스컬레이션(P2)을 연다 (R3)
+ESCALATION_PROCEDURE = "P2"
+# 변경 이력의 종류마다 그 변경이 보여야 하는 판정 근거와 관측 값 (3단계 6장).
+# 시스템 인자가 있는 근거는 변경된 시스템으로 조회한 결과를 본다
+CHANGE_EVIDENCE = {
+    "deploy": ("E06", "deploy", {"success", "partial", "failed"}, "system"),
+    "patch": ("E06", "deploy", {"success", "partial", "failed"}, "system"),
+    "table_change": ("E05", "changed", {"yes"}, None),
+    "event_config": ("E07", "changed", {"yes"}, "system"),
+    "product_config": ("E07", "changed", {"yes"}, "system"),
+}
 URGENT_LEVELS = {"SEV1", "SEV2"}
 
 
@@ -57,6 +68,50 @@ def started_at(scenario: dict) -> datetime:
     return min(_aware(r["at"]) for r in scenario["reports"])
 
 
+def _escalation_evidence(scenario: dict) -> bool:
+    """정답 묶음 가운데 상향 기준(R3)을 넘는 사건이 있는지. 창은 각 접수 시각을 끝으로 하는 시간이다."""
+    for group in scenario["expected"]["incident_groups"]:
+        times = sorted(_aware(scenario["reports"][i]["at"]) for i in group)
+        if any(sum(1 for t in times if end - ESCALATION_WINDOW <= t <= end) >= ESCALATION_COUNT for end in times):
+            return True
+    return False
+
+
+def _change_errors(seed: dict, scenario: dict, env: Environment) -> list[str]:
+    """변경 이력과 판정 근거의 관측 값이 서로 맞는지 (3단계 6장).
+
+    증상 시작 전 변경이 있으면 그 변경을 보는 조회도 변경이 있다고 답해야 하고, 거꾸로도 같다.
+    어긋나면 원인 점수의 변경 가중(R4)과 판정 근거가 서로 다른 말을 한다.
+    """
+    errors = []
+    start = started_at(scenario)
+    before = [c for c in scenario["environment"]["changes"] if _aware(c["at"]) <= start]
+    for change in before:
+        check_id, field_name, changed_values, arg = CHANGE_EVIDENCE[change["kind"]]
+        args = {arg: change["system"]} if arg else None
+        if arg is None:
+            # 테이블 변경은 영역 인자로 조회한다. 어느 영역이든 변경이 보이면 맞다
+            seen = any(e["check"] == check_id and (e.get("observations") or {}).get(field_name) in changed_values
+                       for e in scenario["environment"]["checks"])
+        else:
+            try:
+                seen = env.observe(check_id, args)[field_name] in changed_values
+            except ConditionError as exc:
+                errors.append(f"{change['kind']} 변경({change['system']})을 {check_id}로 조회할 수 없다: {exc}")
+                continue
+        if not seen:
+            errors.append(f"증상 시작 전 {change['kind']} 변경({change['system']})이 있는데 {check_id} 조회는 변경이 없다고 답한다")
+    for entry in scenario["environment"]["checks"]:
+        matches = [(kind, spec) for kind, spec in CHANGE_EVIDENCE.items()
+                   if entry["check"] == spec[0] and (entry.get("observations") or {}).get(spec[1]) in spec[2]]
+        if not matches:
+            continue
+        system = (entry.get("args") or {}).get("system")
+        if not any(c["kind"] == kind and (spec[3] is None or c["system"] == system) for kind, spec in matches for c in before):
+            errors.append(f"{entry['check']} 조회는 증상 시작 전 변경이 있다고 답하는데 그런 변경 이력이 없다 ({entry.get('args') or {}})")
+    return errors
+
+
 def expected_procedures(seed: dict, scenario: dict) -> set[str]:
     """정답 원인, 심각도, 환경으로 열어야 할 절차를 계산한다.
 
@@ -75,6 +130,8 @@ def expected_procedures(seed: dict, scenario: dict) -> set[str]:
     human_only = {p["id"] for p in seed["procedures"] if p.get("human_only")}
 
     procedures = {FIX_PROCEDURE} | set(severity["triggers"])
+    if expected.get("escalated"):
+        procedures.add(ESCALATION_PROCEDURE)
     if expected["severity"] in URGENT_LEVELS:
         procedures.add(URGENT_MAINTENANCE)
     for ref in cause["resolved_by"]:
@@ -209,6 +266,7 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
             check(_aware(change.get("at")) is not None, f"변경 {index}: at은 시간대가 붙은 시각이어야 한다")
     if errors:
         return errors
+    errors += _change_errors(seed, scenario, env)
 
     # 증상과 원인
     symptom = next((s for s in seed["symptoms"] if s["id"] == expected.get("symptom")), None)
@@ -233,10 +291,14 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
     check([expected.get("primary_team")] == owners, f"primary_team은 {owners}여야 한다")
 
     # 심각도
+    escalated = expected.get("escalated", False)
+    if check(isinstance(escalated, bool), "escalated는 true 또는 false여야 한다") and escalated:
+        check(_escalation_evidence(scenario), f"escalated가 true면 같은 사건의 접수가 {int(ESCALATION_WINDOW.total_seconds() // 60)}분 안에 "
+              f"{ESCALATION_COUNT}건 이상인 묶음이 있어야 한다 (R3)")
     scope = expected.get("scope")
     if check(scope in SCOPES, f"scope는 {sorted(SCOPES)} 중 하나여야 한다"):
         severity = base_severity(scope, symptom["core_function"], symptom.get("min_severity"))
-        if expected.get("escalated"):
+        if escalated is True:
             severity = escalate(severity)
         check(expected.get("severity") == severity, f"severity는 {severity}여야 한다 (R3)")
         # 영향 범위는 접수 내역 조회(E15) 결과로 추정한다 (3단계 6장). 일부 유저보다 넓으면 그 근거가 환경에 있어야 한다

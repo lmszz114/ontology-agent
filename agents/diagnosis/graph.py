@@ -25,7 +25,7 @@ from common.gate import gate
 from common.gate.gate import GateError
 from common.knowledge import KnowledgeProvider
 from common.models import LLM, LLMResult
-from common.rules.severity import SCOPES, base_severity, escalate
+from common.rules.severity import ESCALATION_COUNT, ESCALATION_WINDOW, SCOPES, base_severity, escalate
 from common.tool_calls import call_tool
 from common.tracing import Tracer
 from common.writers import events
@@ -35,8 +35,6 @@ KST = timezone(timedelta(hours=9))
 
 # 가정값 (설계 3단계 4-2, 4-3, 11장). 4단계 평가에서 조정한다
 DUPLICATE_WINDOW = timedelta(hours=6)          # R2 비교 시간창
-ESCALATION_WINDOW = timedelta(minutes=30)      # R3 상향 기준 시간
-ESCALATION_COUNT = 20                          # R3 상향 기준 접수 수
 # 가정값 (이 PR에서 정함, 설계에 값이 없다). 확정이 안 되면 다음 후보로 넘어가는 횟수의 상한
 MAX_HYPOTHESES = 3
 # 한 가설을 확인하며 도구를 부르는 왕복의 상한. 끝없는 도구 호출을 막는다
@@ -257,9 +255,11 @@ def build_graph(deps: Deps):
             c for c in events.open_incidents(deps.driver, since=work["at"] - DUPLICATE_WINDOW)
             if datetime.fromisoformat(c["opened_at"]) <= work["at"]
         ]
-        same_reporter = [c for c in candidates if any(r["reporter_id"] == work["reporter"] for r in c["reports"])]
+        same_reporter = [c for c in candidates if any(
+            r["reporter_id"] == work["reporter"] and r["symptom_id"] == work["symptom_id"] for r in c["reports"])]
         if same_reporter:
-            # 같은 요청자가 시간창 안에 다시 보낸 제보는 채널이 달라도 같은 사건이다 (R2)
+            # 같은 요청자가 시간창 안에 같은 증상으로 다시 보낸 제보는 채널이 달라도 같은 사건이다 (R2).
+            # 증상이 다르면 다른 문제일 수 있어 묶지 않고 중복 판정으로 넘긴다
             work |= {"decision": "same", "target": same_reporter[0]["incident_id"], "decided_by": "same_reporter"}
         elif not candidates:
             work |= {"decision": "new"}
@@ -430,7 +430,7 @@ def build_graph(deps: Deps):
         })
         messages: list[dict] = [{"role": "user", "content": content}]
         data, called, retried = None, [], False
-        required = [c["check_id"] for c in checks if c["required"]]
+        required = [(c["check_id"], c["args"]) for c in checks if c["required"]]
         for _ in range(MAX_TOOL_ROUNDS):
             result = deps.llm.call(
                 task="diagnosis", name=f"7.check.{cause_id}", system=prompts.CHECK, messages=messages,
@@ -445,10 +445,11 @@ def build_graph(deps: Deps):
                     data = None
                 # 필수 판정 근거를 조회하지도, 앞 결과를 인용하지도 않고 답하면 한 번 다시 묻는다 (R4-4)
                 missing = _unchecked(data, schema, required, called, tool_results, prior_ids)
-                if missing and not retried:
+                # 다시 물을 때 앞 답의 도구 호출 블록은 뺀다. 결과 없는 도구 호출 뒤에 글을 붙이면 API가 거부한다
+                said = [b.model_dump(mode="json", exclude_none=True) for b in result.message.content if b.type != "tool_use"]
+                if missing and not retried and said:
                     retried = True
-                    messages.append({"role": "assistant", "content": [b.model_dump(mode="json", exclude_none=True)
-                                                                      for b in result.message.content]})
+                    messages.append({"role": "assistant", "content": said})
                     messages.append({"role": "user", "content": prompts.RETRY.format(
                         errors=f"- 필수 판정 근거 {missing}를 조회하지 않고 답했다. 조회하거나 이미 조회한 결과를 "
                                "reused_results로 인용한 뒤 다시 답한다")})
@@ -488,11 +489,16 @@ def build_graph(deps: Deps):
         # 실제 호출 이력(tool_calls)과 따로 둔다. 재사용한 결과도 이 가설의 Finding과 출력에 남긴다.
         # 근거 ID가 아니라 결과 ID로 잇는다. 같은 근거를 다른 인자로 조회한 결과, 같은 인자로 다시 조회해
         # 달라진 결과가 잘못 연결되지 않게 한다. 인용한 결과는 그대로 잇는다
+        # 이 원인의 판정 근거가 아닌 조회는 근거로 남기지 않는다. 호출 이력(tool_calls)에는 그대로 남는다
+        # 원인이 인자를 정한 근거는 그 인자로 조회한 결과만 근거다 (예: C08의 E06은 SY10 배포 이력만)
+        def own(check_id: str, args: dict) -> bool:
+            return any(c["check_id"] == check_id and _covered(check_id, c["args"], [(check_id, args)]) for c in checks)
+
         evidence = [{"check_id": c["check_id"], "tool": c["tool"], "args": c["args"], "text": c["text"], "reused": False}
-                    for c in called if c["check_id"] and not c["is_error"]]
+                    for c in called if not c["is_error"] and own(c["check_id"], c["args"])]
         for result_id in dict.fromkeys(verdict["reused_results"]):
             cached = tool_results[result_id]
-            if cached["check_id"]:
+            if own(cached["check_id"], cached["args"]):
                 evidence.append({k: cached[k] for k in ("check_id", "tool", "args", "text")} | {"reused": True})
         checked_at = deps.now()
         for e in evidence:
@@ -527,6 +533,15 @@ def build_graph(deps: Deps):
         collaborators: list[dict] = []
         confirmed = diag.get("confirmed")
         if confirmed:
+            # 상위 가설을 불명확으로 남긴 채 하위 가설이 확정되면 사람이 확인한다 (R4-4)
+            above = []
+            for h in diag["ranked"]:
+                if h["cause_id"] == confirmed:
+                    break
+                if diag["verdicts"].get(h["cause_id"], {}).get("result") == "inconclusive":
+                    above.append(h["cause_id"])
+            if above:
+                needs_human.append(f"상위 가설 {above}가 불명확인 채로 {confirmed}가 확정됐다")
             info = await deps.knowledge.owner_team(confirmed)
             primaries = [t["team_id"] for t in info["primary"]]
             if len(primaries) != 1:
@@ -572,11 +587,16 @@ def build_graph(deps: Deps):
             needs_human.append(f"원인이 확정되지 않았다. 상위 가설: {[h['cause_id'] for h in open_hyps]}")
             next_check = None
             if open_hyps:
-                pending = [c for c in await deps.knowledge.get_checks(open_hyps[0]["cause_id"]) if c["required"]]
+                # 다음 확인은 상위 가설의 필수 근거 중 아직 결과가 없는 것이다. 모두 조회했으면 사람이 결과를 판단한다
+                target = open_hyps[0]["cause_id"]
+                done = [(e["check_id"], e["args"]) for e in diag["verdicts"].get(target, {}).get("evidence", [])]
+                pending = [c for c in await deps.knowledge.get_checks(target)
+                           if c["required"] and not _covered(c["check_id"], c["args"], done)]
                 if pending:
                     c = pending[0]
-                    next_check = {"cause_id": open_hyps[0]["cause_id"], "check_id": c["check_id"],
-                                  "by": c.get("performed_by_team") or c.get("judged_by_team") or primary}
+                    # 담당은 팀 ID로 적는다. 사람이 하는 조회는 수행 팀, 판단 팀이 따로 있으면 그 팀, 없으면 1차 담당
+                    next_check = {"cause_id": target, "check_id": c["check_id"], "args": c["args"],
+                                  "by": c.get("performed_by_team_id") or c.get("judged_by_team_id") or primary}
         # 같은 팀이 여러 번 붙지 않게 하고 1차 담당은 협업에서 뺀다
         seen, unique = {primary}, []
         for c in collaborators:
@@ -780,9 +800,18 @@ def _unchecked(data, schema: dict, required: list[str], called: list[dict], tool
     """
     if data is None or _structure_errors(data, schema):
         return []
-    have = {c["check_id"] for c in called if not c["is_error"]}
-    have |= {tool_results[r]["check_id"] for r in data["reused_results"] if r in prior_ids}
-    return [c for c in dict.fromkeys(required) if c not in have]
+    have = [(c["check_id"], c["args"]) for c in called if not c["is_error"]]
+    have += [(tool_results[r]["check_id"], tool_results[r]["args"]) for r in data["reused_results"] if r in prior_ids]
+    return [_check_label(check_id, args) for check_id, args in required if not _covered(check_id, args, have)]
+
+
+def _covered(check_id: str, args: dict, have: list[tuple[str, dict]]) -> bool:
+    """필수 근거가 조회됐는지. 원인이 인자를 정해 둔 근거(예: 어느 시스템의 로그)는 그 인자로 조회해야 한다."""
+    return any(c == check_id and all(a.get(k) == v for k, v in args.items()) for c, a in have)
+
+
+def _check_label(check_id: str, args: dict) -> str:
+    return f"{check_id}({', '.join(f'{k}={v}' for k, v in args.items())})" if args else check_id
 
 
 def _explain(incident: dict, diag: dict, symptom_by_id: dict) -> str:

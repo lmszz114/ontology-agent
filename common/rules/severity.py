@@ -4,12 +4,19 @@
 시나리오 검증이 같은 함수를 쓴다. 표의 값은 가정이다.
 """
 
+from datetime import timedelta
+
 # 영향 범위 (설계 3단계 4-3 표의 행)
 SCOPES = {
     "all_service": "전체 서비스",
     "one_world": "특정 월드 전체",
     "some_users": "일부 유저",
 }
+
+# 등급 상향 기준 (R3 상향 규칙, 가정값). 같은 사건의 접수가 이 시간 안에 이 수 이상이면 한 단계 올린다.
+# 시간창은 새 제보의 접수 시각을 끝으로 한다. 진단 에이전트와 시나리오 검증이 같은 값을 쓴다
+ESCALATION_WINDOW = timedelta(minutes=30)
+ESCALATION_COUNT = 20
 
 # 낮은 등급부터 높은 등급 순
 LEVELS = ("SEV4", "SEV3", "SEV2", "SEV1")
