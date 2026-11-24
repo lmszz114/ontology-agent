@@ -264,3 +264,19 @@ def test_git_state_dotdot_through_link_is_a_link_input(tmp_path):
     _commit_all(repo)
     state = git_state(repo / "eval" / "results" / "x", root=repo, inputs=[inputs / "alias" / ".." / "A.yaml"])
     assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]
+
+
+def test_git_state_dotdot_through_link_to_sibling_is_a_link_input(tmp_path):
+    """alias가 같은 폴더의 real을 가리키면 alias/../A.yaml은 실제로도 inputs/A.yaml이다. 최종 경로가 같아도
+    링크를 거쳤으므로 변경이다 (PR #20 리뷰). 경로를 한 단계씩 따라가며 링크를 찾아야 잡힌다."""
+    repo = _repo(tmp_path)
+    inputs = repo / "eval" / "results" / "inputs"
+    (inputs / "real").mkdir(parents=True)
+    (inputs / "A.yaml").write_text("id: A\n", encoding="utf-8")
+    (inputs / "alias").symlink_to(inputs / "real")
+    _commit_all(repo)
+    out = repo / "eval" / "results" / "x"
+    assert not git_state(out, root=repo, inputs=[inputs / "A.yaml"]).dirty
+    assert not git_state(out, root=repo, inputs=[inputs / "real" / ".." / "A.yaml"]).dirty
+    state = git_state(out, root=repo, inputs=[inputs / "alias" / ".." / "A.yaml"])
+    assert state.dirty and state.changed == ["eval/results/inputs/A.yaml (심볼릭 링크를 거친 입력)"]

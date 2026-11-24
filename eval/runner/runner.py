@@ -75,17 +75,16 @@ def _input_change(path: Path, root: Path) -> str | None:
     """입력 파일이 커밋(HEAD)의 같은 경로 내용과 같으면 None, 다르면 변경 설명.
 
     비교 기준은 실행에 넘긴 경로다. 링크를 거치는 입력은 HEAD에서 같은 경로로 읽은 내용과 맞는지 확인하기
-    어렵고 경우가 많아 구멍이 생기기 쉽다. 저장소에 링크로 된 시나리오가 없으므로 링크를 거친 입력은 변경으로 본다
-    (PR #20 리뷰: 커밋된 A.yaml을 다른 내용의 B.yaml을 가리키는 링크로 바꾸는 경우).
+    어렵고 경우가 많아 구멍이 생기기 쉽다. 저장소에 링크로 된 시나리오가 없으므로 경로의 어느 단계에서든 링크를
+    거친 입력은 변경으로 본다 (PR #20 리뷰: 커밋된 A.yaml을 다른 내용의 B.yaml을 가리키는 링크로 바꾸는 경우,
+    alias/../A.yaml처럼 링크 뒤에 ..가 오는 경우).
     """
     root_abs = Path(os.path.abspath(root))
     given = Path(os.path.abspath(path))
     if not given.is_relative_to(root_abs):
         return f"{path} (저장소 밖의 입력)"
     rel = given.relative_to(root_abs)
-    # 링크 검사는 넘겨받은 원래 경로로 한다. abspath는 링크를 풀기 전에 ..를 지워 다른 파일을 가리킬 수 있다
-    # (alias/../A.yaml에서 alias가 링크면 실제로 읽는 파일이 다르다, PR #20 리뷰)
-    if Path(path).resolve() != root_abs.resolve() / rel:
+    if _through_link(Path(path)):
         return f"{rel.as_posix()} (심볼릭 링크를 거친 입력)"
     shown = subprocess.run(["git", "show", f"HEAD:{rel.as_posix()}"], cwd=root, capture_output=True)
     if shown.returncode != 0:
@@ -93,6 +92,21 @@ def _input_change(path: Path, root: Path) -> str | None:
     if shown.stdout != given.read_bytes():
         return rel.as_posix()
     return None
+
+
+def _through_link(path: Path) -> bool:
+    """넘겨받은 경로를 ..를 지우지 않고 앞에서부터 한 단계씩 따라가며 심볼릭 링크가 있는지 본다.
+
+    abspath나 resolve 결과의 비교로는 못 잡는 경우가 있다. abspath는 링크를 풀기 전에 ..를 지워 다른 파일을
+    가리킬 수 있고, alias가 같은 폴더의 real을 가리키면 alias/../A.yaml은 링크를 거쳐도 최종 경로가 같다
+    (PR #20 리뷰). 상대 경로의 시작점인 os.getcwd()는 링크가 풀린 실제 경로라서 오탐이 생기지 않는다.
+    """
+    current = Path(path.anchor) if path.is_absolute() else Path(os.getcwd())
+    for part in path.parts[1 if path.is_absolute() else 0:]:
+        current = current / part
+        if part not in (".", "..") and current.is_symlink():
+            return True
+    return False
 
 
 def _status_entries(status: str) -> list[list[str]]:
