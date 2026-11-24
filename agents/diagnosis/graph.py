@@ -401,7 +401,9 @@ def build_graph(deps: Deps):
         tool_results = dict(diag["tool_results"])
         tool_calls = list(diag["tool_calls"])
 
-        known = "\n".join(f"- {r['check_id']} {r['tool']} {json.dumps(r['args'], ensure_ascii=False)}: {r['text']}"
+        # 앞 가설에서 조회해 둔 결과. 결과 ID로 구분해서, 같은 근거를 다른 인자로 조회한 결과가 섞이지 않게 한다
+        prior_ids = {r["result_id"] for r in tool_results.values()}
+        known = "\n".join(f"- {r['result_id']} {r['check_id']} {r['tool']} {json.dumps(r['args'], ensure_ascii=False)}: {r['text']}"
                            for r in tool_results.values())
         content = (
             "사건 제보:\n" + "\n".join(_report_block({**r, "at": r["at"].isoformat()}) for r in incident["reports"])
@@ -414,6 +416,7 @@ def build_graph(deps: Deps):
         schema = _schema({
             "result": {"type": "string", "enum": ["confirm", "rule_out", "inconclusive"]},
             "used_checks": {"type": "array", "items": {"type": "string"}},
+            "reused_results": {"type": "array", "items": {"type": "string"}},
             "reason": {"type": "string"},
         })
         messages: list[dict] = [{"role": "user", "content": content}]
@@ -438,29 +441,33 @@ def build_graph(deps: Deps):
                 out = await call_tool(deps.mock_client, deps.tracer, server="mock_tools", name=use.name, args=use.input)
                 key = json.dumps([use.name, use.input], ensure_ascii=False, sort_keys=True)
                 if not out.is_error:
-                    tool_results[key] = {"tool": use.name, "args": use.input,
+                    result_id = tool_results[key]["result_id"] if key in tool_results else f"K{len(tool_results) + 1}"
+                    tool_results[key] = {"result_id": result_id, "tool": use.name, "args": use.input,
                                          "check_id": deps.tool_checks.get(use.name), "text": out.text}
                 called.append({"tool": use.name, "args": use.input, "check_id": deps.tool_checks.get(use.name),
                                "is_error": out.is_error, "text": out.text})
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
 
-        if data is None or _structure_errors(data, schema) or data["result"] not in ("confirm", "rule_out", "inconclusive"):
-            verdict = {"result": "inconclusive", "reason": "판정 근거 단계의 답을 읽을 수 없다", "used_checks": []}
+        if (data is None or _structure_errors(data, schema)
+                or data["result"] not in ("confirm", "rule_out", "inconclusive")
+                or not set(data["reused_results"]) <= prior_ids):
+            verdict = {"result": "inconclusive", "reason": "판정 근거 단계의 답을 읽을 수 없다",
+                       "used_checks": [], "reused_results": []}
         else:
             verdict = data
         status = {"confirm": "confirmed", "rule_out": "ruled_out", "inconclusive": "candidate"}[verdict["result"]]
         events.record_hypothesis(deps.driver, incident_id=diag["incident_id"], cause_id=cause_id,
                                  score=hypothesis["score"], rank=hypothesis["rank"], status=status)
-        # 이 가설의 근거: 이번에 새로 부른 성공 결과와, 판단에 썼다고 답한 근거 중 앞 가설에서 조회해 둔 결과.
-        # 실제 호출 이력(tool_calls)과 따로 둔다. 재사용한 결과도 이 가설의 Finding과 출력에 남긴다
+        # 이 가설의 근거: 이번에 새로 부른 성공 결과와, 판단에 썼다고 결과 ID로 답한 앞 가설의 조회 결과.
+        # 실제 호출 이력(tool_calls)과 따로 둔다. 재사용한 결과도 이 가설의 Finding과 출력에 남긴다.
+        # 근거 ID가 아니라 결과 ID로 잇는다. 같은 근거를 다른 인자로 조회한 결과가 잘못 연결되지 않게 한다
         evidence = [{"check_id": c["check_id"], "tool": c["tool"], "args": c["args"], "text": c["text"], "reused": False}
                     for c in called if c["check_id"] and not c["is_error"]]
-        have = {e["check_id"] for e in evidence}
-        for cached in tool_results.values():
-            if cached["check_id"] in set(verdict.get("used_checks") or []) - have:
-                evidence.append({**cached, "reused": True})
-                have.add(cached["check_id"])
+        fresh = {json.dumps([e["tool"], e["args"]], ensure_ascii=False, sort_keys=True) for e in evidence}
+        for key, cached in tool_results.items():
+            if cached["result_id"] in verdict["reused_results"] and key not in fresh and cached["check_id"]:
+                evidence.append({k: cached[k] for k in ("check_id", "tool", "args", "text")} | {"reused": True})
         checked_at = deps.now()
         for e in evidence:
             events.record_finding(
@@ -685,7 +692,8 @@ def build_graph(deps: Deps):
                 "cause_id": h["cause_id"], "rank": h["rank"], "score": h["score"],
                 "status": v["status"] if v else "candidate",
                 "result": v["result"] if v else None,
-                "findings": [{"check_id": e["check_id"], "tool": e["tool"], "result": v["result"], "detail": e["text"],
+                "findings": [{"check_id": e["check_id"], "tool": e["tool"], "args": e["args"], "result": v["result"],
+                              "detail": e["text"],
                               "reused": e["reused"]} for e in v["evidence"]] if v else [],
             })
         output = {

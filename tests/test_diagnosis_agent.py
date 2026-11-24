@@ -110,7 +110,8 @@ class RuleModel:
             return message(uses, stop_reason="tool_use")
         # 도구 결과를 읽고 판단한다. 가짜 모델은 판단 기준을 바깥(verdicts)에서 받는다
         verdict = self.verdicts.get(cause, "rule_out")
-        return text({"result": verdict, "used_checks": [c["check_id"] for c in checks if c["required"]], "reason": "규칙대로"})
+        return text({"result": verdict, "used_checks": [c["check_id"] for c in checks if c["required"]],
+                     "reused_results": [], "reason": "규칙대로"})
 
     def collaboration(self, params):
         return text({"apply": [], "reason": "조건에 해당하지 않는다"})
@@ -441,7 +442,8 @@ def test_reused_evidence_is_linked_to_the_later_hypothesis(db, seed):
 
     def answer_from_cache(params):
         # C01을 확인할 때 도구를 다시 부르지 않고 앞에서 조회한 E01 결과로 판단한다
-        return text({"result": "confirm", "used_checks": ["E01"], "reason": "앞의 결제 기록 조회 결과"})
+        rid = re.search(r"^- (K\d+) E01 ", params["messages"][0]["content"], re.M).group(1)
+        return text({"result": "confirm", "used_checks": ["E01"], "reused_results": [rid], "reason": "앞의 결제 기록 조회 결과"})
 
     original = model.check
 
@@ -508,7 +510,7 @@ def test_check_answer_with_bad_used_checks_is_inconclusive(db, seed):
 
     def check(params):
         if len(params["messages"]) > 1:
-            return text({"result": "confirm", "used_checks": [1], "reason": "x"})
+            return text({"result": "confirm", "used_checks": [1], "reused_results": [], "reason": "x"})
         return original(params)
 
     model.check = check
@@ -531,3 +533,43 @@ def test_urgent_procedures_cannot_be_left_out(db, seed):
     state, _ = run_agent(db, seed, scenario, model, verdicts={scenario["expected"]["root_cause"]: "confirm"})
     assert model.calls.count("procedure") == 2
     assert {"P3", "P4"} <= set(state["outputs"][0]["procedures"])
+
+
+def test_reused_result_is_linked_by_result_id_not_check_id(db, seed):
+    """같은 근거(E06)를 인자만 다르게 두 번 조회했으면, 다음 가설에는 결과 ID로 고른 결과만 근거로 잇는다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    original = model.check
+    seen = {}
+
+    def check(params):
+        first = params["messages"][0]["content"]
+        cause = re.search(r"확인할 원인 가설: (C\d+)", first).group(1)
+        seen.setdefault("first", cause)
+        if cause == seen["first"]:
+            if len(params["messages"]) == 1:
+                uses = [{"type": "tool_use", "id": f"tu_{s}", "name": "query_deploy_history", "input": {"system": s}}
+                        for s in ("SY10", "SY18")]
+                return message(uses, stop_reason="tool_use")
+            return text({"result": "rule_out", "used_checks": ["E06"], "reused_results": [], "reason": "x"})
+        if "picked" not in seen:
+            seen["cached"] = [line for line in first.splitlines() if line.startswith("- K") and " E06 " in line]
+            seen["picked"] = next(line.split()[1] for line in seen["cached"] if '"SY18"' in line)
+            return text({"result": "confirm", "used_checks": ["E06"], "reused_results": [seen["picked"]],
+                         "reason": "앞의 SY18 배포 이력"})
+        return original(params)
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    assert len(seen["cached"]) == 2  # 같은 근거를 인자만 다르게 조회한 결과가 둘 있다
+    (out,) = state["outputs"]
+    second = next(h for h in out["hypotheses"] if h["cause_id"] != seen["first"] and h["findings"])
+    assert [(f["check_id"], f["reused"], f["args"]) for f in second["findings"]] == [("E06", True, {"system": "SY18"})]
+
+
+def test_unknown_reused_result_id_is_inconclusive(db, seed):
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    model.check = lambda params: text({"result": "confirm", "used_checks": [], "reused_results": ["K99"], "reason": "x"})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    assert state["outputs"][0]["hypotheses"][0]["result"] == "inconclusive"
