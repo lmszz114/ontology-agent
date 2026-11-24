@@ -227,3 +227,31 @@ def test_linking_the_same_report_twice_changes_nothing(db):
                           "COUNT { (:Report)-[:PART_OF]->(i) } AS links").single()
     assert (row["n"], row["links"]) == (1, 1)
     assert len(events.open_incidents(db, since=AT - timedelta(hours=1))[0]["reports"]) == 1
+
+
+def test_report_belongs_to_one_incident(db):
+    """접수 하나는 한 사건에만 속한다. 다른 사건에 묶거나 속한 사건의 중복 의심으로 걸면 막는다 (R2, R3)."""
+    open_incident(db)
+    events.record_incident(db, incident_id="INC-2", severity_id="SEV3", opened_at=AT)
+    events.record_report(db, report_id="RP-X", channel_id="CH01", reporter_id="U1", raw_text="x",
+                         received_at=AT, symptom_id="S1", scope="some_users")
+    events.link_report(db, report_id="RP-X", incident_id="INC-1", link="part_of")
+    with pytest.raises(RecordError, match="이미 사건"):
+        events.link_report(db, report_id="RP-X", incident_id="INC-2", link="part_of")
+    with pytest.raises(RecordError, match="중복 의심"):
+        events.link_report(db, report_id="RP-X", incident_id="INC-1", link="suspected_duplicate")
+    events.link_report(db, report_id="RP-X", incident_id="INC-2", link="suspected_duplicate")
+    with db.session() as session:
+        counts = session.run("MATCH (i:Incident) RETURN i.id AS id, i.report_count AS n ORDER BY id").data()
+    assert {r["id"]: r["n"] for r in counts}["INC-2"] == 0
+
+
+def test_part_of_replaces_suspected_duplicate_on_the_same_incident(db):
+    """중복 의심으로 걸었던 사건에 같은 사건으로 묶으면 의심 관계는 지운다. 두 관계가 함께 남지 않는다."""
+    open_incident(db)
+    report(db, report_id="RP-Y")
+    events.link_report(db, report_id="RP-Y", incident_id="INC-1", link="suspected_duplicate")
+    events.link_report(db, report_id="RP-Y", incident_id="INC-1", link="part_of")
+    with db.session() as session:
+        rels = session.run("MATCH (:Report {id: 'RP-Y'})-[r]->(:Incident {id: 'INC-1'}) RETURN type(r) AS t").data()
+    assert [r["t"] for r in rels] == ["PART_OF"]

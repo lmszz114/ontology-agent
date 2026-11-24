@@ -42,7 +42,7 @@ def test_default_answers_are_normal(seed):
     assert [r.content[0].text for r in results] == [
         "결제 승인 기록이 있다",
         "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
-        "같은 증상의 다른 접수 내역이 없다",
+        "같은 증상의 다른 접수 내역이 없거나 일부 유저에게서만 들어왔다",
     ]
 
 

@@ -88,12 +88,15 @@ def _request_action(
     requested_mode: str,
     now: datetime,
     condition: str | None = None,
+    target_report_id: str | None = None,
 ) -> dict:
     """조치 요청 하나를 처리하고 실행 기록을 돌려준다.
 
     requested_mode는 요청한 쪽(LLM)이 표시한 값이다. auto는 자동 실행, approval은 승인 요청.
     실행 여부는 이 값이 아니라 그래프의 Action.risk로 정한다.
     condition은 승인권자가 조건에 따라 달라지는 조치(A15)에서 어느 조건인지 가리킨다.
+    target_report_id는 접수 하나를 대상으로 하는 조치(같은 사건으로 묶은 제보에 보내는 A04 회신)의 대상 접수다.
+    회신할 채널은 그 접수의 채널이다.
     """
     if requested_mode not in REQUESTED_MODES:
         raise GateError(f"requested_mode는 auto 또는 approval이어야 한다: {requested_mode}")
@@ -123,6 +126,7 @@ def _request_action(
         "gate_blocked": high and requested_mode == "auto",
         "required_approver_teams": _required_approvers(policy, condition) if high else [],
         "executed_by_team": executed_by,
+        "target_report_id": target_report_id,
     }
     if not high and condition is not None:
         raise GateError(f"{action_id}: 저위험 조치에 condition을 줄 수 없다")

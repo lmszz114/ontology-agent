@@ -182,7 +182,7 @@ def test_no_unused_nodes(seed):
     assert used_causes == set(ids(seed["causes"]))
 
     used_checks = {x["check"] for c in seed["causes"] for x in c["checked_by"]}
-    # E15는 원인 판정이 아니라 영향 범위 추정과 중복 판정에 공통으로 쓴다
+    # E15는 원인 판정이 아니라 영향 범위 추정과 중복 판정에 공통으로 쓴다. 관측 값은 시나리오 검증만 읽는다
     assert used_checks | {"E15"} == set(ids(seed["evidence_checks"]))
 
     used_procedures = {x["procedure"] for c in seed["causes"] for x in c["resolved_by"]}
@@ -259,7 +259,8 @@ def test_every_observation_field_is_used_by_some_cause(seed):
     """구색 금지: 원인 판정에 쓰이지 않는 관측 필드를 두지 않는다."""
     used = {(x["check"], name) for c in seed["causes"] for x in c["checked_by"] for name in x.get("when", {})}
     defined = {(e["id"], name) for e in seed["evidence_checks"] for name in e.get("observations", {})}
-    assert defined == used
+    # E15의 영향 범위는 원인 판정이 아니라 시나리오 검증기가 정답 범위와 대조하는 데 쓴다 (eval/validate.py)
+    assert defined == used | {("E15", "scope")}
 
 
 def test_causes_of_same_symptom_are_distinguishable(seed):

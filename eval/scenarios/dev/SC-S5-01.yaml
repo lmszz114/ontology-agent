@@ -19,6 +19,7 @@ environment:
       detail: "골드 유통량이 평소 하루 평균보다 크게 늘었다"
     # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
     - check: E15
+      observations: {scope: some_users}
       detail: "거래소 아이템 복사 의심 제보가 3건 들어왔다. 모두 같은 몇몇 계정의 거래를 가리킨다"
   changes: []
 expected:

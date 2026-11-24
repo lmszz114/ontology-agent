@@ -21,6 +21,7 @@ environment:
       detail: "21:00부터 3월드 공성전이 진행 중이다"
     # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
     - check: E15
+      observations: {scope: one_world}
       detail: "공성전 중 지연과 접속 끊김 문의가 45건 들어왔다. 모두 3월드 이용자다"
   changes: []
 expected:

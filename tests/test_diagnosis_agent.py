@@ -836,3 +836,23 @@ def test_evidence_with_other_arguments_is_not_this_causes_finding(db, seed):
     (out,) = state["outputs"]
     c08 = next(h for h in out["hypotheses"] if h["cause_id"] == "C08")
     assert [f["args"] for f in c08["findings"] if f["check_id"] == "E06"] == [{"system": "SY10"}]
+
+
+def test_input_order_does_not_change_grouping(db, seed):
+    """제보가 시각 순서와 다르게 들어와도 접수 시각 순서로 처리해 같은 사건으로 묶는다 (R2)."""
+    forward = two_reports(load("SC-S1-01"), same_reporter=False)
+    backward = dict(forward, reports=list(reversed(forward["reports"])))
+    results = []
+    for scenario in (forward, backward):
+        model = RuleModel(intake_of(scenario))
+        state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+        (out,) = state["outputs"]
+        results.append(sorted(out["report_indexes"]))
+        # 묶인 제보에는 처리 중 회신(A04)을 보낸다
+        assert [r["action_id"] for r in out["merge_replies"]] == ["A04"]
+        assert out["merge_replies"][0]["status"] == "auto_done"
+        # 실행 기록에 대상 접수가 남는다. 묶인 제보는 사건의 두 번째 접수다
+        run_id, target = out["merge_replies"][0]["run_id"], out["merge_replies"][0]["report_id"]
+        assert target == out["report_ids"][1]
+        assert graph_count(db, "MATCH (r:ActionRun {id: $id, target_report_id: $t}) RETURN count(r)", id=run_id, t=target) == 1
+    assert results == [[0, 1], [0, 1]]

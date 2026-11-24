@@ -17,6 +17,7 @@ environment:
       detail: "18:55부터 다른 타이틀 세 곳에서도 로그인 실패율이 급증했다"
     # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
     - check: E15
+      observations: {scope: all_service}
       detail: "19:00 이후 로그인 불가 문의와 커뮤니티 글이 140건 들어왔다. 모든 월드에서 들어오고, 같은 회사 다른 게임 이용자의 문의도 섞여 있다"
   changes: []
 expected:

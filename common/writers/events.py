@@ -142,24 +142,33 @@ def create_action_run(
     gate_blocked: bool,
     required_approver_teams: list[str],
     executed_by_team: str | None,
+    target_report_id: str | None = None,
 ) -> None:
-    """조치 실행 기록을 만든다 (ActionRun 노드, FOR와 OF 관계). 승인 게이트만 부른다."""
+    """조치 실행 기록을 만든다 (ActionRun 노드, FOR와 OF 관계). 승인 게이트만 부른다.
+
+    target_report_id가 있으면 그 접수를 대상으로 한 조치다 (예: 묶인 제보의 처리 중 회신). 사건에 속한 접수여야 한다.
+    """
     if status not in RUN_STATUSES or actor not in RUN_ACTORS:
         raise RecordError(f"ActionRun에 쓸 수 없는 값이다: status={status}, actor={actor}")
     _require_aware(requested_at, "requested_at")
 
     def write(tx) -> None:
+        if target_report_id is not None and not tx.run(
+            "MATCH (:Report {id: $report})-[:PART_OF]->(:Incident {id: $incident}) RETURN 1",
+            report=target_report_id, incident=incident_id,
+        ).single():
+            raise RecordError(f"조치 대상 접수 {target_report_id}는 사건 {incident_id}에 속하지 않는다")
         created = tx.run(
             "MATCH (i:Incident {id: $incident}), (a:Action {id: $action}) "
             "CREATE (r:ActionRun {id: $id, action_id: $action, status: $status, actor: $actor, "
             "requested_at: $at, requested_mode: $mode, gate_blocked: $blocked, "
             "required_approver_teams: $required, approved_by_teams: []}) "
             "CREATE (r)-[:FOR]->(i) CREATE (r)-[:OF]->(a) "
-            "SET r.executed_by_team = $team "
+            "SET r.executed_by_team = $team, r.target_report_id = $report "
             "RETURN r.id",
             incident=incident_id, action=action_id, id=run_id, status=status, actor=actor,
             at=requested_at, mode=requested_mode, blocked=gate_blocked,
-            required=required_approver_teams, team=executed_by_team,
+            required=required_approver_teams, team=executed_by_team, report=target_report_id,
         ).single()
         if created is None:
             raise RecordError(f"없는 Incident 또는 Action이다: {incident_id}, {action_id}")
@@ -172,7 +181,8 @@ RUN_FIELDS = (
     "RETURN r.id AS run_id, r.action_id AS action_id, i.id AS incident_id, r.status AS status, "
     "r.actor AS actor, r.requested_mode AS requested_mode, r.gate_blocked AS gate_blocked, "
     "r.required_approver_teams AS required_approver_teams, r.approved_by_teams AS approved_by_teams, "
-    "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team"
+    "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team, "
+    "r.target_report_id AS target_report_id"
 )
 
 
@@ -295,9 +305,17 @@ def link_report(driver: Driver, *, report_id: str, incident_id: str, link: str, 
     def write(tx) -> None:
         if not tx.run(LOCK.format(label="Incident"), id=incident_id).single():
             raise RecordError(f"없는 Incident다: {incident_id}")
-        if not tx.run("MATCH (r:Report {id: $id}) RETURN r.id", id=report_id).single():
+        # 접수에도 잠금을 건다. 같은 접수를 두 사건에 동시에 묶는 요청이 둘 다 통과하지 않게 한다
+        if not tx.run(LOCK.format(label="Report"), id=report_id).single():
             raise RecordError(f"없는 Report다: {report_id}")
         rel = REPORT_LINKS[link]
+        # 접수 하나는 한 사건에만 속한다. 다른 사건에 이미 속하면 막는다. 접수 수가 두 사건에 함께 세어지면
+        # 상향(R3)이 틀어진다. 중복 의심은 속한 사건이 아닌 다른 사건에만 건다
+        owner = tx.run("MATCH (:Report {id: $id})-[:PART_OF]->(i:Incident) RETURN i.id AS id", id=report_id).single()
+        if owner and owner["id"] != incident_id and link == "part_of":
+            raise RecordError(f"접수 {report_id}는 이미 사건 {owner['id']}에 속한다")
+        if owner and owner["id"] == incident_id and link == "suspected_duplicate":
+            raise RecordError(f"접수 {report_id}는 사건 {incident_id}에 속해 있어 그 사건의 중복 의심으로 걸 수 없다")
         # 이미 같은 연결이 있으면 관계와 접수 수를 다시 늘리지 않는다. 잠금을 건 뒤에 확인한다
         if tx.run(
             f"MATCH (:Report {{id: $report}})-[:{rel}]->(:Incident {{id: $incident}}) RETURN 1",
@@ -310,6 +328,11 @@ def link_report(driver: Driver, *, report_id: str, incident_id: str, link: str, 
             report=report_id, incident=incident_id, by=linked_by,
         ).consume()
         if link == "part_of":
+            # 같은 사건으로 확정되면 그 사건에 걸려 있던 중복 의심은 지운다. 두 관계가 함께 남으면 안 된다
+            tx.run(
+                "MATCH (:Report {id: $report})-[s:SUSPECTED_DUPLICATE_OF]->(:Incident {id: $incident}) DELETE s",
+                report=report_id, incident=incident_id,
+            ).consume()
             tx.run(
                 "MATCH (i:Incident {id: $id}) SET i.report_count = i.report_count + 1", id=incident_id
             ).consume()
