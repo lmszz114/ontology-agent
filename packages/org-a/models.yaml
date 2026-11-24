@@ -1,0 +1,10 @@
+# 가상 회사 A의 모델 설정 (설계 5단계 9장).
+# 작업 이름은 9장 표의 행이다. 기본은 가장 싼 모델이고, 원문 생성과 채점만 평가 대상과 다른 모델을 쓴다.
+# 모델을 바꾸면 회귀 테스트를 거친다. 단가는 common/models/prices.yaml에 있다.
+tasks:
+  intake: claude-haiku-5-5          # 접수 정리, 증상 분류, 중복 판정
+  diagnosis: claude-haiku-5-5       # 원인 판단, 담당 팀 판단, 절차 선택
+  extraction: claude-haiku-5-5      # 지식 후보 추출
+  normalization: claude-haiku-5-5   # 이름 정규화 (별칭 사전에 없는 이름)
+  generation: claude-sonnet-5-5     # 제보, 문서 원문 생성
+  grading: claude-sonnet-5-5        # LLM 채점 (근거 설명 표본)

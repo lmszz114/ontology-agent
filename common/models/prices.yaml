@@ -1,0 +1,31 @@
+# Claude API 단가 (USD, 100만 토큰당). 설계 5단계 11-1.
+# 원본: https://platform.claude.com/docs/en/about-claude/pricing
+# 확인: 2026-11-24 (KST). 단가가 바뀌면 이 파일을 고치고 checked를 바꾼다 (한계 L14).
+#
+# 이 파일에 없는 할인과 할증은 쓰지 않는다:
+# - 배치 처리(50% 할인)는 실행기에서 배치를 쓸 때(M3) 넣는다
+# - 미국 전용 추론(inference_geo us, 1.1배)과 빠른 모드는 쓰지 않는다
+checked: 2026-11-24
+source: https://platform.claude.com/docs/en/about-claude/pricing
+
+models:
+  claude-haiku-5-5:
+    input: 0.10
+    output: 0.50
+    cache_write_5m: 0.125
+    cache_write_1h: 0.20
+    cache_read: 0.01
+    # 프롬프트(입력, 캐시 읽기, 캐시 쓰기의 합)가 기준을 넘는 요청은 요청 전체에 이 단가를 쓴다
+    long_prompt:
+      threshold: 100000
+      input: 0.50
+      output: 2.50
+      cache_write_5m: 0.625
+      cache_write_1h: 1.00
+      cache_read: 0.05
+  claude-sonnet-5-5:
+    input: 2.00
+    output: 10.00
+    cache_write_5m: 2.50
+    cache_write_1h: 4.00
+    cache_read: 0.10

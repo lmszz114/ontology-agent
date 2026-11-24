@@ -7,6 +7,9 @@ LLM은 조치를 요청만 한다. 실행 여부는 이 모듈이 그래프의 A
 
 고위험 조치를 실행하는 길은 approve를 거친 mark_done뿐이다. 이 함수들은 LLM 도구로 내놓지 않는다.
 MVP에서 실행은 모두 시뮬레이션이라 실제로 바뀌는 것은 실행 기록뿐이다.
+
+모든 처리는 실행 기록(Langfuse)에도 남긴다 (5단계 1장). tracer는 빼놓을 수 없는 인자다.
+거부된 요청도 오류로 남는다. 차단 기록(gate_blocked)은 경고로 남겨 실행 기록 화면에서 찾을 수 있게 한다.
 """
 
 import uuid
@@ -14,6 +17,7 @@ from datetime import datetime
 
 from neo4j import Driver
 
+from common.tracing import Tracer
 from common.writers.events import RecordError, create_action_run, read_action_run, transition_action_run
 from mcp_servers.ontology_query import queries
 
@@ -76,7 +80,7 @@ def _required_approvers(policy: dict, condition: str | None) -> list[str]:
     return teams
 
 
-def request_action(
+def _request_action(
     driver: Driver,
     *,
     incident_id: str,
@@ -126,7 +130,7 @@ def request_action(
     return _read_run(driver, run["run_id"])
 
 
-def approve(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
+def _approve(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
     """승인권자 한 팀의 승인을 기록한다. 전원이 승인하면 approved가 된다."""
     def decide(run: dict) -> dict:
         _require_pending_approver(run, team_id)
@@ -139,7 +143,7 @@ def approve(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict
     return _transition(driver, run_id, decide)
 
 
-def reject(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
+def _reject(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
     """승인권자 한 팀이 반려하면 실행하지 않는다. 다른 절차를 다시 고르는 것은 에이전트 몫이다 (R6)."""
     def decide(run: dict) -> dict:
         _require_pending_approver(run, team_id)
@@ -148,7 +152,7 @@ def reject(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
     return _transition(driver, run_id, decide)
 
 
-def mark_done(driver: Driver, *, run_id: str, now: datetime) -> dict:
+def _mark_done(driver: Driver, *, run_id: str, now: datetime) -> dict:
     """승인된 조치의 실행 완료를 기록한다 (시뮬레이션). 승인되지 않은 조치는 완료할 수 없다."""
     def decide(run: dict) -> dict:
         if run["status"] != "approved":
@@ -156,3 +160,32 @@ def mark_done(driver: Driver, *, run_id: str, now: datetime) -> dict:
         return {"status": "done", "done_at": now}
 
     return _transition(driver, run_id, decide)
+
+
+def _traced(tracer: Tracer, name: str, func, **kwargs) -> dict:
+    with tracer.gate(name, input={k: v for k, v in kwargs.items() if k != "driver"}) as obs:
+        run = func(**kwargs)
+        # 차단은 요청을 막은 그 처리에만 경고로 남긴다. 실행 기록의 gate_blocked는 뒤 처리에도 남아 있다
+        blocked = name == "gate.request_action" and run["gate_blocked"]
+        obs.update(output=run, level="WARNING" if blocked else "DEFAULT")
+    return run
+
+
+def request_action(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
+    """조치 요청 하나를 처리하고 실행 기록을 돌려준다. 인자는 _request_action과 같다."""
+    return _traced(tracer, "gate.request_action", _request_action, driver=driver, **kwargs)
+
+
+def approve(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
+    """승인권자 한 팀의 승인을 기록한다. 인자는 _approve와 같다."""
+    return _traced(tracer, "gate.approve", _approve, driver=driver, **kwargs)
+
+
+def reject(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
+    """승인권자 한 팀의 반려를 기록한다. 인자는 _reject와 같다."""
+    return _traced(tracer, "gate.reject", _reject, driver=driver, **kwargs)
+
+
+def mark_done(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
+    """승인된 조치의 실행 완료를 기록한다. 인자는 _mark_done과 같다."""
+    return _traced(tracer, "gate.mark_done", _mark_done, driver=driver, **kwargs)

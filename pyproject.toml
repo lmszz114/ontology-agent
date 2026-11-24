@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "온톨로지 기반 장애 진단 에이전트 (가상 MMORPG 운영 조직)"
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=2.13.0",
+    "langfuse>=5.2.0",
     "mcp>=2.3",
     "neo4j>=5.26",
     "pyyaml>=6.0",

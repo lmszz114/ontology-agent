@@ -13,12 +13,15 @@ from common.writers.events import (
 from ontology.apply_schema import apply_schema
 from ontology.load import load_static
 from ontology.seed import load_seed
+from tests.memory_tracer import MemoryTracer
 
 pytestmark = pytest.mark.integration
 
 KST = timezone(timedelta(hours=9))
 NOW = datetime(2026, 12, 3, 20, 30, tzinfo=KST)
 LATER = NOW + timedelta(minutes=10)
+# 스레드 테스트의 람다 안에서도 쓰므로 모듈 하나에 하나를 둔다
+TRACER = MemoryTracer()
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +47,7 @@ def incident(db):
 
 
 def request(db, incident, action_id, mode="approval", **kwargs):
-    return gate.request_action(db, incident_id=incident, action_id=action_id, requested_mode=mode, now=NOW, **kwargs)
+    return gate.request_action(db, tracer=TRACER, incident_id=incident, action_id=action_id, requested_mode=mode, now=NOW, **kwargs)
 
 
 def test_low_risk_action_runs_automatically(db, incident):
@@ -88,30 +91,30 @@ def test_all_approvers_must_approve(db, incident):
     """긴급 점검(A08)은 게임사업PM팀과 인프라운영팀이 모두 승인해야 한다."""
     run = request(db, incident, "A08")
     assert run["required_approver_teams"] == ["TM06", "TM10"]
-    run = gate.approve(db, run_id=run["run_id"], team_id="TM06", now=LATER)
+    run = gate.approve(db, tracer=TRACER, run_id=run["run_id"], team_id="TM06", now=LATER)
     assert run["status"] == "pending_approval" and run["approved_by_teams"] == ["TM06"]
     with pytest.raises(GateError, match="승인된 조치만"):
-        gate.mark_done(db, run_id=run["run_id"], now=LATER)
-    run = gate.approve(db, run_id=run["run_id"], team_id="TM10", now=LATER)
+        gate.mark_done(db, tracer=TRACER, run_id=run["run_id"], now=LATER)
+    run = gate.approve(db, tracer=TRACER, run_id=run["run_id"], team_id="TM10", now=LATER)
     assert run["status"] == "approved" and run["approved_by_teams"] == ["TM06", "TM10"]
-    assert gate.mark_done(db, run_id=run["run_id"], now=LATER)["status"] == "done"
+    assert gate.mark_done(db, tracer=TRACER, run_id=run["run_id"], now=LATER)["status"] == "done"
 
 
 def test_only_approvers_can_decide(db, incident):
     run = request(db, incident, "A10")
     for decide in (gate.approve, gate.reject):
         with pytest.raises(GateError, match="승인권자가 아니다"):
-            decide(db, run_id=run["run_id"], team_id="TM03", now=LATER)
+            decide(db, tracer=TRACER, run_id=run["run_id"], team_id="TM03", now=LATER)
     assert gate._read_run(db, run["run_id"])["status"] == "pending_approval"
 
 
 def test_rejected_action_cannot_run(db, incident):
     run = request(db, incident, "A08")
-    run = gate.reject(db, run_id=run["run_id"], team_id="TM10", now=LATER)
+    run = gate.reject(db, tracer=TRACER, run_id=run["run_id"], team_id="TM10", now=LATER)
     assert (run["status"], run["rejected_by_team"]) == ("rejected", "TM10")
     for call in (
-        lambda: gate.approve(db, run_id=run["run_id"], team_id="TM06", now=LATER),
-        lambda: gate.mark_done(db, run_id=run["run_id"], now=LATER),
+        lambda: gate.approve(db, tracer=TRACER, run_id=run["run_id"], team_id="TM06", now=LATER),
+        lambda: gate.mark_done(db, tracer=TRACER, run_id=run["run_id"], now=LATER),
     ):
         with pytest.raises(GateError):
             call()
@@ -124,7 +127,7 @@ def test_concurrent_decisions_cannot_overwrite_each_other(db, incident):
     반려는 승인이 끝날 때까지 기다렸다가, 이미 승인된 것을 보고 거부돼야 한다.
     """
     run_id = request(db, incident, "A08")["run_id"]
-    gate.approve(db, run_id=run_id, team_id="TM06", now=LATER)
+    gate.approve(db, tracer=TRACER, run_id=run_id, team_id="TM06", now=LATER)
 
     deciding, release, order = threading.Event(), threading.Event(), []
 
@@ -136,7 +139,7 @@ def test_concurrent_decisions_cannot_overwrite_each_other(db, incident):
 
     def reject_late() -> None:
         try:
-            gate.reject(db, run_id=run_id, team_id="TM06", now=LATER)
+            gate.reject(db, tracer=TRACER, run_id=run_id, team_id="TM06", now=LATER)
             order.append("reject succeeded")
         except GateError:
             order.append("reject refused")
@@ -185,7 +188,7 @@ def test_pending_and_auto_done_cannot_be_marked_done(db, incident):
     for action_id in ("A10", "A01"):
         run = request(db, incident, action_id)
         with pytest.raises(GateError, match="승인된 조치만"):
-            gate.mark_done(db, run_id=run["run_id"], now=LATER)
+            gate.mark_done(db, tracer=TRACER, run_id=run["run_id"], now=LATER)
 
 
 @pytest.mark.parametrize("condition,approvers", [
@@ -259,3 +262,25 @@ def test_incident_has_one_primary_team(db, incident):
 def test_incident_writers_reject_undefined_values(db, incident, call, message):
     with pytest.raises(RecordError, match=message):
         call(db)
+
+
+def test_gate_decisions_are_traced(db, incident):
+    """게이트 처리가 실행 기록에 남는다. 차단은 경고, 거부된 요청은 오류로 남는다 (5단계 1장)."""
+    tracer = MemoryTracer()
+    run = gate.request_action(db, tracer=tracer, incident_id=incident, action_id="A10", requested_mode="auto", now=NOW)
+    gate.approve(db, tracer=tracer, run_id=run["run_id"], team_id="TM06", now=LATER)
+    with pytest.raises(GateError):
+        gate.mark_done(db, tracer=tracer, run_id="AR-none", now=LATER)
+
+    spans = tracer.spans()
+    assert [(s["name"], s["type"], s["level"]) for s in spans] == [
+        ("gate.request_action", "guardrail", "WARNING"),
+        ("gate.approve", "guardrail", "DEFAULT"),
+        ("gate.mark_done", "guardrail", "ERROR"),
+    ]
+    request_span = spans[0]
+    assert request_span["input"]["action_id"] == "A10" and request_span["input"]["requested_mode"] == "auto"
+    assert request_span["output"]["gate_blocked"] is True
+    assert request_span["output"]["status"] == "pending_approval"
+    assert spans[1]["output"]["status"] == "approved"
+    assert spans[2]["status_message"] == "GateError: 없는 ActionRun이다: AR-none"
