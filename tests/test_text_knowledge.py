@@ -352,29 +352,35 @@ def test_unavailable_rank_goes_to_human(db, seed):  # noqa: F811
 
 
 @pytest.mark.integration
-def test_required_procedure_stays_required_through_cause_list(db, seed):  # noqa: F811
-    """P10 조회만 실패하고 원인이 여는 절차 목록으로 P10이 들어와도 항상 여는 절차로 남는다 (PR #18 리뷰).
+@pytest.mark.parametrize("name,systems,cause,target,conditions", [
+    ("SC-S1-01", ("SY12", "SY13"), "C02", "P10", []),  # 원인이 여는 절차(resolved_by)로 다시 들어온다
+    ("SC-S7-01", ("SY14",), "C18", "P3", []),                     # 등급이 여는 절차(triggered_by_severity)로 다시 들어온다
+])
+def test_required_procedure_stays_required_through_cause_list(db, seed, name, systems, cause, target, conditions):  # noqa: F811
+    """필수 절차의 직접 조회만 실패하고 원인 쪽 목록으로 다시 들어와도 항상 여는 절차로 남는다 (PR #18 리뷰).
 
-    필수 표시가 빠지면 LLM이 P10을 빼도 검증을 통과한다. 여기서는 P10을 빼는 답을 먼저 주고 다시 묻는지 본다.
+    필수 표시가 빠지면 LLM이 그 절차를 빼도 검증을 통과한다. 그 절차를 뺀 답을 먼저 주고 다시 묻는지 본다.
+    원인 쪽 조회로 받은 절차 정보는 정상 결과라 후보에 그대로 쓴다.
     """
     _DB[:] = [db]
-    scenario = load("SC-S1-01")
+    scenario = load(name)
 
-    def drop_p10(params):
+    def drop_target(params):
         procs = [p for p in json.loads(params["messages"][0]["content"].split("후보 절차:\n", 1)[1])
-                 if not p["human_only"] and p["procedure_id"] != "P10"]
+                 if not p["human_only"] and p["procedure_id"] != target]
         actions = sorted({a["action_id"]: a["risk"] for p in procs for a in p["actions"]}.items())
-        return text({"procedures": [p["procedure_id"] for p in procs], "resolved_conditions": ["누락 보상"],
+        return text({"procedures": [p["procedure_id"] for p in procs], "resolved_conditions": conditions,
                      "actions": [{"action_id": a, "mode": "approval" if r == "high" else "auto"} for a, r in actions],
-                     "reason": "P10을 뺀다"})
+                     "reason": f"{target}을 뺀다"})
 
-    model = OracleModel(db, intake_of(scenario), overrides={"procedure": [drop_p10]})
-    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"}, conditions=["누락 보상"],
-                         knowledge=_failing("procedure", procedure_id="P10"))
+    model = OracleModel(db, intake_of(scenario, systems=systems), overrides={"procedure": [drop_target]})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={cause: "confirm"}, conditions=conditions,
+                         knowledge=_failing("procedure", procedure_id=target))
     (out,) = state["outputs"]
-    assert model.calls.count("procedure") == 2  # P10을 뺀 첫 답은 거부되고 다시 묻는다
-    assert "P10" in out["procedures"]
-    assert any("절차 P10를 받지 못했다" in n for n in out["needs_human"])
+    assert out["root_cause"] == cause
+    assert model.calls.count("procedure") == 2  # 필수 절차를 뺀 첫 답은 거부되고 다시 묻는다
+    assert target in out["procedures"]
+    assert any(f"절차 {target}를 받지 못했다" in n for n in out["needs_human"])
 
 
 @pytest.mark.integration
