@@ -197,6 +197,17 @@ def read_action_run(driver: Driver, run_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+def list_changes(driver: Driver) -> list[dict]:
+    """기록된 변경 이력 전체 (사건 데이터). 구성 A의 원인 순위가 변경 가중을 판단할 때 읽는다."""
+    with driver.session() as session:
+        rows = session.execute_read(lambda tx: tx.run(
+            "MATCH (c:Change)-[:CHANGED]->(sys:System) "
+            "RETURN c.id AS id, c.kind AS kind, sys.id AS system_id, toString(c.changed_at) AS changed_at "
+            "ORDER BY id"
+        ).data())
+    return rows
+
+
 def transition_action_run(driver: Driver, run_id: str, decide) -> dict:
     """조치 실행 기록의 상태를 바꾼다. 읽기, 판단, 쓰기를 잠금을 건 한 트랜잭션에서 한다.
 

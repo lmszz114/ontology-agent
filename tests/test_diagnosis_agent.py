@@ -153,7 +153,9 @@ class TextOverride:
         return result.model_copy(update={"content": [block], "structured_content": None})
 
 
-def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, conditions=(), tool_texts=None):
+def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, conditions=(), tool_texts=None,
+              knowledge=None):
+    """knowledge: (onto, tracer, llm, results) -> 지식 공급자. 없으면 그래프 공급자(구성 C)를 쓴다."""
     model.verdicts = verdicts
     model.conditions = list(conditions)
     tracer = MemoryTracer()
@@ -164,8 +166,10 @@ def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, condit
         env = Environment(seed, scenario["environment"]["checks"])
         async with Client(build_onto_server(db)) as onto, Client(build_mock_server(seed, env)) as mock:
             listed = await mock.list_tools()
+            results = []
+            provider = knowledge(onto, tracer, llm, results) if knowledge else GraphKnowledge(onto, tracer)
             deps = Deps(
-                driver=db, llm=llm, tracer=tracer, knowledge=GraphKnowledge(onto, tracer),
+                driver=db, llm=llm, tracer=tracer, knowledge=provider, llm_results=results,
                 mock_client=TextOverride(mock, tool_texts) if tool_texts else mock,
                 mock_tools=[{"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
                             for t in listed.tools],
