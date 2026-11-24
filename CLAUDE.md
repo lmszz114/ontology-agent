@@ -124,4 +124,9 @@ Claude Code가 이 저장소에서 작업할 때 따르는 규칙이다.
 
 - Claude Code 클라우드 세션에서 작업한다. 컨테이너는 임시라서 남길 작업은 커밋하고 푸시한다
 - Neo4j 등 서비스는 Docker Compose로 띄운다
+- Neo4j가 필요한 작업(통합 테스트, 스키마 적용, 시드 적재, 에이전트 실행) 직전에 Docker와 `neo4j-test`가 떠 있는지 확인하고, 내려가 있으면 띄운 뒤 진행한다
+  - 클라우드 컨테이너는 Docker를 자동으로 띄우지 않고, 작업 프로세스가 재시작되면 Docker도 같이 내려간다
+  - 확인: `docker info`, `docker compose ps`
+  - 띄우기: `dockerd`를 백그라운드로 실행하고, `docker compose up -d neo4j-test` 뒤 연결될 때까지 기다린다
+  - 연결 오류로 실패한 테스트는 코드 문제로 보지 않는다. Docker를 띄우고 다시 돌린 결과로 판단한다
 - API 키는 클라우드 환경의 시크릿으로 등록한다. GitHub Actions는 저장소 비밀값을 쓴다
