@@ -94,6 +94,42 @@ def validate_cause_conditions(seed: dict) -> None:
             for name, expected in ref["when"].items():
                 for value in allowed_values(expected):
                     validate_observations(seed, ref["check"], {name: value})
+    validate_procedure_conditions(seed)
+
+
+CONDITION_FIELDS = ("check", "args", "when", "expect")
+
+
+def validate_procedure_conditions(seed: dict) -> None:
+    """조건이 붙은 해결 절차는 조건의 판정 근거(check, when, expect)를 함께 적는다.
+
+    에이전트가 조건을 조회 결과로 판단하려면 무엇을 조회할지 알아야 한다 (M3 점검). 같은 이름의 조건은
+    원인마다 다르게 정의하지 않는다. 다르면 같은 조건이 원인에 따라 다른 뜻이 된다.
+    """
+    seen: dict[str, dict] = {}
+    for cause in seed["causes"]:
+        for ref in cause["resolved_by"]:
+            where = f"{cause['id']}의 {ref['procedure']}"
+            name = ref.get("condition")
+            fields = {k: ref[k] for k in CONDITION_FIELDS if k in ref}
+            if name is None:
+                if fields:
+                    raise ConditionError(f"{where}: 조건이 없는 절차에 판정 근거를 적었다")
+                continue
+            if not ref.get("check") or not ref.get("when") or not ref.get("expect"):
+                raise ConditionError(f"{where}: 조건 {name}의 판정 근거는 check, when, expect를 적는다")
+            validate_args(seed, ref["check"], ref.get("args"))
+            for field_name, expected in ref["when"].items():
+                for value in allowed_values(expected):
+                    validate_observations(seed, ref["check"], {field_name: value})
+            if seen.setdefault(name, fields) != fields:
+                raise ConditionError(f"{where}: 조건 {name}의 판정 근거가 다른 원인과 다르다")
+
+
+def procedure_conditions(seed: dict) -> dict[str, dict]:
+    """조건 이름마다 판정 근거 정의 (check, args, when, expect). 검증이 끝난 시드를 받는다."""
+    return {ref["condition"]: {k: ref[k] for k in CONDITION_FIELDS if k in ref}
+            for cause in seed["causes"] for ref in cause["resolved_by"] if ref.get("condition")}
 
 
 @dataclass

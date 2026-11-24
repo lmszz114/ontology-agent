@@ -5,7 +5,7 @@
 기준 지식 K와 이 설명은 system 블록 하나로 묶어 캐싱한다. 질문마다 바뀌는 내용은 user 메시지에만 넣는다.
 """
 
-PROMPT_VERSION = "knowledge-a-v1"
+PROMPT_VERSION = "knowledge-a-v2"
 
 SYSTEM = """너는 게임 라이브 운영 조직의 지식 담당이다. 아래 기준 지식만 근거로 질문에 답한다.
 기준 지식에 없는 원인, 팀, 절차, 조치, 판정 근거를 만들지 않는다. ID는 기준 지식에 적힌 그대로 쓴다.
@@ -30,6 +30,8 @@ args는 조회 도구에 넘길 인자다. 판정 근거 노드의 tool이 조�
 
 ## R7 절차
 1. 원인의 해결 절차 관계를 모두 가져온다. 조건(condition)이 있으면 함께 적는다
+   조건이 있으면 그 조건을 판단할 판정 근거도 condition_check에 적는다. check_id는 해결 절차 관계의 condition_check,
+   expect는 condition_expect, args는 condition_args다. tool은 그 판정 근거 노드의 tool이다
 2. 심각도의 여는 절차 관계도 가져온다
 3. 절차마다 조치 관계를 순서(order)대로, 조치의 위험도(risk)와 함께 적는다. 절차의 human_only, 주관 팀, 단계(steps)도 적는다
 """

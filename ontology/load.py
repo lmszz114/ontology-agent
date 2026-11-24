@@ -115,7 +115,12 @@ def build_graph(seed: dict) -> Graph:
                 required=is_required(ref), expect=ref.get("expect"), note=ref.get("note"), args=args,
             )
         for ref in cause["resolved_by"]:
-            g.add_rel("RESOLVED_BY", cause["id"], ref["procedure"], condition=ref.get("condition"))
+            # 조건의 판정 근거는 조회할 근거(condition_check)와 설명(condition_expect)만 넣는다. when은 검증기용이다
+            cond_args = json.dumps(ref["args"], ensure_ascii=False, sort_keys=True) if ref.get("args") else None
+            g.add_rel(
+                "RESOLVED_BY", cause["id"], ref["procedure"], condition=ref.get("condition"),
+                condition_check=ref.get("check"), condition_expect=ref.get("expect"), condition_args=cond_args,
+            )
 
     for check in seed["evidence_checks"]:
         g.add_node(

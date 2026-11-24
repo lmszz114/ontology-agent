@@ -179,15 +179,21 @@ def get_procedures(driver: Driver, cause_id: str, severity_id: str | None = None
         # P10이 P3 앞에 오지 않게 번호 순으로 둔다
         return sorted(rows, key=lambda r: int(r["procedure_id"][1:]))
 
-    result = {
-        "cause_id": cause_id,
-        "resolved_by": by_number(_read(
-            driver,
-            "MATCH (:Cause {id: $id})-[r:RESOLVED_BY]->(p:Procedure) " + actions
-            + "RETURN r.condition AS condition, " + fields,
-            id=cause_id,
-        )),
-    }
+    # 조건이 붙은 절차는 조건을 판단할 판정 근거를 함께 준다 (M3 점검). 진단 에이전트가 9단계 전에 조회한다
+    resolved = _read(
+        driver,
+        "MATCH (:Cause {id: $id})-[r:RESOLVED_BY]->(p:Procedure) " + actions
+        + "OPTIONAL MATCH (e:EvidenceCheck {id: r.condition_check}) "
+        + "RETURN r.condition AS condition, CASE WHEN e IS NULL THEN null ELSE "
+        + "{check_id: e.id, tool: e.tool, expect: r.condition_expect, args: r.condition_args} END AS condition_check, "
+        + fields,
+        id=cause_id,
+    )
+    for row in resolved:
+        if row["condition_check"]:
+            check = row["condition_check"]
+            check["args"] = json.loads(check["args"]) if check["args"] else {}
+    result = {"cause_id": cause_id, "resolved_by": by_number(resolved)}
     if severity_id is not None:
         _require(driver, "Severity", severity_id)
         result["triggered_by_severity"] = by_number(_read(

@@ -9,7 +9,7 @@ import pytest
 
 from ontology.conditions import (
     RULE_OUT, ConditionError, Environment, confirmed_causes, environments_for,
-    evaluate_cause, implies, validate_cause_conditions,
+    evaluate_cause, implies, procedure_conditions, validate_cause_conditions,
 )
 from ontology.seed import load_seed, resolve_owner_teams, validate_seed
 
@@ -389,4 +389,36 @@ def test_cause_without_conditions_is_rejected(seed):
     c17 = next(c for c in broken["causes"] if c["id"] == "C17")
     c17["checked_by"] = [x for x in c17["checked_by"] if "note" in x]
     with pytest.raises(ConditionError, match="확정 조건이 없다"):
+        validate_cause_conditions(broken)
+
+
+def _resolved(seed: dict, cause_id: str, procedure_id: str) -> dict:
+    cause = next(c for c in seed["causes"] if c["id"] == cause_id)
+    return next(r for r in cause["resolved_by"] if r["procedure"] == procedure_id)
+
+
+def test_procedure_conditions_have_checks(seed):
+    """조건이 붙은 절차는 조건의 판정 근거를 함께 적는다. 미지급과 과지급은 E02로 가른다 (M3 점검)."""
+    conditions = procedure_conditions(seed)
+    assert set(conditions) == {"미지급", "과지급"}  # C01의 누락 보상은 미지급으로 합쳤다
+    assert conditions["미지급"]["check"] == conditions["과지급"]["check"] == "E02"
+    assert conditions["과지급"]["when"] == {"delivery": "over"}
+
+
+@pytest.mark.parametrize("change,message", [
+    (lambda r: r.pop("check"), "check, when, expect"),
+    (lambda r: r.update(when={"delivery": "maybe"}), "delivery"),
+    (lambda r: r.update(expect="다른 설명"), "다른 원인과 다르다"),
+])
+def test_procedure_condition_errors(seed, change, message):
+    broken = copy.deepcopy(seed)
+    change(_resolved(broken, "C12", "P7"))
+    with pytest.raises(ConditionError, match=message):
+        validate_cause_conditions(broken)
+
+
+def test_unconditional_procedure_rejects_condition_check(seed):
+    broken = copy.deepcopy(seed)
+    _resolved(broken, "C14", "P7").update(check="E02")
+    with pytest.raises(ConditionError, match="조건이 없는 절차"):
         validate_cause_conditions(broken)
