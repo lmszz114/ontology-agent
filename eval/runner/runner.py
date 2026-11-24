@@ -38,8 +38,12 @@ class GitState:
 RESULTS_DIR = Path("eval") / "results"
 
 
-def git_state(out: Path, root: Path = ROOT) -> GitState:
-    """커밋과 커밋하지 않은 변경. 결과 폴더(이번 --out과 eval/results 전체) 안의 파일은 변경으로 보지 않는다."""
+def git_state(out: Path, root: Path = ROOT, inputs: list[Path] | tuple[Path, ...] = ()) -> GitState:
+    """커밋과 커밋하지 않은 변경. 결과 폴더(이번 --out과 eval/results 전체) 안의 파일은 변경으로 보지 않는다.
+
+    inputs(실행에 넣는 시나리오 파일)는 어디에 있든 제외하지 않는다. 결과 폴더 안에 커밋하지 않은 시나리오를 두고
+    돌리면 결과의 커밋으로 실행을 재현할 수 없기 때문이다. 저장소 밖의 입력 파일도 변경으로 본다 (PR #20 리뷰).
+    """
     def git(*args: str) -> str:
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, check=True).stdout
 
@@ -55,11 +59,14 @@ def git_state(out: Path, root: Path = ROOT) -> GitState:
         return Path(os.path.abspath(path))
 
     ignored = (absolute(out), absolute(root / RESULTS_DIR))
-    changed = []
+    root_abs = absolute(root)
+    input_set = {absolute(p) for p in inputs}
+    changed = [f"{p} (저장소 밖의 입력)" for p in sorted(input_set) if not p.is_relative_to(root_abs)]
     for paths in _status_entries(status):
-        # 이동은 원래 경로와 새 경로를 모두 본다. 하나라도 결과 폴더 밖이면 변경이다
-        outside = [p for p in paths if not any(absolute(root / p).is_relative_to(d) for d in ignored)]
-        if outside:
+        # 이동은 원래 경로와 새 경로를 모두 본다. 하나라도 결과 폴더 밖이거나 입력 파일이면 변경이다
+        counted = [p for p in paths
+                   if absolute(root / p) in input_set or not any(absolute(root / p).is_relative_to(d) for d in ignored)]
+        if counted:
             changed.append(" <- ".join(paths) if len(paths) > 1 else paths[0])
     return GitState(commit=commit, dirty=bool(changed), changed=changed)
 

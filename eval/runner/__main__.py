@@ -51,7 +51,7 @@ def prepare(args: argparse.Namespace):
         load_scenarios(args.split)  # 형식이 틀린 파일이 있으면 여기서 멈춘다
     check_dev_only(paths)
     out = Path(args.out)
-    git = git_state(out)
+    git = git_state(out, inputs=paths)
     if git.dirty and not args.allow_dirty:
         # 커밋하지 않은 변경으로 돌리면 결과의 커밋으로 코드를 재현할 수 없다
         raise RunnerError("커밋하지 않은 변경이 있다. 커밋하고 돌리거나 --allow-dirty를 준다:\n  "

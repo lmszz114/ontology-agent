@@ -141,7 +141,7 @@ def test_git_state_korean_result_folder_and_moves(tmp_path):
 
 
 def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(cli, "git_state", lambda out: GitState("abc", True, ["a.py"]))
+    monkeypatch.setattr(cli, "git_state", lambda out, inputs=(): GitState("abc", True, ["a.py"]))
     assert cli.main(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path)]) == 1
     assert "--allow-dirty" in capsys.readouterr().err
     with pytest.raises(SystemExit):
@@ -152,7 +152,7 @@ def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
 
 def test_cli_allow_dirty_reaches_plan(tmp_path, monkeypatch):
     """--allow-dirty면 실행 목록까지 만든다. 실제 실행은 하지 않는다."""
-    monkeypatch.setattr(cli, "git_state", lambda out: GitState("abc", True, ["a.py"]))
+    monkeypatch.setattr(cli, "git_state", lambda out, inputs=(): GitState("abc", True, ["a.py"]))
     args = cli.parse_args(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path), "--allow-dirty",
                            "--reps", "2"])
     out, git, todo = cli.prepare(args)
@@ -184,3 +184,19 @@ def test_git_state_does_not_follow_symlinks_into_results(tmp_path):
     (repo / "a.py").symlink_to(target)
     state = git_state(repo / "eval" / "results" / "2026-11-24-x-A", root=repo)
     assert state.dirty and state.changed == ["a.py"]
+
+
+def test_git_state_counts_uncommitted_inputs_inside_results(tmp_path):
+    """결과 폴더 안에 커밋하지 않은 시나리오를 두고 실행에 넣으면 변경으로 잡는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    scenario = repo / "eval" / "results" / "scratch" / "SC-X.yaml"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text("id: SC-X\n", encoding="utf-8")
+    out = repo / "eval" / "results" / "2026-11-24-x-A"
+    assert not git_state(out, root=repo).dirty  # 입력이 아니면 결과 폴더 안의 파일일 뿐이다
+    state = git_state(out, root=repo, inputs=[scenario])
+    assert state.dirty and state.changed == ["eval/results/scratch/SC-X.yaml"]
+    outside = tmp_path / "elsewhere.yaml"
+    outside.write_text("id: SC-Y\n", encoding="utf-8")
+    state = git_state(out, root=repo, inputs=[outside])
+    assert state.dirty and "저장소 밖" in state.changed[0]
