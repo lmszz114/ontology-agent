@@ -106,6 +106,20 @@ def load_prices(path: Path = PRICES_PATH) -> dict[str, ModelPrice]:
     return prices
 
 
+def price_record(models: list[str], path: Path = PRICES_PATH) -> dict:
+    """실행 결과에 남길 단가. 쓴 모델의 단가와 단가 파일의 확인 날짜, 출처다 (4단계 10장, 한계 L14).
+
+    단가 파일이 나중에 바뀌어도 그 실행의 비용을 어떤 단가로 계산했는지 결과 파일만 보고 알 수 있다.
+    """
+    data = _read(path)
+    load_prices(path)  # 형식이 틀린 단가를 남기지 않는다
+    missing = [m for m in models if m not in data["models"]]
+    if missing:
+        raise PricingError(f"단가가 없는 모델이다: {missing}")
+    return {"checked": str(data["checked"]), "source": data["source"],
+            "models": {m: data["models"][m] for m in models}}
+
+
 def usage_from_response(usage) -> dict[str, int]:
     """Messages API 응답의 usage를 비용 계산에 쓰는 다섯 값으로 바꾼다.
 

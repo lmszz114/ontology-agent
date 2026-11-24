@@ -1,0 +1,124 @@
+"""평가 실행기 단위 테스트. 가짜 run_scenario로 돌린다 (LLM, Neo4j 없음)."""
+
+import asyncio
+import json
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from eval.grader.grade import load_results
+from eval.runner import __main__ as cli
+from eval.runner.runner import GitState, RunnerError, git_state, plan, run_all
+
+DEV = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "dev"
+PATHS = [DEV / "SC-S1-01.yaml", DEV / "SC-S7-02.yaml"]
+GIT = GitState(commit="abc1234def", dirty=False, changed=[])
+EXPECTED = {"config": "C", "org": "org-a", "split": "dev", "prompt_version": "diagnosis-v6",
+            "git_commit": GIT.commit, "git_dirty": False}
+
+
+def fake_result(scenario: dict) -> dict:
+    return {"run": {"scenario": scenario["id"], "split": "dev", "config": "C", "org": "org-a", "mode": "eval",
+                    "started_at": "2026-11-24T13:00:00+09:00", "finished_at": "2026-11-24T13:00:10+09:00",
+                    "seconds": 10.0, "models": ["claude-haiku-5-5"], "prompt_version": "diagnosis-v6",
+                    "trace_id": "t", "llm_calls": 4, "usage": {"input": 1000, "output": 100}, "cost_usd": 0.002},
+            "outputs": [], "unclassified": []}
+
+
+def run(todo, out, *, fail_on: str | None = None):
+    calls = []
+
+    async def run_one(scenario, path):
+        calls.append(scenario["id"])
+        if scenario["id"] == fail_on:
+            raise RuntimeError("연결 실패")
+        return fake_result(scenario)
+    asyncio.run(run_all(todo, out=out, git=GIT, run_one=run_one, log=lambda _: None))
+    return calls
+
+
+def test_reps_write_rep_folders_with_run_record(tmp_path):
+    todo = plan(PATHS, out=tmp_path, reps=2, resume=False, expected=EXPECTED)
+    assert [(r, p.stem) for r, p in todo] == [(1, "SC-S1-01"), (1, "SC-S7-02"), (2, "SC-S1-01"), (2, "SC-S7-02")]
+    run(todo, tmp_path)
+    data = json.loads((tmp_path / "r2" / "SC-S7-02.json").read_text(encoding="utf-8"))
+    assert data["run"]["git_commit"] == GIT.commit and data["run"]["git_dirty"] is False
+    prices = data["run"]["prices"]
+    assert prices["checked"] and prices["source"].startswith("https://")
+    assert set(prices["models"]) == {"claude-haiku-5-5"} and "input" in prices["models"]["claude-haiku-5-5"]
+    # 채점기가 같은 폴더를 읽을 수 있다
+    assert [name for name, _ in load_results(tmp_path)] == ["r1", "r2"]
+
+
+def test_existing_results_need_resume(tmp_path):
+    run(plan(PATHS, out=tmp_path, reps=1, resume=False, expected=EXPECTED), tmp_path)
+    with pytest.raises(RunnerError, match="--resume"):
+        plan(PATHS, out=tmp_path, reps=1, resume=False, expected=EXPECTED)
+
+
+def test_failure_stops_and_resume_skips_done(tmp_path):
+    todo = plan(PATHS, out=tmp_path, reps=2, resume=False, expected=EXPECTED)
+    with pytest.raises(RuntimeError):
+        run(todo, tmp_path, fail_on="SC-S7-02")
+    # 실패한 곳에서 멈췄다. 앞 결과는 남고 뒤는 돌지 않았다
+    assert [p.relative_to(tmp_path).as_posix() for p in sorted(tmp_path.glob("r*/*.json"))] == ["r1/SC-S1-01.json"]
+    todo = plan(PATHS, out=tmp_path, reps=2, resume=True, expected=EXPECTED)
+    assert [(r, p.stem) for r, p in todo] == [(1, "SC-S7-02"), (2, "SC-S1-01"), (2, "SC-S7-02")]
+
+
+@pytest.mark.parametrize("key,value", [("git_commit", "other"), ("prompt_version", "diagnosis-v7"),
+                                       ("config", "A"), ("git_dirty", True)])
+def test_resume_refuses_different_conditions(tmp_path, key, value):
+    run(plan(PATHS, out=tmp_path, reps=1, resume=False, expected=EXPECTED), tmp_path)
+    with pytest.raises(RunnerError, match=key):
+        plan(PATHS, out=tmp_path, reps=1, resume=True, expected=EXPECTED | {key: value})
+
+
+def test_reps_must_be_positive(tmp_path):
+    with pytest.raises(RunnerError, match="반복"):
+        plan(PATHS, out=tmp_path, reps=0, resume=False, expected=EXPECTED)
+
+
+def _repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    def git(*args):
+        subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
+    git("init", "-q")
+    (repo / "a.py").write_text("x = 1\n", encoding="utf-8")
+    git("add", ".")
+    git("-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "init")
+    return repo
+
+
+def test_git_state_ignores_result_folder(tmp_path):
+    repo = _repo(tmp_path)
+    out = repo / "eval" / "results" / "x"
+    out.mkdir(parents=True)
+    (out / "r1.json").write_text("{}", encoding="utf-8")
+    state = git_state(out, root=repo)
+    assert not state.dirty and len(state.commit) == 40
+    (repo / "a.py").write_text("x = 2\n", encoding="utf-8")
+    (repo / "new.py").write_text("", encoding="utf-8")
+    state = git_state(out, root=repo)
+    assert state.dirty and sorted(state.changed) == ["a.py", "new.py"]
+
+
+def test_cli_refuses_dirty_tree_and_test_split(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "git_state", lambda out: GitState("abc", True, ["a.py"]))
+    assert cli.main(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path)]) == 1
+    assert "--allow-dirty" in capsys.readouterr().err
+    with pytest.raises(SystemExit):
+        cli.main(["--config", "C", "--split", "test", "--out", str(tmp_path)])
+    with pytest.raises(SystemExit):
+        cli.main(["--config", "Z", "--split", "dev", "--out", str(tmp_path)])
+
+
+def test_cli_allow_dirty_reaches_plan(tmp_path, monkeypatch):
+    """--allow-dirty면 실행 목록까지 만든다. 실제 실행은 하지 않는다."""
+    monkeypatch.setattr(cli, "git_state", lambda out: GitState("abc", True, ["a.py"]))
+    args = cli.parse_args(["--config", "C", "--scenario", str(PATHS[0]), "--out", str(tmp_path), "--allow-dirty",
+                           "--reps", "2"])
+    out, git, todo = cli.prepare(args)
+    assert git.dirty and len(todo) == 2

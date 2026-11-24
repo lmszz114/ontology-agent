@@ -295,3 +295,28 @@ def test_non_finite_measure_stops(tmp_path, field, value):
     _write(tmp_path, r)
     with pytest.raises(GradeError, match=field):
         load_results(tmp_path)
+
+
+def test_missing_singleton_group_fails_grouping():
+    """정답 [[0, 1], [2]]에 결과 [[0, 1]]. 쌍만 비교하면 둘 다 (0, 1) 하나라 맞다고 나오던 사례 (PR #16 리뷰)."""
+    scenario = copy.deepcopy(load_scenario("dev", "SC-S7-02"))
+    scenario["expected"]["incident_groups"] = [[0, 1], [2]]
+    scenario["expected"]["unclassified"] = [3]
+    r = perfect_s7_02()
+    r["outputs"][0]["report_indexes"] = [0, 1]
+    r["unclassified"] = [{"report_index": 3, "symptom": "none"}]
+    g = grade_scenario(r, scenario, SEED)
+    assert g["pairs"] == {"tp": 1, "fp": 0, "fn": 0}
+    assert g["symptom"] and not g["grouping"]
+    assert g["first_failure"] == "분류: 묶음"
+
+
+def test_dirty_runs_cannot_mix(tmp_path):
+    clean = perfect_s7_02()
+    clean["run"]["git_dirty"] = False
+    _write(tmp_path / "r1", clean)
+    dirty = perfect_s7_02()
+    dirty["run"]["git_dirty"] = True
+    _write(tmp_path / "r2", dirty)
+    with pytest.raises(GradeError, match="git_dirty"):
+        load_results(tmp_path)

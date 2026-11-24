@@ -10,6 +10,7 @@
     ],
     "prompt_version": "diagnosis-v6",
     "git_commit": "7c2305e85b52dfbd1ebcc0858812fca94e09f3ef",
+    "git_dirty": null,
     "scenarios": [
       "SC-S1-01",
       "SC-S2-01",
