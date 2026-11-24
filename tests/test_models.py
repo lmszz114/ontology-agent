@@ -71,8 +71,13 @@ def test_price_file_shape_is_checked(tmp_path):
         load_prices(path)
     path.write_text(yaml.safe_dump({"checked": "x", "source": "y", "models": {"m": {
         "input": -1, "output": 1, "cache_write_5m": 1, "cache_write_1h": 1, "cache_read": 1}}}))
-    with pytest.raises(ModelConfigError, match="0 이상의 숫자"):
+    with pytest.raises(ModelConfigError, match="0 이상의 유한한 숫자"):
         load_prices(path)
+    for bad in (float("nan"), float("inf")):
+        path.write_text(yaml.safe_dump({"checked": "x", "source": "y", "models": {"m": {
+            "input": bad, "output": 1, "cache_write_5m": 1, "cache_write_1h": 1, "cache_read": 1}}}))
+        with pytest.raises(ModelConfigError, match="유한한"):
+            load_prices(path)
     path.write_text(yaml.safe_dump({"models": {}}))
     with pytest.raises(ModelConfigError, match="checked가 없다"):
         load_prices(path)
@@ -131,6 +136,15 @@ def test_usage_from_response_splits_cache_writes():
 def test_usage_without_cache_detail_counts_writes_as_5m():
     got = usage_from_response(api_usage(cache_creation_input_tokens=40, cache_read_input_tokens=None))
     assert got == usage(input=100, output=20, cache_write_5m=40)
+
+
+def test_usage_refuses_server_tool_charges():
+    """서버 도구(웹 검색 등)는 토큰 외 요금이 붙는데 단가 파일에 없다."""
+    used = SimpleNamespace(model_dump=lambda **_: {"web_search_requests": 1, "web_fetch_requests": 0})
+    with pytest.raises(PricingError, match="서버 도구"):
+        usage_from_response(api_usage(server_tool_use=used))
+    unused = SimpleNamespace(model_dump=lambda **_: {"web_search_requests": 0})
+    assert usage_from_response(api_usage(server_tool_use=unused))["input"] == 100
 
 
 def test_usage_refuses_unpriced_or_inconsistent_values():
@@ -245,3 +259,30 @@ def test_unknown_task_fails_before_calling_api(config):
         LLM(config, MemoryTracer(), SimpleNamespace(messages=messages)).call(
             task="summary", name="x", messages=[])
     assert messages.calls == []
+
+
+def test_server_tools_are_refused_before_calling_api(config):
+    messages = FakeMessages(fake_message())
+    llm = LLM(config, MemoryTracer(), SimpleNamespace(messages=messages))
+    with pytest.raises(LLMConfigError, match="서버 도구"):
+        llm.call(task="intake", name="x", messages=[{"role": "user", "content": "x"}],
+                 tools=[{"type": "web_search_20260209", "name": "web_search"}])
+    assert messages.calls == []
+    llm.call(task="intake", name="x", messages=[{"role": "user", "content": "x"}],
+             tools=[{"type": "custom", "name": "get_checks", "input_schema": {"type": "object"}}])
+    assert len(messages.calls) == 1
+
+
+def test_response_is_recorded_even_when_pricing_fails(config):
+    """비용 계산이 실패해도 받은 응답과 원래 사용량은 기록에 남는다."""
+    tracer = MemoryTracer()
+    message = fake_message(inference_geo="us")
+    llm = LLM(config, tracer, SimpleNamespace(messages=FakeMessages(message)))
+    with pytest.raises(PricingError):
+        llm.call(task="intake", name="intake", messages=[{"role": "user", "content": "x"}])
+    (span,) = tracer.spans()
+    assert span["level"] == "ERROR"
+    assert span["output"][0]["text"] == "원인 후보는 C03이다"
+    assert span["metadata"]["raw_usage"]["inference_geo"] == "us"
+    assert span["metadata"]["stop_reason"] == "end_turn"
+    assert span["cost"] is None

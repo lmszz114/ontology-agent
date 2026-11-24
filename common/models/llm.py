@@ -27,6 +27,17 @@ class LLMConfigError(RuntimeError):
     """LLM을 부를 수 없는 설정이다."""
 
 
+def _check_tools(tools: list[dict[str, Any]]) -> None:
+    """직접 정의한 도구만 받는다.
+
+    웹 검색 같은 서버 도구는 토큰 외 요금이 붙는데 비용 계산에 없어서, 비용 기록이 빠지지 않도록 호출 전에 거부한다.
+    """
+    for tool in tools:
+        kind = tool.get("type")
+        if kind not in (None, "custom"):
+            raise LLMConfigError(f"서버 도구는 쓰지 않는다: {tool.get('name')} ({kind})")
+
+
 def make_anthropic_client() -> Anthropic:
     """이 프로젝트 전용 키와 공식 주소로 클라이언트를 만든다.
 
@@ -79,6 +90,8 @@ class LLM:
         refusal 같은 stop_reason은 그대로 돌려준다. 어떻게 다룰지는 부르는 쪽이 정한다.
         """
         model = self.config.model_for(task)
+        if tools is not None:
+            _check_tools(tools)
         params: dict[str, Any] = {"model": model, "max_tokens": max_tokens, "messages": messages}
         if system is not None:
             params["system"] = system
@@ -93,13 +106,17 @@ class LLM:
             model_parameters={"max_tokens": max_tokens},
         ) as gen:
             message = self.client.messages.create(**params)
-            usage = usage_from_response(message.usage)
-            cost = self.config.cost(model, usage)
+            # 받은 응답은 비용 계산 전에 먼저 남긴다. 계산이 실패해도 호출과 원래 사용량이 기록에 남는다
             gen.update(
                 output=[block.model_dump(mode="json") for block in message.content],
-                usage_details=usage,
-                cost_details=cost,
-                metadata={"stop_reason": message.stop_reason, "request_id": getattr(message, "_request_id", None)},
+                metadata={
+                    "stop_reason": message.stop_reason,
+                    "request_id": getattr(message, "_request_id", None),
+                    "raw_usage": message.usage.model_dump(mode="json"),
+                },
                 level="WARNING" if message.stop_reason in ("refusal", "max_tokens") else "DEFAULT",
             )
+            usage = usage_from_response(message.usage)
+            cost = self.config.cost(model, usage)
+            gen.update(usage_details=usage, cost_details=cost)
         return LLMResult(message=message, model=model, usage=usage, cost=cost)

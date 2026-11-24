@@ -4,6 +4,7 @@
 비용은 코드로 계산한다. LLM에게 시키지 않는다 (5단계 1장).
 """
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -70,8 +71,8 @@ def _rates(where: str, raw: dict) -> Rates:
     values = {}
     for field in PRICE_FIELDS:
         value = raw[field]
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
-            raise ModelConfigError(f"{where}.{field}: 0 이상의 숫자여야 한다: {value!r}")
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            raise ModelConfigError(f"{where}.{field}: 0 이상의 유한한 숫자여야 한다: {value!r}")
         values[field] = float(value)
     return Rates(**values)
 
@@ -113,6 +114,12 @@ def usage_from_response(usage) -> dict[str, int]:
     if getattr(usage, "inference_geo", None) == "us":
         # 미국 전용 추론은 1.1배 단가인데 단가 파일에 없다. 쓰지 않는 설정이라 계산하지 않고 멈춘다
         raise PricingError("inference_geo us 요청의 단가가 단가 파일에 없다")
+    server_tools = getattr(usage, "server_tool_use", None)
+    if server_tools is not None and any(
+        (count or 0) > 0 for count in server_tools.model_dump(exclude_none=True).values() if isinstance(count, int)
+    ):
+        # 웹 검색 같은 서버 도구는 토큰 외 요금이 붙는데 단가 파일에 없다
+        raise PricingError(f"서버 도구 사용량의 단가가 단가 파일에 없다: {server_tools}")
     write_total = usage.cache_creation_input_tokens or 0
     detail = getattr(usage, "cache_creation", None)
     if detail is not None:

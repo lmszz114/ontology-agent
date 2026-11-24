@@ -25,6 +25,35 @@ def test_missing_keys_stop_the_run(monkeypatch, missing):
         Tracer.from_env()
 
 
+def set_keys(monkeypatch):
+    for name, value in {"LANGFUSE_PUBLIC_KEY": "pk", "LANGFUSE_SECRET_KEY": "sk",
+                        "LANGFUSE_BASE_URL": "https://x.invalid"}.items():
+        monkeypatch.setenv(name, value)
+
+
+def test_disabled_tracing_stops_the_run(monkeypatch):
+    """LANGFUSE_TRACING_ENABLED=false면 SDK가 기록을 보내지 않으므로 실행하지 않는다."""
+    set_keys(monkeypatch)
+    monkeypatch.setenv("LANGFUSE_TRACING_ENABLED", "False")
+    with pytest.raises(TracingConfigError, match="TRACING_ENABLED"):
+        Tracer.from_env(check=False)
+
+
+def test_sample_rate_is_fixed_to_record_every_run(monkeypatch):
+    """환경 변수로 샘플링을 낮춰도 모든 실행을 남긴다."""
+    set_keys(monkeypatch)
+    monkeypatch.setenv("LANGFUSE_SAMPLE_RATE", "0")
+    seen = {}
+
+    class Capturing:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+    monkeypatch.setattr("common.tracing.tracer.Langfuse", Capturing)
+    Tracer.from_env(check=False)
+    assert seen["sample_rate"] == 1.0
+
+
 def test_failed_auth_stops_the_run(monkeypatch):
     class Refusing:
         def __init__(self, *a, **k):

@@ -74,7 +74,11 @@ class Tracer:
             missing.append(" 또는 ".join(URL_ENV))
         if missing:
             raise TracingConfigError(f"실행 기록에 필요한 환경 변수가 없다: {missing}")
-        client = Langfuse()
+        # 이 값이 false면 SDK는 인자와 상관없이 기록을 보내지 않는다
+        if os.environ.get("LANGFUSE_TRACING_ENABLED", "true").lower() == "false":
+            raise TracingConfigError("LANGFUSE_TRACING_ENABLED=false라서 실행 기록이 남지 않는다")
+        # sample_rate를 인자로 주면 SDK는 LANGFUSE_SAMPLE_RATE를 읽지 않는다. 모든 실행을 남기도록 1.0으로 고정한다
+        client = Langfuse(sample_rate=1.0)
         if check and not client.auth_check():
             raise TracingConfigError("Langfuse 인증에 실패했다. 키와 주소를 확인한다")
         return cls(client)
