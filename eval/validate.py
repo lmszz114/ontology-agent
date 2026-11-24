@@ -67,8 +67,12 @@ def _aware(value) -> datetime | None:
 
 
 def started_at(scenario: dict) -> datetime:
-    """증상 시작 시각. 가장 이른 제보 시각으로 본다."""
-    return min(_aware(r["at"]) for r in scenario["reports"])
+    """증상 시작 시각. 사건으로 묶인 제보 중 가장 이른 시각으로 본다.
+
+    분류하지 않는 제보(unclassified)는 증상과 관계가 없어 시작 시각에 넣지 않는다
+    """
+    grouped = {i for group in scenario["expected"]["incident_groups"] for i in group}
+    return min(_aware(r["at"]) for i, r in enumerate(scenario["reports"]) if i in grouped)
 
 
 def _condition_errors(seed: dict, scenario: dict, env: Environment) -> list[str]:

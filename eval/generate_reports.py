@@ -49,7 +49,11 @@ def generate(llm: LLM, request: dict):
     result = llm.call(task="generation", name=f"generate.{request['slot']}", system=SYSTEM,
                       messages=[{"role": "user", "content": content}], output_schema=SCHEMA,
                       max_tokens=400 * request["count"] + 500, metadata={"slot": request["slot"], "prompt_version": PROMPT_VERSION})
-    return result.json()["candidates"], result
+    candidates = result.json()["candidates"]
+    if len(candidates) != request["count"]:
+        # 요청한 수와 다르면 멈춘다. 모자란 후보를 사람이 채우거나 조용히 넘어가지 않는다
+        raise SystemExit(f"{request['slot']}: 후보 {request['count']}개를 요청했는데 {len(candidates)}개가 왔다")
+    return candidates, result
 
 
 def main() -> int:

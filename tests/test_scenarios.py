@@ -261,3 +261,13 @@ def test_reports_over_the_threshold_must_be_labelled_escalated(seed, scenarios):
         s["reports"] = [dict(r, at=s["reports"][0]["at"]) for r in s["reports"]]
     errors = validate_scenario(seed, broken(scenarios, "SC-S3-02", mutate))
     assert any("때만 true다" in e for e in errors), errors
+
+
+def test_unclassified_report_does_not_move_symptom_start(seed, scenarios):
+    """분류하지 않는 제보가 가장 이르더라도 증상 시작 시각은 사건 제보로 정한다."""
+    from eval.validate import started_at
+    scenario = dict(scenarios["SC-S7-02"])
+    reports = [dict(r) for r in scenario["reports"]]
+    reports[2]["at"] = "2026-12-18T08:00+09:00"
+    scenario = dict(scenario, reports=reports)
+    assert started_at(scenario).isoformat() == "2026-12-18T20:06:00+09:00"
