@@ -244,3 +244,14 @@ def test_report_belongs_to_one_incident(db):
     with db.session() as session:
         counts = session.run("MATCH (i:Incident) RETURN i.id AS id, i.report_count AS n ORDER BY id").data()
     assert {r["id"]: r["n"] for r in counts}["INC-2"] == 0
+
+
+def test_part_of_replaces_suspected_duplicate_on_the_same_incident(db):
+    """중복 의심으로 걸었던 사건에 같은 사건으로 묶으면 의심 관계는 지운다. 두 관계가 함께 남지 않는다."""
+    open_incident(db)
+    report(db, report_id="RP-Y")
+    events.link_report(db, report_id="RP-Y", incident_id="INC-1", link="suspected_duplicate")
+    events.link_report(db, report_id="RP-Y", incident_id="INC-1", link="part_of")
+    with db.session() as session:
+        rels = session.run("MATCH (:Report {id: 'RP-Y'})-[r]->(:Incident {id: 'INC-1'}) RETURN type(r) AS t").data()
+    assert [r["t"] for r in rels] == ["PART_OF"]

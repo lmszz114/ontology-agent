@@ -341,10 +341,11 @@ def build_graph(deps: Deps):
             events.link_report(deps.driver, report_id=work["report_id"], incident_id=incident_id, link="part_of")
             summary = dict(incidents.get(incident_id) or {"incident_id": incident_id})
             # 같은 사건으로 묶은 제보에는 원래 채널로 "처리 중" 회신을 보낸다 (R2 표, A04). 저위험 자동 실행이다
+            # 실행 기록에 대상 접수를 남긴다. 회신 채널은 그 접수의 채널이다
             reply = gate.request_action(deps.driver, tracer=deps.tracer, incident_id=incident_id, action_id=MERGE_REPLY_ACTION,
-                                        requested_mode="auto", now=deps.now())
+                                        requested_mode="auto", now=deps.now(), target_report_id=work["report_id"])
             summary["merge_replies"] = [*summary.get("merge_replies", []), {
-                "report_id": work["report_id"], "channel": work["channel"], "action_id": reply["action_id"],
+                "report_id": reply["target_report_id"], "channel": work["channel"], "action_id": reply["action_id"],
                 "status": reply["status"], "run_id": reply["run_id"]}]
             summary["report_ids"] = [*summary.get("report_ids", []), work["report_id"]]
             summary["reports"] = [*summary.get("reports", []), work]

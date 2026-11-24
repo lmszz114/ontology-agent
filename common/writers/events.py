@@ -142,24 +142,33 @@ def create_action_run(
     gate_blocked: bool,
     required_approver_teams: list[str],
     executed_by_team: str | None,
+    target_report_id: str | None = None,
 ) -> None:
-    """조치 실행 기록을 만든다 (ActionRun 노드, FOR와 OF 관계). 승인 게이트만 부른다."""
+    """조치 실행 기록을 만든다 (ActionRun 노드, FOR와 OF 관계). 승인 게이트만 부른다.
+
+    target_report_id가 있으면 그 접수를 대상으로 한 조치다 (예: 묶인 제보의 처리 중 회신). 사건에 속한 접수여야 한다.
+    """
     if status not in RUN_STATUSES or actor not in RUN_ACTORS:
         raise RecordError(f"ActionRun에 쓸 수 없는 값이다: status={status}, actor={actor}")
     _require_aware(requested_at, "requested_at")
 
     def write(tx) -> None:
+        if target_report_id is not None and not tx.run(
+            "MATCH (:Report {id: $report})-[:PART_OF]->(:Incident {id: $incident}) RETURN 1",
+            report=target_report_id, incident=incident_id,
+        ).single():
+            raise RecordError(f"조치 대상 접수 {target_report_id}는 사건 {incident_id}에 속하지 않는다")
         created = tx.run(
             "MATCH (i:Incident {id: $incident}), (a:Action {id: $action}) "
             "CREATE (r:ActionRun {id: $id, action_id: $action, status: $status, actor: $actor, "
             "requested_at: $at, requested_mode: $mode, gate_blocked: $blocked, "
             "required_approver_teams: $required, approved_by_teams: []}) "
             "CREATE (r)-[:FOR]->(i) CREATE (r)-[:OF]->(a) "
-            "SET r.executed_by_team = $team "
+            "SET r.executed_by_team = $team, r.target_report_id = $report "
             "RETURN r.id",
             incident=incident_id, action=action_id, id=run_id, status=status, actor=actor,
             at=requested_at, mode=requested_mode, blocked=gate_blocked,
-            required=required_approver_teams, team=executed_by_team,
+            required=required_approver_teams, team=executed_by_team, report=target_report_id,
         ).single()
         if created is None:
             raise RecordError(f"없는 Incident 또는 Action이다: {incident_id}, {action_id}")
@@ -172,7 +181,8 @@ RUN_FIELDS = (
     "RETURN r.id AS run_id, r.action_id AS action_id, i.id AS incident_id, r.status AS status, "
     "r.actor AS actor, r.requested_mode AS requested_mode, r.gate_blocked AS gate_blocked, "
     "r.required_approver_teams AS required_approver_teams, r.approved_by_teams AS approved_by_teams, "
-    "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team"
+    "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team, "
+    "r.target_report_id AS target_report_id"
 )
 
 
@@ -318,6 +328,11 @@ def link_report(driver: Driver, *, report_id: str, incident_id: str, link: str, 
             report=report_id, incident=incident_id, by=linked_by,
         ).consume()
         if link == "part_of":
+            # 같은 사건으로 확정되면 그 사건에 걸려 있던 중복 의심은 지운다. 두 관계가 함께 남으면 안 된다
+            tx.run(
+                "MATCH (:Report {id: $report})-[s:SUSPECTED_DUPLICATE_OF]->(:Incident {id: $incident}) DELETE s",
+                report=report_id, incident=incident_id,
+            ).consume()
             tx.run(
                 "MATCH (i:Incident {id: $id}) SET i.report_count = i.report_count + 1", id=incident_id
             ).consume()
