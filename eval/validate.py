@@ -240,7 +240,8 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
             severity = escalate(severity)
         check(expected.get("severity") == severity, f"severity는 {severity}여야 한다 (R3)")
         # 영향 범위는 접수 내역 조회(E15) 결과로 추정한다 (3단계 6장). 일부 유저보다 넓으면 그 근거가 환경에 있어야 한다
-        lookup = [c for c in environment.get("checks") or [] if c.get("check") == "E15" and c.get("detail")]
+        lookup = [c for c in environment.get("checks") or [] if c.get("check") == "E15"
+                  and isinstance(c.get("detail"), str) and c["detail"].strip()]
         check(scope == "some_users" or bool(lookup),
               f"scope가 {scope}면 그 근거인 E15(접수 내역 조회) detail이 환경에 있어야 한다")
     if errors:

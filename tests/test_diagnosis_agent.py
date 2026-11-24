@@ -685,3 +685,17 @@ def test_required_check_retry_happens_once(db, seed):
     assert out["root_cause"] is None
     assert model.calls.count("check") == 2 * len(out["hypotheses"][:3])
     assert all(h["result"] == "inconclusive" for h in out["hypotheses"][:3])
+
+
+def test_confirm_without_required_checks_after_retry_is_inconclusive(db, seed):
+    """다시 물어도 필수 근거 없이 확정하면 원인을 확정하지 않는다 (R4-4)."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    model.check = lambda params: text({"result": "confirm", "used_checks": [], "reused_results": [],
+                                        "reason": "조회 없이 확정"})
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    assert out["root_cause"] is None
+    first = out["hypotheses"][0]
+    assert first["result"] == "inconclusive" and first["status"] == "candidate"
+    assert graph_count(db, "MATCH (:Incident)-[h:HAS_HYPOTHESIS {status: 'confirmed'}]->() RETURN count(h)") == 0

@@ -116,6 +116,10 @@ def broken(scenarios, sid, mutate):
     # 영향 범위의 근거 (E15)
     ("SC-S3-01", lambda s: s["environment"].update(checks=[c for c in s["environment"]["checks"] if c["check"] != "E15"]),
      "E15"),
+    ("SC-S3-01", lambda s: next(c for c in s["environment"]["checks"] if c["check"] == "E15").update(detail="  "),
+     "E15"),
+    ("SC-S3-01", lambda s: next(c for c in s["environment"]["checks"] if c["check"] == "E15").update(detail=True),
+     "E15"),
 ])
 def test_broken_scenarios_are_reported(seed, scenarios, sid, mutate, message):
     errors = validate_scenario(seed, broken(scenarios, sid, mutate))

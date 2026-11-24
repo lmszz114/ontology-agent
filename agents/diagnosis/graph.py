@@ -476,6 +476,11 @@ def build_graph(deps: Deps):
                        "used_checks": [], "reused_results": []}
         else:
             verdict = data
+            # 다시 물어도 필수 근거가 없으면 확정도 배제도 근거가 없다. 불명확으로 둔다 (R4-4)
+            missing = _unchecked(data, schema, required, called, tool_results, prior_ids)
+            if missing and verdict["result"] != "inconclusive":
+                verdict = {**verdict, "result": "inconclusive",
+                           "reason": f"필수 판정 근거 {missing}의 결과 없이 {data['result']}로 답했다. 답한 이유: {data['reason']}"}
         status = {"confirm": "confirmed", "rule_out": "ruled_out", "inconclusive": "candidate"}[verdict["result"]]
         events.record_hypothesis(deps.driver, incident_id=diag["incident_id"], cause_id=cause_id,
                                  score=hypothesis["score"], rank=hypothesis["rank"], status=status)
