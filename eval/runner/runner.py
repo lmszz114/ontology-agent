@@ -41,8 +41,10 @@ RESULTS_DIR = Path("eval") / "results"
 def git_state(out: Path, root: Path = ROOT, inputs: list[Path] | tuple[Path, ...] = ()) -> GitState:
     """커밋과 커밋하지 않은 변경. 결과 폴더(이번 --out과 eval/results 전체) 안의 파일은 변경으로 보지 않는다.
 
-    inputs(실행에 넣는 시나리오 파일)는 어디에 있든 제외하지 않는다. 결과 폴더 안에 커밋하지 않은 시나리오를 두고
-    돌리면 결과의 커밋으로 실행을 재현할 수 없기 때문이다. 저장소 밖의 입력 파일도 변경으로 본다 (PR #20 리뷰).
+    inputs(실행에 넣는 시나리오 파일)는 git status와 따로, 내용이 커밋(HEAD)과 같은지 직접 비교한다.
+    결과의 커밋으로 재현할 수 있는 입력이어야 하기 때문이다 (PR #20 리뷰). 링크를 풀어 실제 대상을 보고,
+    대상이 저장소 밖이거나 HEAD에 없거나 내용이 다르면 변경이다. 추적하지 않은 파일, 무시 규칙에 걸린 파일,
+    결과 폴더 안의 파일, 저장소 밖을 가리키는 링크가 모두 여기에 걸린다.
     """
     def git(*args: str) -> str:
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, check=True).stdout
@@ -53,22 +55,35 @@ def git_state(out: Path, root: Path = ROOT, inputs: list[Path] | tuple[Path, ...
         status = git("status", "--porcelain=v1", "-z", "--untracked-files=all")
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RunnerError(f"Git 상태를 읽을 수 없다: {exc}") from exc
-    # 심볼릭 링크를 따라가지 않고 경로 자체로 비교한다. 결과 폴더 밖의 파일을 결과 폴더 안을 가리키는
-    # 링크로 바꾼 변경도 놓치지 않게 한다 (resolve는 링크 대상을 돌려준다)
+    # 저장소 파일의 변경은 심볼릭 링크를 따라가지 않고 경로 자체로 비교한다. 결과 폴더 밖의 파일을 결과 폴더 안을
+    # 가리키는 링크로 바꾼 변경도 놓치지 않게 한다 (resolve는 링크 대상을 돌려준다)
     def absolute(path: Path) -> Path:
         return Path(os.path.abspath(path))
 
     ignored = (absolute(out), absolute(root / RESULTS_DIR))
-    root_abs = absolute(root)
-    input_set = {absolute(p) for p in inputs}
-    changed = [f"{p} (저장소 밖의 입력)" for p in sorted(input_set) if not p.is_relative_to(root_abs)]
+    changed = []
     for paths in _status_entries(status):
-        # 이동은 원래 경로와 새 경로를 모두 본다. 하나라도 결과 폴더 밖이거나 입력 파일이면 변경이다
-        counted = [p for p in paths
-                   if absolute(root / p) in input_set or not any(absolute(root / p).is_relative_to(d) for d in ignored)]
-        if counted:
+        # 이동은 원래 경로와 새 경로를 모두 본다. 하나라도 결과 폴더 밖이면 변경이다
+        outside = [p for p in paths if not any(absolute(root / p).is_relative_to(d) for d in ignored)]
+        if outside:
             changed.append(" <- ".join(paths) if len(paths) > 1 else paths[0])
+    changed += [p for p in (_input_change(path, root) for path in inputs) if p and p not in changed]
     return GitState(commit=commit, dirty=bool(changed), changed=changed)
+
+
+def _input_change(path: Path, root: Path) -> str | None:
+    """입력 파일이 커밋(HEAD)의 내용과 같으면 None, 다르면 변경 설명. 링크는 풀어서 실제 대상을 본다."""
+    root_real = root.resolve()
+    target = Path(path).resolve()
+    if not target.is_relative_to(root_real):
+        return f"{path} (저장소 밖의 입력)"
+    rel = target.relative_to(root_real).as_posix()
+    shown = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=root, capture_output=True)
+    if shown.returncode != 0:
+        return f"{rel} (커밋에 없는 입력)"
+    if shown.stdout != target.read_bytes():
+        return rel
+    return None
 
 
 def _status_entries(status: str) -> list[list[str]]:

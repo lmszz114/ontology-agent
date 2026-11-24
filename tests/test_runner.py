@@ -195,8 +195,42 @@ def test_git_state_counts_uncommitted_inputs_inside_results(tmp_path):
     out = repo / "eval" / "results" / "2026-11-24-x-A"
     assert not git_state(out, root=repo).dirty  # 입력이 아니면 결과 폴더 안의 파일일 뿐이다
     state = git_state(out, root=repo, inputs=[scenario])
-    assert state.dirty and state.changed == ["eval/results/scratch/SC-X.yaml"]
+    assert state.dirty and state.changed == ["eval/results/scratch/SC-X.yaml (커밋에 없는 입력)"]
     outside = tmp_path / "elsewhere.yaml"
     outside.write_text("id: SC-Y\n", encoding="utf-8")
     state = git_state(out, root=repo, inputs=[outside])
     assert state.dirty and "저장소 밖" in state.changed[0]
+
+
+def _commit_all(repo: Path) -> None:
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "x"],
+                   cwd=repo, check=True, capture_output=True)
+
+
+def test_git_state_input_checks_content_against_head(tmp_path):
+    """입력은 내용이 HEAD와 같아야 깨끗하다. 링크로 저장소 밖을 가리키거나 무시 규칙에 걸려도 잡는다 (PR #20 리뷰)."""
+    repo = _repo(tmp_path)
+    scenario = repo / "eval" / "scenarios" / "dev" / "SC-X.yaml"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text("id: SC-X\n", encoding="utf-8")
+    _commit_all(repo)
+    out = repo / "eval" / "results" / "x"
+    assert not git_state(out, root=repo, inputs=[scenario]).dirty
+    # 저장소 밖 파일을 가리키는 링크를 커밋해 두고 입력으로 쓰면, 링크가 바뀌지 않았어도 재현할 수 없다
+    outside = tmp_path / "outside.yaml"
+    outside.write_text("id: SC-O\n", encoding="utf-8")
+    link = repo / "eval" / "scenarios" / "dev" / "SC-L.yaml"
+    link.symlink_to(outside)
+    _commit_all(repo)
+    state = git_state(out, root=repo, inputs=[link])
+    assert state.dirty and "저장소 밖" in state.changed[0]
+    # 무시 규칙에 걸린 커밋하지 않은 입력은 git status에 나오지 않는다. 내용 비교로 잡는다
+    (repo / ".gitignore").write_text("ignored/\n", encoding="utf-8")
+    _commit_all(repo)
+    hidden = repo / "ignored" / "SC-H.yaml"
+    hidden.parent.mkdir()
+    hidden.write_text("id: SC-H\n", encoding="utf-8")
+    assert not git_state(out, root=repo).dirty
+    state = git_state(out, root=repo, inputs=[hidden])
+    assert state.dirty and state.changed == ["ignored/SC-H.yaml (커밋에 없는 입력)"]
