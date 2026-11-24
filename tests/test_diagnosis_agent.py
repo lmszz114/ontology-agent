@@ -813,3 +813,26 @@ def test_retry_drops_tool_use_blocks_from_the_earlier_answer(db, seed):
     run_agent(db, seed, scenario, model, verdicts={})
     retry = next(m for m in seen if len(m) == 3)
     assert all(b["type"] != "tool_use" for b in retry[1]["content"])
+
+
+def test_evidence_with_other_arguments_is_not_this_causes_finding(db, seed):
+    """원인이 인자를 정한 근거는 그 인자의 결과만 근거다. C08(E06 SY10)에 SY18 결과가 붙지 않는다."""
+    scenario = load("SC-S3-01")
+    model = RuleModel(intake_of(scenario, systems=("SY02", "SY17")))
+    original = model.check
+
+    def check(params):
+        first = params["messages"][0]["content"]
+        if "확인할 원인 가설: C08" in first and len(params["messages"]) == 1:
+            uses = [{"type": "tool_use", "id": f"tu_{s}", "name": "query_deploy_history", "input": {"system": s}}
+                    for s in ("SY10", "SY18")]
+            return message(uses, stop_reason="tool_use")
+        if "확인할 원인 가설: C08" in first:
+            return text({"result": "rule_out", "used_checks": ["E06"], "reused_results": [], "reason": "x"})
+        return text({"result": "rule_out", "used_checks": [], "reused_results": [], "reason": "x"})
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    c08 = next(h for h in out["hypotheses"] if h["cause_id"] == "C08")
+    assert [f["args"] for f in c08["findings"] if f["check_id"] == "E06"] == [{"system": "SY10"}]

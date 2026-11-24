@@ -490,12 +490,15 @@ def build_graph(deps: Deps):
         # 근거 ID가 아니라 결과 ID로 잇는다. 같은 근거를 다른 인자로 조회한 결과, 같은 인자로 다시 조회해
         # 달라진 결과가 잘못 연결되지 않게 한다. 인용한 결과는 그대로 잇는다
         # 이 원인의 판정 근거가 아닌 조회는 근거로 남기지 않는다. 호출 이력(tool_calls)에는 그대로 남는다
-        own = {c["check_id"] for c in checks}
+        # 원인이 인자를 정한 근거는 그 인자로 조회한 결과만 근거다 (예: C08의 E06은 SY10 배포 이력만)
+        def own(check_id: str, args: dict) -> bool:
+            return any(c["check_id"] == check_id and _covered(check_id, c["args"], [(check_id, args)]) for c in checks)
+
         evidence = [{"check_id": c["check_id"], "tool": c["tool"], "args": c["args"], "text": c["text"], "reused": False}
-                    for c in called if c["check_id"] in own and not c["is_error"]]
+                    for c in called if not c["is_error"] and own(c["check_id"], c["args"])]
         for result_id in dict.fromkeys(verdict["reused_results"]):
             cached = tool_results[result_id]
-            if cached["check_id"] in own:
+            if own(cached["check_id"], cached["args"]):
                 evidence.append({k: cached[k] for k in ("check_id", "tool", "args", "text")} | {"reused": True})
         checked_at = deps.now()
         for e in evidence:

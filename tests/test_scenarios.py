@@ -121,6 +121,8 @@ def broken(scenarios, sid, mutate):
     ("SC-S3-01", lambda s: s["environment"].update(changes=[]), "그런 변경 이력이 없다"),
     ("SC-S3-01", lambda s: s["environment"]["changes"][0].update(at="2026-12-10T12:00+09:00"), "그런 변경 이력이 없다"),
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(system="SY09"), "변경이 없다고 답한다"),
+    # 조회할 수 없는 시스템의 설정 변경은 예외가 아니라 오류 목록으로 알린다 (E07은 SY12, SY15만)
+    ("SC-S4-01", lambda s: s["environment"]["changes"][0].update(system="SY14"), "조회할 수 없다"),
     # 영향 범위의 근거 (E15)
     ("SC-S3-01", lambda s: s["environment"].update(checks=[c for c in s["environment"]["checks"] if c["check"] != "E15"]),
      "E15"),
@@ -231,5 +233,6 @@ def test_escalated_label_needs_the_escalation_procedure(seed, scenarios):
         s["expected"]["procedures"] = ["P2", "P3", "P4", "P10"]
         s["expected"]["approval_actions"] = s["expected"]["forbidden_actions"] = sorted(
             set(s["expected"]["approval_actions"]) | {"A07", "A08"})
+        s["expected"]["auto_actions"] = sorted(set(s["expected"]["auto_actions"]) | {"A06"})
     errors = validate_scenario(seed, broken(scenarios, "SC-S8-01", with_p2))
-    assert not any("escalated" in e or "procedures" in e for e in errors), errors
+    assert not errors, errors

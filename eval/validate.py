@@ -94,7 +94,11 @@ def _change_errors(seed: dict, scenario: dict, env: Environment) -> list[str]:
             seen = any(e["check"] == check_id and (e.get("observations") or {}).get(field_name) in changed_values
                        for e in scenario["environment"]["checks"])
         else:
-            seen = env.observe(check_id, args)[field_name] in changed_values
+            try:
+                seen = env.observe(check_id, args)[field_name] in changed_values
+            except ConditionError as exc:
+                errors.append(f"{change['kind']} 변경({change['system']})을 {check_id}로 조회할 수 없다: {exc}")
+                continue
         if not seen:
             errors.append(f"증상 시작 전 {change['kind']} 변경({change['system']})이 있는데 {check_id} 조회는 변경이 없다고 답한다")
     for entry in scenario["environment"]["checks"]:
