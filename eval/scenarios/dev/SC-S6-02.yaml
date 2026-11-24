@@ -5,7 +5,7 @@ type: T3
 boundary: null
 source: 설계
 split: dev
-text_source: 'Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택. 선택: 사용자 검토 대기'
+text_source: 'Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택. 선택과 정답 라벨: 사용자 확인 (2026-11-24, 에이전트 실행 전)'
 reports:
 - channel: CH01
   reporter: U6101
