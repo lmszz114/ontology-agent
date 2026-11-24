@@ -47,7 +47,8 @@ def meta_lines(meta: dict) -> list[str]:
     return [
         f"- 실행: {meta['started_at'][:10]} (KST), 첫 시나리오 시작 {meta['started_at']}, 마지막 시작 {meta['finished_at']}",
         f"- 구성 {meta['config']}, 조직 설정 {meta['org']}, 모드 {meta['mode']}",
-        f"- 모델 {', '.join(meta['models'])}, 프롬프트 {meta['prompt_version']}, 커밋 {meta['git_commit'][:7]}",
+        f"- 모델 {', '.join(meta['models'])}, 프롬프트 {meta['prompt_version']}, 커밋 {meta['git_commit'][:7]}"
+        + {True: " (커밋하지 않은 변경 있음)", False: "", None: " (커밋하지 않은 변경 여부 기록 없음)"}[meta.get("git_dirty")],
         f"- 시나리오 묶음 {meta['split']} {len(meta['scenarios'])}건, 반복 {meta['repetitions']}회",
     ]
 

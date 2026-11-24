@@ -512,10 +512,10 @@ def test_later_reports_do_not_count_for_an_earlier_one(db, seed):
 
 
 def test_test_split_is_refused_before_any_call(tmp_path):
-    from agents.diagnosis.run import check_dev_only
+    from eval.runner.runner import RunnerError, check_dev_only
     path = tmp_path / "SC-T.yaml"
     path.write_text("split: test\n", encoding="utf-8")
-    with pytest.raises(SystemExit, match="dev 시나리오만"):
+    with pytest.raises(RunnerError, match="dev 시나리오만"):
         check_dev_only([path])
 
 
@@ -856,3 +856,38 @@ def test_input_order_does_not_change_grouping(db, seed):
         assert target == out["report_ids"][1]
         assert graph_count(db, "MATCH (r:ActionRun {id: $id, target_report_id: $t}) RETURN count(r)", id=run_id, t=target) == 1
     assert results == [[0, 1], [0, 1]]
+
+
+def test_runner_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypatch):
+    """실행기가 실제 MCP 서버 프로세스와 테스트용 Neo4j로 시나리오를 돌리고, 채점기가 그 결과를 읽는다.
+
+    LLM만 규칙 모델로 바꾼다. 서버 프로세스는 NEO4J_URI를 받으므로 테스트용 DB 주소로 바꿔 넘긴다.
+    """
+    from agents.diagnosis.run import run_scenario
+    from eval.grader.grade import grade_folder
+    from eval.runner.runner import GitState, plan, run_all
+    from tests.conftest import test_db_uri
+
+    monkeypatch.setenv("NEO4J_URI", test_db_uri())
+    path = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "dev" / "SC-S1-01.yaml"
+    scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
+    model = RuleModel(intake_of(scenario))
+    model.verdicts, model.conditions = {"C02": "confirm"}, []
+    tracer = MemoryTracer()
+    llm = LLM(load_model_config("org-a"), tracer, SimpleNamespace(messages=SimpleNamespace(create=model.create)))
+    git = GitState(commit="abc1234", dirty=False, changed=[])
+    expected = {"config": "C", "org": "org-a", "split": "dev", "prompt_version": prompts.PROMPT_VERSION,
+                "git_commit": git.commit, "git_dirty": False}
+    todo = plan([path], out=tmp_path, reps=1, resume=False, expected=expected)
+
+    async def run_one(s, p):
+        return await run_scenario(s, p, config="C", org="org-a", tracer=tracer, llm=llm, driver=db)
+    asyncio.run(run_all(todo, out=tmp_path, git=git, run_one=run_one, prices=llm.config.price_record,
+                        log=lambda _: None))
+
+    result = grade_folder(tmp_path, seed)
+    assert result["meta"]["config"] == "C" and result["meta"]["git_dirty"] is False
+    (g,) = result["reps"][0]["scenarios"]
+    assert g["symptom"] and g["top1"] and g["team"] and g["required"] == {"total": 2, "covered": 2}
+    # 시나리오 하나라 이어서 돌릴 것이 없다
+    assert plan([path], out=tmp_path, reps=1, resume=True, expected=expected) == []
