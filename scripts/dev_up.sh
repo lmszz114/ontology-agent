@@ -7,7 +7,8 @@
 #
 # 실행: scripts/dev_up.sh              # neo4j-test(7688)와 neo4j(7687)
 #       scripts/dev_up.sh neo4j-test   # 테스트용 DB만
-# 이미 떠 있으면 아무것도 바꾸지 않고 상태만 확인한다.
+# 이미 떠 있으면 아무것도 바꾸지 않고 상태만 확인한다. 떠 있는 컨테이너는 다시 만들지 않으므로
+# compose 설정이나 이미지를 바꾼 뒤에는 `docker compose up -d <서비스>`로 따로 다시 만든다.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -16,16 +17,25 @@ SERVICES=("$@")
 PIDFILE=/var/run/docker.pid
 LOG=/tmp/dockerd.log
 
-wait_for() {  # 최대 초, 확인 명령
+# 확인 명령 한 번에 쓰는 최대 초. dockerd가 연결만 받고 답하지 않아도 대기 제한이 지켜지게 한다
+CHECK_TIMEOUT=10
+
+docker_ready() { timeout "$CHECK_TIMEOUT" docker info >/dev/null 2>&1; }
+healthy() {  # 서비스 이름
+    timeout "$CHECK_TIMEOUT" docker compose ps "$1" 2>/dev/null | grep -q "(healthy)"
+}
+
+wait_for() {  # 최대 초, 확인 명령 (명령 한 번은 CHECK_TIMEOUT 안에 끝난다)
     local limit=$1; shift
-    for _ in $(seq "$limit"); do
-        "$@" >/dev/null 2>&1 && return 0
+    local deadline=$((SECONDS + limit))
+    while [ "$SECONDS" -lt "$deadline" ]; do
+        "$@" && return 0
         sleep 1
     done
     return 1
 }
 
-if ! docker info >/dev/null 2>&1; then
+if ! docker_ready; then
     if pgrep -x dockerd >/dev/null; then
         echo "dockerd가 실행 중이다. 준비될 때까지 기다린다"
     else
@@ -37,7 +47,7 @@ if ! docker info >/dev/null 2>&1; then
         echo "dockerd를 시작한다 (로그: $LOG)"
         nohup dockerd >"$LOG" 2>&1 &
     fi
-    if ! wait_for 60 docker info; then
+    if ! wait_for 60 docker_ready; then
         echo "dockerd가 60초 안에 준비되지 않았다. $LOG를 확인한다" >&2
         tail -5 "$LOG" >&2 || true
         exit 1
@@ -45,12 +55,12 @@ if ! docker info >/dev/null 2>&1; then
 fi
 echo "docker 준비됨"
 
-docker compose up -d "${SERVICES[@]}"
+# 떠 있는 컨테이너는 그대로 두고, 없으면 만들고, 멈춰 있으면 시작한다
+docker compose up -d --no-recreate "${SERVICES[@]}"
 for service in "${SERVICES[@]}"; do
-    healthy() { docker compose ps "$service" | grep -q "(healthy)"; }
-    if ! wait_for 180 healthy; then
+    if ! wait_for 180 healthy "$service"; then
         echo "$service가 180초 안에 healthy가 되지 않았다" >&2
-        docker compose ps "$service" >&2
+        timeout "$CHECK_TIMEOUT" docker compose ps "$service" >&2 || true
         exit 1
     fi
     echo "$service healthy"
