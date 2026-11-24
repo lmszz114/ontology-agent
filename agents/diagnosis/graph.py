@@ -795,6 +795,9 @@ def build_graph(deps: Deps):
                              "check_id": check["check_id"], "args": args, "is_error": result.is_error,
                              "text": result.text}
                 condition_calls.append(done[key])
+                if result.is_error:
+                    # 조건 절차는 필수가 아니라 LLM이 빼도 검증을 통과한다. 근거 없이 빠진 것을 사람이 알게 남긴다
+                    unavailable.append(f"조건 판정 근거 {check['check_id']}를 조회하지 못했다: {result.text}")
             call = done[key]
             text = call["text"] if not call["is_error"] else f"조회하지 못했다 ({call['text']})"
             condition_lines.append(f"- 조건 {name}: 판정 근거 {check['check_id']}, 기대 결과 \"{check['expect']}\". "

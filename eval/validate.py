@@ -96,9 +96,7 @@ def _condition_errors(seed: dict, scenario: dict, env: Environment) -> list[str]
 
     derived = {name for name in used if holds(name)}
     labelled = set(expected.get("resolved_conditions") or []) & used
-    if not derived:
-        checks = sorted({definitions[name]["check"] for name in used})
-        return [f"{cause['id']}의 조건 {sorted(used)}를 가를 {checks} 결과가 환경에 없다"]
+    # 어떤 조건도 성립하지 않으면(관측이 정상이면) 조건 절차를 열지 않는 것이 정답이다 (PR #22 리뷰)
     if labelled != derived:
         return [f"resolved_conditions는 조건의 판정 근거 관측 값으로 {sorted(derived)}여야 한다 (라벨 {sorted(labelled)})"]
     return []

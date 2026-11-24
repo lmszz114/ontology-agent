@@ -962,3 +962,29 @@ def test_severity_procedures_stay_with_severity_rule(db, seed):
     candidates = {p["procedure_id"]: p for p in json.loads(seen[0].split("후보 절차:\n", 1)[1])}
     severity = re.search(r"심각도 (SEV\d)", seen[0]).group(1)
     assert candidates["P4"]["always"] is (severity in ("SEV1", "SEV2"))
+
+
+@pytest.mark.integration
+def test_failed_condition_lookup_goes_to_human(db, seed):
+    """조건 판정 근거를 조회하지 못하면 사람 확인 사유로 남긴다 (PR #22 리뷰).
+
+    조건 절차는 필수가 아니라 LLM이 빼도 검증을 통과한다. 근거 없이 빠진 것을 알 수 있어야 한다.
+    """
+    scenario = load("SC-S4-01")
+
+    class BrokenConditionTool(GraphKnowledge):
+        async def cause_procedures(self, cause_id, severity_id):
+            found = await super().cause_procedures(cause_id, severity_id)
+            for proc in found["resolved_by"]:
+                if proc.get("condition_check"):
+                    proc["condition_check"] = {**proc["condition_check"], "tool": "no_such_tool"}
+            return found
+
+    model = RuleModel(intake_of(scenario, systems=("SY15",)))
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C11": "confirm"},
+                         knowledge=lambda onto, tracer, llm, results: BrokenConditionTool(onto, tracer))
+    (out,) = state["outputs"]
+    calls = [c for c in out["tool_calls"] if c["step"] == "9.condition"]
+    assert len(calls) == 1 and calls[0]["is_error"]
+    assert any("조건 판정 근거 E02를 조회하지 못했다" in n for n in out["needs_human"])
+    assert "P7" not in out["procedures"]
