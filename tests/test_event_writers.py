@@ -1,5 +1,6 @@
 """사건 계층 기록 함수 검증. 시드를 적재한 테스트용 Neo4j에서 돈다."""
 
+import json
 from datetime import datetime, timedelta, timezone, tzinfo
 
 import pytest
@@ -188,8 +189,11 @@ def test_hypothesis_and_finding(db):
     events.record_hypothesis(db, incident_id="INC-1", cause_id="C02", score=3, rank=1, status="candidate")
     events.record_hypothesis(db, incident_id="INC-1", cause_id="C02", score=3, rank=1, status="confirmed")
     events.record_finding(db, finding_id="FD-1", incident_id="INC-1", check_id="E02", cause_id="C02",
-                          result="confirm", detail="지급 기록 없음", checked_at=AT)
+                          result="confirm", detail="지급 기록 없음", checked_at=AT,
+                          tool="query_mailbox_log", args={"world": "W3"})
     with db.session() as session:
+        f = session.run("MATCH (f:Finding {id: 'FD-1'}) RETURN f.tool AS t, f.args AS a").single()
+        assert (f["t"], json.loads(f["a"])) == ("query_mailbox_log", {"world": "W3"})
         assert session.run("MATCH (:Incident)-[h:HAS_HYPOTHESIS]->(:Cause {id: 'C02'}) RETURN collect(h.status) AS s"
                            ).single()["s"] == ["confirmed"]
         assert session.run("MATCH (f:Finding)-[:CHECKS]->(:EvidenceCheck {id: 'E02'}) RETURN f.result AS r"
@@ -198,7 +202,7 @@ def test_hypothesis_and_finding(db):
         events.record_hypothesis(db, incident_id="INC-1", cause_id="C02", score=3, rank=1, status="maybe")
     with pytest.raises(RecordError, match="Finding.result"):
         events.record_finding(db, finding_id="FD-2", incident_id="INC-1", check_id="E02", cause_id="C02",
-                              result="yes", detail="", checked_at=AT)
+                              result="yes", detail="", checked_at=AT, tool="query_mailbox_log", args={})
 
 
 def test_started_after_and_severity_change(db):

@@ -473,6 +473,7 @@ def build_graph(deps: Deps):
             events.record_finding(
                 deps.driver, finding_id=_new_id("FD"), incident_id=diag["incident_id"], check_id=e["check_id"],
                 cause_id=cause_id, result=verdict["result"], detail=e["text"], checked_at=checked_at,
+                tool=e["tool"], args=e["args"],
             )
         tool_calls += [dict(c, cause_id=cause_id) for c in called]
         verdicts = dict(diag["verdicts"])

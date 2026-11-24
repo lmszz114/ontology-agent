@@ -565,6 +565,11 @@ def test_reused_result_is_linked_by_result_id_not_check_id(db, seed):
     (out,) = state["outputs"]
     second = next(h for h in out["hypotheses"] if h["cause_id"] != seen["first"] and h["findings"])
     assert [(f["check_id"], f["reused"], f["args"]) for f in second["findings"]] == [("E06", True, {"system": "SY18"})]
+    # 그래프의 Finding에도 그 조회의 인자가 남는다
+    with db.session() as session:
+        stored = session.run("MATCH (f:Finding {cause_id: $c}) RETURN f.tool AS t, f.args AS a",
+                             c=second["cause_id"]).data()
+    assert [(r["t"], json.loads(r["a"])) for r in stored] == [("query_deploy_history", {"system": "SY18"})]
 
 
 def test_unknown_reused_result_id_is_inconclusive(db, seed):

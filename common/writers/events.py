@@ -5,6 +5,7 @@ LLM은 그래프에 직접 쓰지 않는다. 사건 계층은 이 모듈의 함�
 함수는 그것을 쓰는 단계를 만들 때 함께 추가한다.
 """
 
+import json
 from datetime import datetime
 
 from neo4j import Driver
@@ -397,10 +398,14 @@ def record_finding(
     result: str,
     detail: str,
     checked_at: datetime,
+    tool: str,
+    args: dict,
 ) -> None:
     """판정 근거 확인 결과를 기록한다 (Finding, FOR, CHECKS) (R4-4).
 
     result는 이 근거로 cause_id 가설을 확정, 배제, 불명확 중 무엇으로 판단했는지다.
+    tool과 args는 이 결과를 낸 조회다. 같은 근거를 다른 인자로 조회한 결과를 구분한다.
+    Neo4j 속성은 맵을 담지 못해서 args는 JSON 문자열로 둔다.
     """
     if result not in FINDING_RESULTS:
         raise RecordError(f"Finding.result에 쓸 수 없는 값이다: {result}")
@@ -412,10 +417,11 @@ def record_finding(
         if not tx.run(
             "MATCH (i:Incident {id: $incident}), (e:EvidenceCheck {id: $check}), (:Cause {id: $cause}) "
             "CREATE (f:Finding {id: $id, check_id: $check, cause_id: $cause, result: $result, "
-            "detail: $detail, checked_at: $at}) "
+            "detail: $detail, checked_at: $at, tool: $tool, args: $args}) "
             "CREATE (f)-[:FOR]->(i) CREATE (f)-[:CHECKS]->(e) RETURN f.id",
             incident=incident_id, check=check_id, cause=cause_id, id=finding_id,
             result=result, detail=detail, at=checked_at,
+            tool=tool, args=json.dumps(args, ensure_ascii=False, sort_keys=True),
         ).single():
             raise RecordError(f"없는 Incident, EvidenceCheck 또는 Cause다: {incident_id}, {check_id}, {cause_id}")
 
