@@ -538,10 +538,11 @@ def test_check_answer_with_bad_used_checks_is_inconclusive(db, seed):
     assert state["outputs"][0]["hypotheses"][0]["result"] == "inconclusive"
 
 
-def test_urgent_procedures_cannot_be_left_out(db, seed):
-    """SEV1, SEV2에서 P3, P4를 빠뜨리면 다시 묻는다 (R3, R7)."""
-    scenario = load("SC-S2-01")
-    model = RuleModel(intake_of(scenario, systems=("SY01", "SY09")))
+@pytest.mark.parametrize("sid, systems", [("SC-S2-01", ("SY01", "SY09")), ("SC-S3-01", ("SY02", "SY17"))])
+def test_urgent_procedures_cannot_be_left_out(db, seed, sid, systems):
+    """SEV1(S2-01), SEV2(S3-01)에서 P3, P4를 빠뜨리면 다시 묻는다 (R3, R7)."""
+    scenario = load(sid)
+    model = RuleModel(intake_of(scenario, systems=systems))
 
     def without_urgent(params):
         answer = json.loads(RuleModel.procedure(model, params).content[0].text)
