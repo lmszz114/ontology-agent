@@ -295,9 +295,17 @@ def link_report(driver: Driver, *, report_id: str, incident_id: str, link: str, 
     def write(tx) -> None:
         if not tx.run(LOCK.format(label="Incident"), id=incident_id).single():
             raise RecordError(f"없는 Incident다: {incident_id}")
-        if not tx.run("MATCH (r:Report {id: $id}) RETURN r.id", id=report_id).single():
+        # 접수에도 잠금을 건다. 같은 접수를 두 사건에 동시에 묶는 요청이 둘 다 통과하지 않게 한다
+        if not tx.run(LOCK.format(label="Report"), id=report_id).single():
             raise RecordError(f"없는 Report다: {report_id}")
         rel = REPORT_LINKS[link]
+        # 접수 하나는 한 사건에만 속한다. 다른 사건에 이미 속하면 막는다. 접수 수가 두 사건에 함께 세어지면
+        # 상향(R3)이 틀어진다. 중복 의심은 속한 사건이 아닌 다른 사건에만 건다
+        owner = tx.run("MATCH (:Report {id: $id})-[:PART_OF]->(i:Incident) RETURN i.id AS id", id=report_id).single()
+        if owner and owner["id"] != incident_id and link == "part_of":
+            raise RecordError(f"접수 {report_id}는 이미 사건 {owner['id']}에 속한다")
+        if owner and owner["id"] == incident_id and link == "suspected_duplicate":
+            raise RecordError(f"접수 {report_id}는 사건 {incident_id}에 속해 있어 그 사건의 중복 의심으로 걸 수 없다")
         # 이미 같은 연결이 있으면 관계와 접수 수를 다시 늘리지 않는다. 잠금을 건 뒤에 확인한다
         if tx.run(
             f"MATCH (:Report {{id: $report}})-[:{rel}]->(:Incident {{id: $incident}}) RETURN 1",

@@ -43,6 +43,7 @@ MAX_TOOL_ROUNDS = 8
 URGENT_LEVELS = {"SEV1", "SEV2"}
 INTAKE_PROCEDURE, ESCALATION_PROCEDURE = "P1", "P2"
 URGENT_NOTICE, URGENT_MAINTENANCE, FIX_PROCEDURE = "P3", "P4", "P10"
+MERGE_REPLY_ACTION = "A04"  # 처리 중 회신. 같은 사건으로 묶은 제보에 보낸다 (R2 표)
 SCOPE_CHECK = "E15"  # 접수 내역 조회. 영향 범위 추정의 근거 (3단계 6장, R3)
 CAUSE_FIX_ACTION = "A15"
 # R7: 원인 수정(A15)의 반영 시점. 시드의 승인 조건 값과 같아야 한다
@@ -78,8 +79,13 @@ class State(TypedDict, total=False):
 
 
 def initial_state(reports: list[dict]) -> State:
-    """그래프 입력. 결과 목록은 빈 목록으로 시작한다 (사건이 하나도 열리지 않아도 키가 있다)."""
-    return {"reports": reports, "index": 0, "incidents": {}, "queue": [], "outputs": [], "unclassified": []}
+    """그래프 입력. 결과 목록은 빈 목록으로 시작한다 (사건이 하나도 열리지 않아도 키가 있다).
+
+    제보는 접수 시각 순서로 처리한다. 실제 접수도 시각 순서로 들어오고, 중복 후보(R2)와 상향 창(R3)이
+    이 순서를 전제로 한다. 입력 순서가 달라도 결과가 같아야 한다. 원래 순서의 번호(index)는 채점용으로 남긴다
+    """
+    ordered = sorted(({**r, "index": i} for i, r in enumerate(reports)), key=lambda r: (_parse_at(r["at"]), r["index"]))
+    return {"reports": ordered, "index": 0, "incidents": {}, "queue": [], "outputs": [], "unclassified": []}
 
 
 def _parse_at(value: str) -> datetime:
@@ -219,7 +225,8 @@ def build_graph(deps: Deps):
         )
         at = _parse_at(report["at"])
         work = {
-            "report_id": _new_id("RP"), "channel": report["channel"], "reporter": report["reporter"],
+            "report_id": _new_id("RP"), "report_index": report.get("index"),
+            "channel": report["channel"], "reporter": report["reporter"],
             "at": at, "text": report["text"], "needs_human": [],
             "scope_lookup": {"cause_id": None, "step": "1.intake", "tool": lookup_tool, "check_id": SCOPE_CHECK,
                              "args": {}, "is_error": lookup.is_error, "text": lookup.text},
@@ -325,13 +332,20 @@ def build_graph(deps: Deps):
 
         if decision == "unclassified":
             unclassified.append({
-                "report_id": work["report_id"], "symptom": "none", "first_handler": work["first_handler"],
+                "report_id": work["report_id"], "report_index": work["report_index"], "symptom": "none",
+                "first_handler": work["first_handler"],
                 "needs_human": work["needs_human"] or ["증상 8개에 해당하지 않아 사람에게 넘긴다"],
             })
         elif decision == "same":
             incident_id = work["target"]
             events.link_report(deps.driver, report_id=work["report_id"], incident_id=incident_id, link="part_of")
             summary = dict(incidents.get(incident_id) or {"incident_id": incident_id})
+            # 같은 사건으로 묶은 제보에는 원래 채널로 "처리 중" 회신을 보낸다 (R2 표, A04). 저위험 자동 실행이다
+            reply = gate.request_action(deps.driver, tracer=deps.tracer, incident_id=incident_id, action_id=MERGE_REPLY_ACTION,
+                                        requested_mode="auto", now=deps.now())
+            summary["merge_replies"] = [*summary.get("merge_replies", []), {
+                "report_id": work["report_id"], "channel": work["channel"], "action_id": reply["action_id"],
+                "status": reply["status"], "run_id": reply["run_id"]}]
             summary["report_ids"] = [*summary.get("report_ids", []), work["report_id"]]
             summary["reports"] = [*summary.get("reports", []), work]
             # 같은 사건에 짧은 시간 동안 접수가 몰리면 한 단계 상향한다 (R3, 상향은 한 번만).
@@ -747,6 +761,8 @@ def build_graph(deps: Deps):
             "symptom": incident["symptom_id"],
             "incident_id": diag["incident_id"],
             "report_ids": incident["report_ids"],
+            # 시나리오 제보의 원래 순서 번호. 채점기가 정답 묶음(incident_groups)과 비교한다
+            "report_indexes": [r["report_index"] for r in incident["reports"]],
             "scope": incident["scope"],
             "severity": incident["severity"],
             "escalated": incident.get("escalated", False),
@@ -759,6 +775,7 @@ def build_graph(deps: Deps):
             "procedures": sorted(diag["procedure_choice"]["procedures"], key=lambda p: int(p[1:])),
             "resolved_conditions": diag["procedure_choice"]["resolved_conditions"],
             "actions": diag["runs"],
+            "merge_replies": incident.get("merge_replies", []),
             # 접수 정리의 접수 내역 조회(1단계)와 판정 근거 조회(7단계)를 단계와 함께 남긴다
             "tool_calls": [{k: c[k] for k in ("step", "cause_id", "tool", "check_id", "args", "is_error")}
                            for c in [*(r["scope_lookup"] for r in incident["reports"]), *diag["tool_calls"]]],

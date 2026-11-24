@@ -124,6 +124,7 @@ def broken(scenarios, sid, mutate):
     # 조회할 수 없는 시스템의 설정 변경은 예외가 아니라 오류 목록으로 알린다 (E07은 SY12, SY15만)
     ("SC-S4-01", lambda s: s["environment"]["changes"][0].update(system="SY14"), "조회할 수 없다"),
     # 영향 범위의 근거 (E15)
+    ("SC-S1-01", lambda s: s["expected"].update(scope="all_service", severity="SEV1"), "E15 관측 값"),
     ("SC-S3-01", lambda s: s["environment"].update(checks=[c for c in s["environment"]["checks"] if c["check"] != "E15"]),
      "E15"),
     ("SC-S3-01", lambda s: next(c for c in s["environment"]["checks"] if c["check"] == "E15").update(detail="  "),

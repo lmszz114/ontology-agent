@@ -27,6 +27,7 @@ environment:
       detail: "14:05에 로그인 서버(게이트웨이) 배포가 있었다. 배포는 정상으로 끝났다"
     # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
     - check: E15
+      observations: {scope: all_service}
       detail: "14:10 이후 로그인 실패 문의와 커뮤니티 글이 210건 들어왔다. 모든 월드에서 고르게 들어온다"
   changes:
     - {kind: deploy, system: SY09, at: "2026-12-09T14:05+09:00"}

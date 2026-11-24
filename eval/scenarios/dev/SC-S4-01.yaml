@@ -18,6 +18,7 @@ environment:
       detail: "오늘 15:50에 출석 이벤트의 보상 수량 설정이 수정됐다"
     # 영향 범위 추정의 근거 (3단계 6장 E15). 정답 라벨의 scope에 맞춰 넣었다 (2026-11-24, 라벨은 그대로)
     - check: E15
+      observations: {scope: all_service}
       detail: "출석 이벤트 보상 중복 지급 글과 문의가 52건 들어왔다. 모든 월드에서 들어왔다"
   changes:
     - {kind: event_config, system: SY15, at: "2026-12-11T15:50+09:00"}

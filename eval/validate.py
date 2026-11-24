@@ -301,7 +301,11 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
         if escalated is True:
             severity = escalate(severity)
         check(expected.get("severity") == severity, f"severity는 {severity}여야 한다 (R3)")
-        # 영향 범위는 접수 내역 조회(E15) 결과로 추정한다 (3단계 6장). 일부 유저보다 넓으면 그 근거가 환경에 있어야 한다
+        # 영향 범위는 접수 내역 조회(E15) 결과로 추정한다 (3단계 6장). E15의 관측 값이 라벨의 범위와 같아야 한다.
+        # 관측 값은 검증기만 읽고 에이전트는 문장만 받는다
+        observed_scope = env.observe("E15")["scope"]
+        check(observed_scope == scope, f"scope가 {scope}인데 E15 관측 값은 {observed_scope}다")
+        # 일부 유저보다 넓으면 에이전트가 읽을 문장도 있어야 한다
         lookup = [c for c in environment.get("checks") or [] if c.get("check") == "E15"
                   and isinstance(c.get("detail"), str) and c["detail"].strip()]
         check(scope == "some_users" or bool(lookup),
