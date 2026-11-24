@@ -412,7 +412,18 @@ def build_graph(deps: Deps):
                     gap_minutes=int(change["gap_minutes"]),
                 )
         diag["ranked"] = ranked
+        if not ranked:
+            # 원인 후보가 하나도 없으면 근거 확인을 건너뛰고 사람에게 넘긴다.
+            # 그래프 공급자는 증상마다 후보가 있어 생기지 않는다. 텍스트 공급자(구성 A)가 답에 실패하면 생긴다
+            incidents = dict(state["incidents"])
+            incident = dict(incidents[diag["incident_id"]])
+            incident["needs_human"] = [*incident["needs_human"], "원인 후보를 받지 못했다"]
+            incidents[diag["incident_id"]] = incident
+            return {"diag": diag, "incidents": incidents}
         return {"diag": diag}
+
+    def after_rank(state: State) -> str:
+        return "check" if state["diag"]["ranked"] else "owner"
 
     # 7 판정 근거 조회 (LLM이 고르고 모의 도구 호출, R4-4)
     async def check(state: State) -> State:
@@ -801,7 +812,7 @@ def build_graph(deps: Deps):
     graph.add_edge("duplicate_judge", "severity")
     graph.add_conditional_edges("severity", after_report, ["intake", "next_incident"])
     graph.add_conditional_edges("next_incident", after_next, ["rank", END])
-    graph.add_edge("rank", "check")
+    graph.add_conditional_edges("rank", after_rank, ["check", "owner"])
     graph.add_conditional_edges("check", after_check, ["check", "owner"])
     graph.add_edge("owner", "procedures")
     graph.add_edge("procedures", "approval_gate")

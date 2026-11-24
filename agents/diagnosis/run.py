@@ -14,28 +14,45 @@
 import os
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from mcp import Client, StdioServerParameters
 
 from agents.diagnosis.graph import KST, Deps, build_graph, initial_state
 from agents.diagnosis.prompts import PROMPT_VERSION
 from common.knowledge import GraphKnowledge, KnowledgeProvider
-from common.models import LLM
+from common.knowledge.text import TextKnowledge
+from common.models import LLM, LLMResult
 from common.models.config import USAGE_FIELDS
 from common.tracing import Tracer
 from common.writers import events
 from mcp_servers.ontology_query import queries
+from ontology.seed import load_seed
 
 ROOT = Path(__file__).parent.parent.parent
 # MCP 서버 프로세스에 넘기는 환경 변수. API 키 같은 비밀값은 넘기지 않는다
 PASS_ENV = ("PATH", "HOME", "NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD", "LANG")
 
-# 비교 구성별 지식 공급자 (4단계 2-2, 5단계 4-2). 에이전트 코드는 하나이고 지식 공급자만 바꿔 끼운다.
-# 받는 값은 온톨로지 조회 MCP 클라이언트와 실행 기록기다. 구성 A는 M3 다음 PR에서 더한다
-KNOWLEDGE: dict[str, Callable[[Client, Tracer], KnowledgeProvider]] = {
-    "C": lambda onto, tracer: GraphKnowledge(onto, tracer, name="C"),
+@dataclass(frozen=True)
+class KnowledgeContext:
+    """지식 공급자를 만들 때 쓰는 값. 구성마다 필요한 것만 꺼내 쓴다."""
+
+    onto: Client                 # 온톨로지 조회 MCP 클라이언트 (구성 C)
+    tracer: Tracer
+    llm: LLM                     # 구성 A가 텍스트를 읽고 답할 때 부른다
+    driver: Any                  # 사건 데이터(변경 이력)를 읽는다
+    org: str
+    results: list[LLMResult]     # 진단 실행의 LLM 호출 목록. 공급자의 호출도 비용과 토큰에 함께 센다
+
+
+# 비교 구성별 지식 공급자 (4단계 2-2, 5단계 4-2). 에이전트 코드는 하나이고 지식 공급자만 바꿔 끼운다
+KNOWLEDGE: dict[str, Callable[[KnowledgeContext], KnowledgeProvider]] = {
+    "A": lambda ctx: TextKnowledge(llm=ctx.llm, seed=load_seed(ctx.org), results=ctx.results,
+                                   changes=lambda: events.list_changes(ctx.driver), name="A"),
+    "C": lambda ctx: GraphKnowledge(ctx.onto, ctx.tracer, name="C"),
 }
 
 
@@ -66,8 +83,11 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
         listed = await mock.list_tools()
         mock_tools = [{"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
                       for t in listed.tools]
+        results: list[LLMResult] = []
+        knowledge = KNOWLEDGE[config](KnowledgeContext(onto=onto, tracer=tracer, llm=llm, driver=driver, org=org,
+                                                       results=results))
         deps = Deps(
-            driver=driver, llm=llm, tracer=tracer, knowledge=KNOWLEDGE[config](onto, tracer),
+            driver=driver, llm=llm, tracer=tracer, knowledge=knowledge, llm_results=results,
             mock_client=mock, mock_tools=mock_tools, tool_checks=queries.get_evidence_tools(driver),
             symptoms=queries.get_symptom_types(driver), systems=queries.get_systems(driver),
         )
@@ -93,6 +113,9 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
             "trace_id": trace_id,
             "llm_calls": len(deps.llm_results), "usage": usage,
             "cost_usd": sum(r.cost["total"] for r in deps.llm_results),
+            # 지식 공급자의 답이 검증에 두 번 실패한 질문 (구성 A). 그래프 공급자는 없다
+            "knowledge_errors": list(getattr(knowledge, "errors", [])),
+            "knowledge_prompt_version": getattr(knowledge, "prompt_version", None),
         },
         "outputs": state.get("outputs") or [],
         "unclassified": state.get("unclassified") or [],
