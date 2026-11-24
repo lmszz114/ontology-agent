@@ -116,7 +116,8 @@ def get_checks(driver: Driver, cause_id: str) -> list[dict]:
         "OPTIONAL MATCH (pt:Team {id: e.performed_by_team}) "
         "RETURN e.id AS check_id, e.name AS name, e.tool AS tool, e.performed_by AS performed_by, "
         "r.required AS required, r.expect AS expect, r.note AS note, r.args AS args, "
-        "jt.name AS judged_by_team, pt.name AS performed_by_team "
+        "jt.name AS judged_by_team, pt.name AS performed_by_team, "
+        "jt.id AS judged_by_team_id, pt.id AS performed_by_team_id "
         "ORDER BY check_id",
         id=cause_id,
     )

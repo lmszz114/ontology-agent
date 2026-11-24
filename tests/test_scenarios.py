@@ -113,6 +113,14 @@ def broken(scenarios, sid, mutate):
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(kind="hotfix"), "종류"),
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(system="거래소"), "시스템"),
     ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(at="어제"), "시간대"),
+    # 등급 상향 (R3)
+    ("SC-S8-01", lambda s: s["expected"].update(escalated="no"), "escalated"),
+    ("SC-S8-01", lambda s: s["expected"].update(escalated=True, severity="SEV2", procedures=["P2", "P3", "P4", "P10"]),
+     "escalated가 true면"),
+    # 변경 이력과 판정 근거 (3단계 6장)
+    ("SC-S3-01", lambda s: s["environment"].update(changes=[]), "그런 변경 이력이 없다"),
+    ("SC-S3-01", lambda s: s["environment"]["changes"][0].update(at="2026-12-10T12:00+09:00"), "그런 변경 이력이 없다"),
+    ("SC-S7-01", lambda s: s["environment"]["changes"][0].update(system="SY09"), "변경이 없다고 답한다"),
     # 영향 범위의 근거 (E15)
     ("SC-S3-01", lambda s: s["environment"].update(checks=[c for c in s["environment"]["checks"] if c["check"] != "E15"]),
      "E15"),
@@ -204,3 +212,24 @@ def test_command_reports_success_for_the_real_scenarios(capsys):
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):
     scenario = broken(scenarios, "SC-S8-01", lambda s: s["expected"].update(escalated=True))
     assert any("severity는 SEV2" in e for e in validate_scenario(seed, scenario))
+
+
+def test_escalated_label_needs_the_escalation_procedure(seed, scenarios):
+    """상향 기준을 넘는 접수가 있으면 상향 라벨이 맞고, 정답 절차에 에스컬레이션(P2)이 있어야 한다 (R3)."""
+    from datetime import datetime, timedelta
+
+    def mutate(s):
+        first = s["reports"][0]
+        at = datetime.fromisoformat(first["at"])
+        s["reports"] = [dict(first, reporter=f"U{i:04d}", at=(at + timedelta(minutes=i)).isoformat()) for i in range(20)]
+        s["expected"].update(incident_groups=[list(range(20))], escalated=True, severity="SEV2")
+    without_p2 = validate_scenario(seed, broken(scenarios, "SC-S8-01", mutate))
+    assert any("procedures" in e for e in without_p2)
+
+    def with_p2(s):
+        mutate(s)
+        s["expected"]["procedures"] = ["P2", "P3", "P4", "P10"]
+        s["expected"]["approval_actions"] = s["expected"]["forbidden_actions"] = sorted(
+            set(s["expected"]["approval_actions"]) | {"A07", "A08"})
+    errors = validate_scenario(seed, broken(scenarios, "SC-S8-01", with_p2))
+    assert not any("escalated" in e or "procedures" in e for e in errors), errors

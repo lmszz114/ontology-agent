@@ -245,8 +245,8 @@ def test_change_weight_reorders_and_is_recorded(db, seed):
 
 # --- 판정 근거가 확정되지 않는 경우 ---------------------------------------------------
 
-def test_moves_to_next_hypothesis_and_caps(db, seed):
-    """1순위가 배제되면 다음 후보로 넘어가고, 확정이 안 되면 상한(3개)까지만 확인한다 (R4, 가정값)."""
+def test_moves_to_next_hypothesis(db, seed):
+    """1순위가 배제되면 다음 후보로 넘어간다 (R4)."""
     scenario = load("SC-S1-01")
     model = RuleModel(intake_of(scenario))
     state, _ = run_agent(db, seed, scenario, model, verdicts={"C01": "confirm"})
@@ -254,12 +254,16 @@ def test_moves_to_next_hypothesis_and_caps(db, seed):
     assert [h["status"] for h in out["hypotheses"][:2]] == ["ruled_out", "confirmed"]
     assert out["root_cause"] == "C01"
 
-    model = RuleModel(intake_of(scenario))
+
+def test_hypothesis_cap_stops_before_the_last_candidate(db, seed):
+    """확정이 안 되면 상한(3개, 가정값)까지만 확인한다. 후보가 4개인 S3로 상한 자체를 본다."""
+    scenario = load("SC-S3-01")
+    model = RuleModel(intake_of(scenario, systems=("SY02", "SY17")))
     state, _ = run_agent(db, seed, scenario, model, verdicts={})
     (out,) = state["outputs"]
-    # 후보 3개를 모두 확인하고 멈춘다. 가설마다 도구 요청 1번, 판단 1번
+    assert len(out["hypotheses"]) == 4
     assert out["root_cause"] is None and model.calls.count("check") == 3 * 2
-    assert sum(1 for h in out["hypotheses"] if h["result"]) == 3
+    assert [h["result"] is not None for h in out["hypotheses"]] == [True, True, True, False]
 
 
 def test_unconfirmed_assigns_top_two_teams(db, seed):
@@ -270,7 +274,8 @@ def test_unconfirmed_assigns_top_two_teams(db, seed):
     assert out["root_cause"] is None
     assert out["primary_team"] == "TM03"  # 1순위 C02의 담당 (서버개발팀)
     assert [c["team_id"] for c in out["collaborators"]] == ["TM09"]  # 2순위 C01의 담당 (플랫폼팀)
-    assert out["next_check"]["cause_id"] == "C02"
+    # 다음 확인은 1순위 C02의 필수 근거 중 아직 결과가 없는 것이다. 모두 조회했으면 사람이 결과를 판단한다
+    assert out["next_check"] is None
     assert any("확정되지 않았다" in n for n in out["needs_human"])
     # 원인이 없으면 접수 절차만 연다
     assert out["procedures"] == ["P1"]
@@ -557,10 +562,12 @@ def test_urgent_procedures_cannot_be_left_out(db, seed, sid, systems):
 
 
 def test_reused_result_is_linked_by_result_id_not_check_id(db, seed):
-    """같은 근거(E06)를 인자만 다르게 두 번 조회했으면, 다음 가설에는 결과 ID로 고른 결과만 근거로 잇는다."""
-    scenario = load("SC-S1-01")
-    model = RuleModel(intake_of(scenario))
-    original = model.check
+    """같은 근거(E06)를 인자만 다르게 두 번 조회했으면, 다음 가설에는 결과 ID로 고른 결과만 근거로 잇는다.
+
+    S3에서 C08은 E06(SY10), C09는 E06(SY18)을 본다. 첫 가설에서 둘 다 조회해 두고 C09가 SY18 결과를 인용한다.
+    """
+    scenario = load("SC-S3-01")
+    model = RuleModel(intake_of(scenario, systems=("SY02", "SY17")))
     seen = {}
 
     def check(params):
@@ -572,27 +579,24 @@ def test_reused_result_is_linked_by_result_id_not_check_id(db, seed):
                 uses = [{"type": "tool_use", "id": f"tu_{s}", "name": "query_deploy_history", "input": {"system": s}}
                         for s in ("SY10", "SY18")]
                 return message(uses, stop_reason="tool_use")
-            return text({"result": "rule_out", "used_checks": ["E06"], "reused_results": [], "reason": "x"})
-        if seen.get("pick_cause", cause) == cause:
-            # 이 가설의 필수 근거가 E06이 아니어서 한 번 다시 묻는다. 다시 물어도 같은 답을 한다
-            seen["pick_cause"] = cause
-            if "picked" not in seen:
-                seen["cached"] = [line for line in first.splitlines() if line.startswith("- K") and " E06 " in line]
-                seen["picked"] = next(line.split()[1] for line in seen["cached"] if '"SY18"' in line)
-            return text({"result": "confirm", "used_checks": ["E06"], "reused_results": [seen["picked"]],
+            return text({"result": "rule_out", "used_checks": [], "reused_results": [], "reason": "x"})
+        if cause == "C09":
+            seen["cached"] = [line for line in first.splitlines() if line.startswith("- K") and " E06 " in line]
+            picked = next(line.split()[1] for line in seen["cached"] if '"SY18"' in line)
+            return text({"result": "confirm", "used_checks": ["E06"], "reused_results": [picked],
                          "reason": "앞의 SY18 배포 이력"})
-        return original(params)
+        return text({"result": "rule_out", "used_checks": [], "reused_results": [], "reason": "x"})
 
     model.check = check
     state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    assert seen["first"] != "C09"
     assert len(seen["cached"]) == 2  # 같은 근거를 인자만 다르게 조회한 결과가 둘 있다
     (out,) = state["outputs"]
-    second = next(h for h in out["hypotheses"] if h["cause_id"] != seen["first"] and h["findings"])
-    assert [(f["check_id"], f["reused"], f["args"]) for f in second["findings"]] == [("E06", True, {"system": "SY18"})]
+    c09 = next(h for h in out["hypotheses"] if h["cause_id"] == "C09")
+    assert [(f["check_id"], f["reused"], f["args"]) for f in c09["findings"]] == [("E06", True, {"system": "SY18"})]
     # 그래프의 Finding에도 그 조회의 인자가 남는다
     with db.session() as session:
-        stored = session.run("MATCH (f:Finding {cause_id: $c}) RETURN f.tool AS t, f.args AS a",
-                             c=second["cause_id"]).data()
+        stored = session.run("MATCH (f:Finding {cause_id: 'C09'}) RETURN f.tool AS t, f.args AS a").data()
     assert [(r["t"], json.loads(r["a"])) for r in stored] == [("query_deploy_history", {"system": "SY18"})]
 
 
@@ -699,3 +703,113 @@ def test_confirm_without_required_checks_after_retry_is_inconclusive(db, seed):
     first = out["hypotheses"][0]
     assert first["result"] == "inconclusive" and first["status"] == "candidate"
     assert graph_count(db, "MATCH (:Incident)-[h:HAS_HYPOTHESIS {status: 'confirmed'}]->() RETURN count(h)") == 0
+
+
+def test_next_check_names_a_team_id_and_skips_checked_evidence(db, seed):
+    """다음 확인은 아직 결과가 없는 필수 근거를 가리키고, 담당은 팀 ID로 적는다 (R5-4)."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    original = model.check
+
+    def check(params):
+        if "확인할 원인 가설: C02" in params["messages"][0]["content"]:
+            if len(params["messages"]) == 1:
+                # 필수 근거 둘 중 E01만 조회한다
+                return message([{"type": "tool_use", "id": "tu_0", "name": "query_payment_record", "input": {}}],
+                               stop_reason="tool_use")
+            return text({"result": "inconclusive", "used_checks": ["E01"], "reused_results": [], "reason": "E02 미확인"})
+        return original(params)
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C01": "inconclusive", "C03": "inconclusive"})
+    (out,) = state["outputs"]
+    assert out["next_check"]["cause_id"] == "C02" and out["next_check"]["check_id"] == "E02"
+    assert out["next_check"]["by"] in {t["id"] for t in seed["teams"]}
+
+
+def test_upper_inconclusive_hypothesis_is_flagged_when_lower_confirms(db, seed):
+    """상위 가설이 불명확인 채로 하위 가설이 확정되면 사람 확인을 붙인다 (R4-4)."""
+    scenario = load("SC-S1-01")
+    state, _ = run_agent(db, seed, scenario, RuleModel(intake_of(scenario)),
+                         verdicts={"C02": "inconclusive", "C01": "confirm"})
+    (out,) = state["outputs"]
+    assert out["root_cause"] == "C01"
+    assert any("C02" in n and "불명확" in n for n in out["needs_human"])
+
+
+def test_same_reporter_with_other_symptom_is_not_merged(db, seed):
+    """같은 요청자라도 증상이 다르면 같은 사건으로 바로 묶지 않고 중복 판정으로 넘긴다 (R2)."""
+    scenario = two_reports(load("SC-S1-01"), same_reporter=True)
+    other = lambda p: text({"symptom_id": "S2", "scope": "some_users", "system_ids": ["SY01"], "reason": "x"})  # noqa: E731
+    model = RuleModel(intake_of(scenario), overrides={"intake": [lambda p: None, other]})
+    run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+    assert "duplicate" in model.calls
+
+
+def test_unrelated_query_is_not_recorded_as_evidence(db, seed):
+    """가설의 판정 근거가 아닌 조회는 호출 이력에만 남고 그 가설의 근거(Finding)가 되지 않는다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    original = model.check
+
+    def check(params):
+        if len(params["messages"]) == 1 and "확인할 원인 가설: C02" in params["messages"][0]["content"]:
+            uses = original(params).content
+            extra = {"type": "tool_use", "id": "tu_extra", "name": "query_deploy_history", "input": {"system": "SY10"}}
+            return message([b.model_dump() for b in uses] + [extra], stop_reason="tool_use")
+        return original(params)
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={"C02": "confirm"})
+    (out,) = state["outputs"]
+    c02 = next(h for h in out["hypotheses"] if h["cause_id"] == "C02")
+    assert "E06" not in {f["check_id"] for f in c02["findings"]}
+    assert "E06" in {t["check_id"] for t in out["tool_calls"]}
+    assert graph_count(db, "MATCH (f:Finding {cause_id: 'C02', check_id: 'E06'}) RETURN count(f)") == 0
+
+
+def test_required_check_with_wrong_arguments_does_not_count(db, seed):
+    """원인이 인자를 정한 필수 근거는 그 인자로 조회해야 충족된다. 다른 시스템으로 조회하면 다시 묻는다."""
+    scenario = load("SC-S7-01")
+    model = RuleModel(intake_of(scenario, systems=("SY14",)))
+    original = model.check
+    asked = []
+
+    def check(params):
+        first = params["messages"][0]["content"]
+        checks = json.loads(first.split("판정 근거:\n", 1)[1].split("\n\n이미 조회한 결과", 1)[0])
+        if len(params["messages"]) == 1:
+            uses = [{"type": "tool_use", "id": f"tu_{i}", "name": c["tool"],
+                     "input": {k: "SY01" for k in c["args"]} if c["args"] else {}}
+                    for i, c in enumerate(checks) if c["required"]]
+            return message(uses, stop_reason="tool_use")
+        asked.append(params["messages"][-1]["content"])
+        return text({"result": "confirm", "used_checks": [c["check_id"] for c in checks if c["required"]],
+                     "reused_results": [], "reason": "x"})
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    first = state["outputs"][0]["hypotheses"][0]
+    assert first["result"] == "inconclusive"
+    assert any(isinstance(a, str) and "필수 판정 근거" in a for a in asked)
+
+
+def test_retry_drops_tool_use_blocks_from_the_earlier_answer(db, seed):
+    """다시 묻는 대화에는 결과가 없는 도구 호출 블록을 남기지 않는다. 남기면 API가 요청을 거부한다."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    seen = []
+
+    def check(params):
+        seen.append(params["messages"])
+        if len(params["messages"]) == 1:
+            answer = {"result": "confirm", "used_checks": [], "reused_results": [], "reason": "x"}
+            return message([{"type": "text", "text": json.dumps(answer)},
+                            {"type": "tool_use", "id": "tu_cut", "name": "query_payment_record", "input": {}}],
+                           stop_reason="max_tokens")
+        return text({"result": "inconclusive", "used_checks": [], "reused_results": [], "reason": "x"})
+
+    model.check = check
+    run_agent(db, seed, scenario, model, verdicts={})
+    retry = next(m for m in seen if len(m) == 3)
+    assert all(b["type"] != "tool_use" for b in retry[1]["content"])
