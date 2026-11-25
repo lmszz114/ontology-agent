@@ -1,0 +1,269 @@
+document_id: PM-08
+run_id: 2026-11-25-m4-extract-dev-r2
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 서버개발팀
+    id: TM03
+  object:
+    type: System
+    name: 경매장
+    id: SY14
+  props:
+    scope: logic
+  evidence_spans:
+  - 경매장의 로직은 서버개발팀이 맡고 있다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 경매장
+    id: SY14
+  object:
+    type: System
+    name: 월드 서버
+    id: SY10
+  props: {}
+  evidence_spans:
+  - 경매장은 월드 서버에 의존하는 구조라서 월드 서버에 문제가 생기면 경매장에도 영향이 간다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 등록 실패
+    id: S7
+  object:
+    type: System
+    name: 경매장
+    id: SY14
+  props: {}
+  evidence_spans:
+  - 경매장에서 등록 실패가 이어지는 장애가 발생했다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM03
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 등록 실패
+    id: S7
+  object:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  props:
+    prior: 높음
+  evidence_spans:
+  - 이런 증상이 나타날 때 가장 먼저 의심하는 원인 후보는 경매장 서버 오류이고, 지금까지 경험상 가능성도 높은 편이다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: System
+    name: 경매장
+    id: SY14
+  props:
+    scope: logic
+  evidence_spans:
+  - 이는 경매장의 로직 쪽 문제에 해당한다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: EvidenceCheck
+    name: 서버 오류 로그 조회
+    id: E04
+  props:
+    required: true
+    expect: 경매장의 서버 오류 로그에 증상과 관련된 항목이 생긴다.
+  evidence_spans:
+  - 배포 직후에는 경매장의 서버 오류 로그에 증상과 관련된 항목이 생기는지 서버개발팀이 먼저 살펴보기로 했다.
+  - 경매장에서 이번 증상과 관련된 오류 로그가 확인되었다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: EvidenceCheck
+    name: 배포 이력 조회
+    id: E06
+  props:
+    required: false
+    expect: 증상이 시작되기 전에 경매장 배포 이력이 남아 있다.
+  evidence_spans:
+  - 등록 실패가 다시 보이면 이번처럼 서버 오류 로그와 배포 이력을 함께 조회해 원인을 좁힌다.
+  - 증상이 시작되기 전에 경매장 배포 이력이 남아 있었다.
+  confidence: 0.6
+  match: conflict
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: Procedure
+    name: 긴급 공지
+    id: P3
+  props: {}
+  evidence_spans:
+  - 경매장 서버 오류가 원인일 때 여는 절차를 순서대로 진행했다.
+  - '긴급 공지: 이용자에게 장애 사실을 알렸다.'
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: Procedure
+    name: 긴급 점검
+    id: P4
+  props: {}
+  evidence_spans:
+  - 경매장 서버 오류가 원인일 때 여는 절차를 순서대로 진행했다.
+  - '긴급 점검: 경매장을 점검 상태로 두고 작업했다.'
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: Procedure
+    name: 롤백
+    id: P5
+  props: {}
+  evidence_spans:
+  - 경매장 서버 오류가 원인일 때 여는 절차를 순서대로 진행했다.
+  - '롤백: 문제가 된 배포를 되돌렸다.'
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 경매장 서버 오류
+    id: C18
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 경매장 서버 오류가 원인일 때 여는 절차를 순서대로 진행했다.
+  - '원인 수정과 반영: 로직의 문제를 고쳐 다시 반영했다.'
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 거래소
+    id: SY14
+  object:
+    type: Name
+    name: 경매장
+    id: null
+  props: {}
+  evidence_spans:
+  - 경매장의 로직은 서버개발팀이 맡고 있다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: SymptomType
+    name: 거래소 장애
+    id: S7
+  object:
+    type: Name
+    name: 등록 실패
+    id: null
+  props: {}
+  evidence_spans:
+  - 경매장에서 등록 실패가 이어지는 장애가 발생했다.
+  confidence: 0.85
+  match: new
+  reviewers:
+  - TM05
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 거래소 서버 오류
+    id: C18
+  object:
+    type: Name
+    name: 경매장 서버 오류
+    id: null
+  props: {}
+  evidence_spans:
+  - 이런 증상이 나타날 때 가장 먼저 의심하는 원인 후보는 경매장 서버 오류이고, 지금까지 경험상 가능성도 높은 편이다.
+  confidence: 0.7
+  match: new
+  reviewers:
+  - TM03
+dropped: []
+stats:
+  raw: 11
+  names_by_code: 8
+  names_to_llm: 3
+  names_by_llm: 3
+  kept: 14
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1236
+    output: 3921
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0021094
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2233
+    output: 285
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0003658
+  stop_reason: end_turn
+cost_usd: 0.002475

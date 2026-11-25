@@ -39,6 +39,7 @@ PROPS: dict[str, dict[str, set | None]] = {
     "RESOLVED_BY": {"condition": {"미지급", "과지급"}},
 }
 MATCHES = ("existing", "new", "conflict")
+MAX_SPANS = 3
 
 
 class CandidateError(RecordError):
@@ -72,8 +73,11 @@ def check_candidate(c: dict) -> None:
     confidence = c.get("confidence")
     if confidence is not None and (isinstance(confidence, bool) or not 0 <= confidence <= 1):
         raise CandidateError(f"confidence는 0과 1 사이다: {confidence!r}")
-    if not isinstance(c.get("evidence_span"), str) or not c["evidence_span"].strip():
-        raise CandidateError("근거 문장이 비어 있다")
+    spans = c.get("evidence_spans")
+    # 근거 문장은 1~3개다. 대명사와 돌려 말하기 때문에 한 문장만으로 관계가 드러나지 않는 경우가 있다 (M4 PR 4 결정 2)
+    if (not isinstance(spans, list) or not 1 <= len(spans) <= MAX_SPANS
+            or not all(isinstance(x, str) and x.strip() for x in spans)):
+        raise CandidateError(f"근거 문장은 비어 있지 않은 문장 1~{MAX_SPANS}개다: {spans!r}")
 
 
 EXTRACTION_LABELS = ("Candidate", "Document")
@@ -167,21 +171,22 @@ def record_candidates(driver: Driver, *, run_id: str, document_id: str, candidat
         ids = []
         for i, c in enumerate(candidates, start=1):
             # 근거 문장이 원문에 글자 그대로 없으면 후보를 버린다 (R8-3). 추출 단계가 먼저 걸러야 하고 여기서는 막기만 한다
-            if c["evidence_span"] not in doc["text"]:
-                raise RecordError(f"근거 문장이 원문에 없다: {document_id} {c['evidence_span'][:40]}")
+            missing = [x for x in c["evidence_spans"] if x not in doc["text"]]
+            if missing:
+                raise RecordError(f"근거 문장이 원문에 없다: {document_id} {missing[0][:40]}")
             cid = f"{run_id}:{document_id}:{i:03d}"
             subject, obj = c["subject"], c["object"]
             tx.run(
                 "MATCH (d:Document {id: $doc}) "
                 "CREATE (c:Candidate {id: $id, run_id: $run, relation: $rel, subject_type: $st, subject_name: $sn, "
-                "object_type: $ot, object_name: $on, props: $props, evidence_span: $span, match: $match, "
+                "object_type: $ot, object_name: $on, props: $props, evidence_spans: $spans, match: $match, "
                 "status: 'pending'})-[:EXTRACTED_FROM]->(d) "
                 "SET c.confidence = $conf, c.subject_id = $sid, c.object_id = $oid",
                 doc=document_id, id=cid, run=run_id, rel=c["relation"], st=subject["type"], sn=subject["name"],
                 ot=obj["type"], on=obj["name"], sid=subject.get("id"), oid=obj.get("id"),
                 # 관계 속성은 맵을 노드 속성에 넣을 수 없어 JSON 문자열로 둔다 (Finding.args와 같은 방식)
                 props=json.dumps(c.get("props") or {}, ensure_ascii=False, sort_keys=True),
-                span=c["evidence_span"], match=c["match"], conf=c.get("confidence"),
+                spans=c["evidence_spans"], match=c["match"], conf=c.get("confidence"),
             ).consume()
             for role, end in (("subject", subject), ("object", obj)):
                 if end.get("id") is None:

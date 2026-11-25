@@ -1,0 +1,102 @@
+document_id: MT-03
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 게임사업PM팀
+    id: TM06
+  object:
+    type: System
+    name: 캐시샵
+    id: SY12
+  props:
+    scope: config
+  evidence_spans:
+  - 캐시샵의 설정은 게임사업PM팀이 맡는다.
+  - 캐시샵 설정 변경 요청은 게임사업PM팀으로 일원화한다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM06
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 캐시샵
+    id: SY12
+  object:
+    type: System
+    name: 결제 플랫폼
+    id: SY02
+  props: {}
+  evidence_spans:
+  - 이쪽에 문제가 생기면 캐시샵에도 곧바로 영향이 간다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM06
+  - TM09
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 캐시샵
+    id: SY12
+  object:
+    type: System
+    name: 우편함
+    id: SY13
+  props: {}
+  evidence_spans:
+  - 우편함에 문제가 생기는 경우에도 캐시샵이 영향을 받는다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM06
+- relation: ALIAS
+  subject:
+    type: System
+    name: 캐시 상점
+    id: SY12
+  object:
+    type: Name
+    name: 캐시샵
+    id: null
+  props: {}
+  evidence_spans:
+  - 캐시샵의 설정은 게임사업PM팀이 맡는다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+  - TM06
+dropped: []
+stats:
+  raw: 3
+  names_by_code: 3
+  names_to_llm: 1
+  names_by_llm: 1
+  kept: 4
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 865
+    output: 1266
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0007448
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1014
+    output: 69
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0001359
+  stop_reason: end_turn
+cost_usd: 0.000881

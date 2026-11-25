@@ -1,0 +1,201 @@
+document_id: PM-10
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 인프라 운영
+    id: TM10
+  object:
+    type: System
+    name: 서버 인프라
+    id: SY05
+  props:
+    scope: operation
+  evidence_spans:
+  - 서버 인프라의 운영은 인프라 운영이 맡고 있다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM10
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 대규모 콘텐츠 중 서버 과부하
+    id: S8
+  object:
+    type: System
+    name: 서버 인프라
+    id: SY05
+  props: {}
+  evidence_spans:
+  - 공성전이 진행되는 시간에 서버 인프라에서 렉이 발생했다.
+  - 증상은 '대규모 콘텐츠 중 서버 과부하'로 분류했다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 대규모 콘텐츠 중 서버 과부하
+    id: S8
+  object:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  props:
+    prior: 높음
+  evidence_spans:
+  - 이런 증상에서는 서버 자원 부족이 원인일 가능성이 높은 편이다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  object:
+    type: System
+    name: 서버 인프라
+    id: SY05
+  props:
+    scope: operation
+  evidence_spans:
+  - 이는 서버 인프라의 운영 쪽 문제로 분류한다.
+  - 원인은 서버 자원 부족이다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  object:
+    type: EvidenceCheck
+    name: 자원·네트워크 지표 조회
+    id: E09
+  props:
+    required: true
+    expect: 서버 인프라의 자원 지표가 한계에 가깝거나 한계를 넘은 상태이다.
+  evidence_spans:
+  - 자원·네트워크 지표 조회 결과 서버 인프라의 자원 지표가 한계에 가깝거나 한계를 넘은 상태였다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  object:
+    type: EvidenceCheck
+    name: 콘텐츠 일정 대조
+    id: E14
+  props:
+    required: true
+    expect: 렉이 발생한 시간이 대규모 콘텐츠가 진행되던 시간과 겹친다.
+  evidence_spans:
+  - 콘텐츠 일정(월드보스, 공성전 시간)과 대조해 보니 렉이 난 때가 대규모 콘텐츠가 진행되던 시간과 겹쳤다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  object:
+    type: Procedure
+    name: 긴급 공지
+    id: P3
+  props: {}
+  evidence_spans:
+  - 서버 자원 부족이 원인이므로 아래 세 절차를 열었다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  object:
+    type: Procedure
+    name: 긴급 점검
+    id: P4
+  props: {}
+  evidence_spans:
+  - 서버 자원 부족이 원인이므로 아래 세 절차를 열었다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 서버 자원 부족
+    id: C20
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 서버 자원 부족이 원인이므로 아래 세 절차를 열었다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM10
+- relation: ALIAS
+  subject:
+    type: Team
+    name: 인프라운영팀
+    id: TM10
+  object:
+    type: Name
+    name: 인프라 운영
+    id: null
+  props: {}
+  evidence_spans:
+  - 서버 인프라의 운영은 인프라 운영이 맡고 있다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM10
+dropped: []
+stats:
+  raw: 9
+  names_by_code: 15
+  names_to_llm: 3
+  names_by_llm: 3
+  kept: 10
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1235
+    output: 2876
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0015868
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1250
+    output: 167
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0002085
+  stop_reason: end_turn
+cost_usd: 0.001795

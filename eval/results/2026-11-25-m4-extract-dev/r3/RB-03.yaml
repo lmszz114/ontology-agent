@@ -1,0 +1,85 @@
+document_id: RB-03
+run_id: 2026-11-25-m4-extract-dev-r3
+candidates:
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 결제 승인, 기록 오류
+    id: C01
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 원인이 '결제 승인, 기록 오류'로 판단되면 '원인 수정과 반영' 절차를 연다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM09
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 우편함 지급 누락
+    id: C02
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 원인이 '우편함 지급 누락'일 때도 같다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 상품 설정 오류
+    id: C03
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - '''상품 설정 오류''가 원인인 경우에도 이 절차를 열고, ''공통 계정 인증 장애''가 원인일 때도 마찬가지다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM06
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - '''상품 설정 오류''가 원인인 경우에도 이 절차를 열고, ''공통 계정 인증 장애''가 원인일 때도 마찬가지다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM09
+dropped: []
+stats:
+  raw: 4
+  names_by_code: 8
+  names_to_llm: 0
+  kept: 4
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 802
+    output: 1644
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0009275
+  stop_reason: end_turn
+cost_usd: 0.000928

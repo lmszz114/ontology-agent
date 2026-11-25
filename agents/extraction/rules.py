@@ -6,7 +6,7 @@
      "subject": {"type": "Team", "name": "서버팀", "id": "TM03"},
      "object": {"type": "System", "name": "메일함", "id": "SY13"},
      "props": {"scope": "logic"},
-     "evidence_span": "메일함 지급 로직은 서버팀이 맡는다.",
+     "evidence_spans": ["메일함 지급 로직은 서버팀이 맡는다."],
      "confidence": 0.8}
 
 별칭(ALIAS)은 object가 {"type": "Name", "name": 별칭, "id": None}이다.

@@ -1,0 +1,238 @@
+document_id: PM-03
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 서버개발팀
+    id: TM03
+  object:
+    type: System
+    name: 게이트웨이
+    id: SY09
+  props:
+    scope: logic
+  evidence_spans:
+  - 게이트웨이의 로직은 서버개발팀이 맡는다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 게이트웨이
+    id: SY09
+  object:
+    type: System
+    name: 통합 계정 인증
+    id: SY01
+  props: {}
+  evidence_spans:
+  - 게이트웨이는 통합 계정 인증에 의존하므로 인증에 문제가 생기면 영향이 간다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM03
+  - TM09
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 로그인 불가, 접속 장애
+    id: S2
+  object:
+    type: System
+    name: 게이트웨이
+    id: SY09
+  props: {}
+  evidence_spans:
+  - 증상은 로그인 서버, 이하 게이트웨이에서 나타났다.
+  confidence: 0.75
+  match: existing
+  reviewers:
+  - TM03
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 로그인 불가, 접속 장애
+    id: S2
+  object:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  props:
+    prior: 중간
+  evidence_spans:
+  - 게임 로그인 서버 장애는 그중 가능성이 중간 정도인 후보다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 게이트웨이 세션 처리 로직 버그
+    id: null
+  object:
+    type: System
+    name: 게이트웨이
+    id: SY09
+  props:
+    scope: logic
+  evidence_spans:
+  - 게이트웨이의 로직 쪽 문제, 구체적으로는 세션 처리 버그다.
+  confidence: 0.8
+  match: new
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: EvidenceCheck
+    name: 다른 타이틀 로그인 상태 확인
+    id: E03
+  props:
+    required: true
+    expect: 다른 타이틀 로그인은 정상이고 문제가 이 타이틀에 한정된다.
+  evidence_spans:
+  - 첫째, 다른 타이틀의 로그인 상태를 확인했다.
+  - 다른 타이틀 로그인은 정상이었고, 문제가 이 타이틀에 한정된다는 점이 드러났다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: EvidenceCheck
+    name: 서버 오류 로그 조회
+    id: E04
+  props:
+    required: true
+    expect: 게이트웨이에 증상과 관련된 오류 로그가 남아 있다.
+  evidence_spans:
+  - 둘째, 서버 오류 로그를 조회했다.
+  - 게이트웨이에 증상과 관련된 오류 로그가 남아 있었다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: Procedure
+    name: 긴급 공지
+    id: P3
+  props: {}
+  evidence_spans:
+  - 게임 로그인 서버 장애가 원인일 때 여는 절차 네 가지를 모두 열었다.
+  - 1. 긴급 공지
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: Procedure
+    name: 긴급 점검
+    id: P4
+  props: {}
+  evidence_spans:
+  - 게임 로그인 서버 장애가 원인일 때 여는 절차 네 가지를 모두 열었다.
+  - 2. 긴급 점검
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: Procedure
+    name: 롤백
+    id: P5
+  props: {}
+  evidence_spans:
+  - 게임 로그인 서버 장애가 원인일 때 여는 절차 네 가지를 모두 열었다.
+  - 3. 롤백
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 게임 로그인 서버 장애가 원인일 때 여는 절차 네 가지를 모두 열었다.
+  - 4. 원인 수정과 반영
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 로그인 서버(게이트웨이)
+    id: SY09
+  object:
+    type: Name
+    name: 게이트웨이
+    id: null
+  props: {}
+  evidence_spans:
+  - 게이트웨이의 로직은 서버개발팀이 맡는다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+dropped: []
+stats:
+  raw: 11
+  names_by_code: 17
+  names_to_llm: 2
+  names_by_llm: 1
+  kept: 12
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1107
+    output: 4902
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.002587
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1532
+    output: 205
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0002557
+  stop_reason: end_turn
+cost_usd: 0.002843

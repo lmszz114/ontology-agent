@@ -1,0 +1,228 @@
+document_id: PM-07
+run_id: 2026-11-25-m4-extract-dev-r3
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 시스템 기획
+    id: TM02
+  object:
+    type: System
+    name: 확률 테이블
+    id: SY17
+  props:
+    scope: data
+    area: probability
+  evidence_spans:
+  - 이 영역은 시스템 기획이 맡고 있다.
+  - 확률 테이블의 확률 영역 데이터는 시스템 기획 담당이다.
+  confidence: 0.95
+  match: existing
+  reviewers:
+  - TM02
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 확률 표기가 실제와 맞지 않음
+    id: S6
+  object:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  props:
+    prior: 중간
+  evidence_spans:
+  - 이 증상에서 확률 테이블 값 오류는 가능성이 중간쯤인 후보였고, 가장 유력하다고 볼 근거는 없었다.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM02
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  object:
+    type: System
+    name: 확률 테이블
+    id: SY17
+  props:
+    scope: data
+    area: probability
+  evidence_spans:
+  - 확률 테이블의 확률 영역 데이터가 잘못 수정되어 공개 확률과 어긋났다.
+  - 이는 데이터 문제이며, 게임 로직이 잘못 동작한 것이 아니다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM02
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  object:
+    type: EvidenceCheck
+    name: 공개 수치와 테이블 수치와 실제 결과 비교
+    id: E08
+  props:
+    required: true
+    expect: 테이블 수치가 공개 수치와 다르고, 실제 결과는 테이블 수치와 같은 방향으로 나온다.
+  evidence_spans:
+  - 첫 번째 근거는 공개 수치, 테이블 수치, 실제 결과를 나란히 놓고 비교한 것이다.
+  - 확률 테이블에 들어 있는 수치는 공개 수치와 달랐다.
+  - 반면 실제 결과는 테이블 수치와 같은 방향으로 나왔다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM02
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  object:
+    type: EvidenceCheck
+    name: 확률 테이블 변경 이력 조회
+    id: E05
+  props:
+    required: true
+    expect: 증상이 시작되기 전에 확률 테이블을 바꾼 이력이 남아 있고, 값이 달라진 시점이 증상 시점보다 앞선다.
+  evidence_spans:
+  - 두 번째 근거는 확률 테이블 변경 이력 조회 결과다.
+  - 증상이 시작되기 전에 확률 테이블을 바꾼 이력이 남아 있었다.
+  - 값이 달라진 시점과 증상이 나타난 시점의 앞뒤 순서가 맞는다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM02
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  object:
+    type: Procedure
+    name: 확률 표기 정정
+    id: P8
+  props: {}
+  evidence_spans:
+  - '확률 표기 정정: 공개된 확률 표기를 바로잡는다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM02
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  object:
+    type: Procedure
+    name: 긴급 공지
+    id: P3
+  props: {}
+  evidence_spans:
+  - '긴급 공지: 유저에게 상황을 알린다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM02
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 확률 테이블 값 오류
+    id: C16
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - '원인 수정과 반영: 잘못된 테이블 값을 고쳐 게임에 반영한다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM02
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 확률 테이블
+    id: SY17
+  object:
+    type: System
+    name: 로그 수집
+    id: SY03
+  props: {}
+  evidence_spans:
+  - 또 확률 테이블은 로그 수집에 의존하므로, 로그 수집에 문제가 생기면 테이블 쪽에도 영향이 간다는 점을 점검할 때 함께 염두에 둔다.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+  - TM10
+- relation: ALIAS
+  subject:
+    type: Team
+    name: 시스템기획팀
+    id: TM02
+  object:
+    type: Name
+    name: 시스템 기획
+    id: null
+  props: {}
+  evidence_spans:
+  - 이 영역은 시스템 기획이 맡고 있다.
+  confidence: 0.95
+  match: new
+  reviewers:
+  - TM02
+- relation: ALIAS
+  subject:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  object:
+    type: Name
+    name: 확률 테이블
+    id: null
+  props: {}
+  evidence_spans:
+  - 확률 테이블의 확률 영역 데이터는 시스템 기획 담당이다.
+  confidence: 0.95
+  match: new
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+dropped: []
+stats:
+  raw: 9
+  names_by_code: 11
+  names_to_llm: 5
+  names_by_llm: 5
+  kept: 11
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1248
+    output: 3949
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0021246000000000004
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2503
+    output: 539
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0005198
+  stop_reason: end_turn
+cost_usd: 0.002644

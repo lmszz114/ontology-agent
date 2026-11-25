@@ -1,0 +1,21 @@
+document_id: NZ-02
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates: []
+dropped: []
+stats:
+  raw: 0
+  names_by_code: 0
+  names_to_llm: 0
+  kept: 0
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 681
+    output: 11
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 9.89e-05
+  stop_reason: end_turn
+cost_usd: 9.9e-05
