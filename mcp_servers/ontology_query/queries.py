@@ -146,7 +146,8 @@ def get_owner_team(driver: Driver, cause_id: str) -> dict:
         "RETURN c.id AS cause_id, {system_id: sys.id, system_name: sys.name, scope: l.scope, area: l.area} AS located_in, "
         "[(t:Team)-[o:OWNS]->(sys) WHERE o.scope = l.scope AND coalesce(o.area, '') = coalesce(l.area, '') "
         "| {team_id: t.id, name: t.name}] AS primary, "
-        "[(t:Team)-[o:OWNS]->(sys) WHERE NOT (o.scope = l.scope AND coalesce(o.area, '') = coalesce(l.area, '')) "
+        # 1차 담당이 아닌 담당 전부. scope가 없는 쪽(C-ext)은 비교가 null이라 NOT으로 뒤집으면 빠진다. null을 거짓으로 본다
+        "[(t:Team)-[o:OWNS]->(sys) WHERE NOT coalesce(o.scope = l.scope AND coalesce(o.area, '') = coalesce(l.area, ''), false) "
         "| {team_id: t.id, name: t.name, scope: o.scope, area: o.area}] AS other_owners, "
         "[(t:Team)-[k:COLLABORATES_ON]->(sys) | {team_id: t.id, name: t.name, condition: k.condition}] AS collaborators",
         id=cause_id,

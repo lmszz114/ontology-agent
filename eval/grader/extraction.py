@@ -15,7 +15,6 @@
 import hashlib
 import statistics
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import yaml

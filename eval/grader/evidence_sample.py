@@ -62,7 +62,8 @@ def load_rep(folder: Path, rep: str) -> list[dict]:
     out = []
     for path in sorted((folder / rep).glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        for i, c in enumerate(data.get("candidates") or []):
+        # 후보 id의 순번은 기록 함수(record_candidates)와 같게 1부터 센다. 운영 화면과 그래프의 후보 id와 맞춘다 (M4 전체 점검)
+        for i, c in enumerate(data.get("candidates") or [], start=1):
             out.append(c | {"document_id": data["document_id"], "candidate": f"{data['document_id']}:{i:03d}"})
     if not out:
         raise SystemExit(f"{folder / rep}: 후보가 없다. 빈 표본으로 기록을 쓰지 않는다")
@@ -170,6 +171,8 @@ def main(argv=None) -> int:
                 result = llm.call(task="grading", name=f"evidence.{c['candidate']}", system=SYSTEM,
                                   messages=[{"role": "user", "content": text}], max_tokens=400, output_schema=SCHEMA,
                                   metadata={"candidate": c["candidate"], "prompt_version": PROMPT_VERSION})
+                if result.message.stop_reason != "end_turn":
+                    raise SystemExit(f"{c['candidate']}: 판정이 끝나지 않았다 (stop_reason={result.message.stop_reason})")
                 judged = result.json()
                 total += result.cost["total"]
                 rows.append({"candidate": c["candidate"], "relation": c["relation"], "match": c.get("match"),

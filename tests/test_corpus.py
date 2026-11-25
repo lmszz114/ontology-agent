@@ -198,7 +198,7 @@ def test_manual_only_fails_for_docs_never_verified(tmp_path, monkeypatch, capsys
     """--manual-only는 확인 기록이 없는 문서를 통과로 세지 않는다 (PR #28 리뷰)."""
     import sys
 
-    import eval.corpus.verify as verify
+    from eval.corpus import verify
 
     monkeypatch.setattr(verify, "RESULT_PATH", tmp_path / "verify.yaml")
     monkeypatch.setattr(sys, "argv", ["verify", "--only", "RB-08", "--manual-only"])

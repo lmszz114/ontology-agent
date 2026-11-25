@@ -313,9 +313,16 @@ def review_candidate(driver: Driver, *, candidate_id: str, team_id: str, decisio
 
 
 def delete_run(driver: Driver, run_id: str) -> int:
-    """한 실행의 후보를 지우고 지운 수를 돌려준다. 문서는 남긴다."""
+    """한 실행의 후보를 지우고 지운 수를 돌려준다. 문서는 남긴다.
+
+    지식 반영(A17) 기록이 붙은 후보가 있으면 지우지 않는다. A17 기록은 다른 실행의 후보와 함께 묶이거나 이미 시드를
+    바꾼 기록이라, 함께 지우면 그 후보들이 다시 반영 대기로 보여 두 번 반영될 수 있다 (M4 전체 점검)
+    """
     with driver.session() as session:
-        session.run("MATCH (r:ActionRun)-[:FOR]->(:Candidate {run_id: $run}) DETACH DELETE r", run=run_id).consume()
+        runs = session.run("MATCH (r:ActionRun)-[:FOR]->(:Candidate {run_id: $run}) RETURN DISTINCT r.id AS id",
+                           run=run_id).value()
+        if runs:
+            raise RecordError(f"{run_id}: 지식 반영 기록이 붙은 후보가 있어 지우지 않는다: {sorted(runs)}")
         return session.run("MATCH (c:Candidate {run_id: $run}) DETACH DELETE c", run=run_id
                            ).consume().counters.nodes_deleted
 

@@ -764,9 +764,6 @@ documents:
     subject: SY10
     object: SY11
   - rel: ALIAS
-    subject: SY10
-    object: 월드서버
-  - rel: ALIAS
     subject: TM03
     object: 서버팀
   stale: []
