@@ -105,8 +105,12 @@ def test_distractor_violation_needs_a_quote_from_the_text():
 
     doc = _doc("NZ-01")
     text = "겨울 이벤트 일정 회의. 서버개발팀이 우편함을 맡는다."
-    ok, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["", "원문에 없는 문장"]})), doc, text, {})
-    assert ok["ok"] and ok["unexpected"] == [] and ok["invalid_quotes"] == ["", "원문에 없는 문장"]
+    # 잘못된 인용만 온 응답은 위반도 통과도 아니다. 판정 불가로 남겨 다시 확인한다
+    odd, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["", "원문에 없는 문장"]})), doc, text, {})
+    assert not odd["ok"] and odd["undecided"] and odd["unexpected"] == []
+    assert odd["invalid_quotes"] == ["", "원문에 없는 문장"]
+    clean, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": []})), doc, text, {})
+    assert clean["ok"] and "undecided" not in clean
     bad, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["서버개발팀이 우편함을 맡는다."]})), doc, text, {})
     assert not bad["ok"] and bad["unexpected"] == ["서버개발팀이 우편함을 맡는다."]
 

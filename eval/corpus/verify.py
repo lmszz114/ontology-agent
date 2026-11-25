@@ -73,9 +73,10 @@ def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str]) -> tuple[dict,
         # 원문에 글자 그대로 있는 인용만 위반으로 본다. 빈 인용이나 원문에 없는 인용은 응답 오류로 따로 남긴다 (PR #28 리뷰)
         found = [q for q in quotes if q and q in text]
         invalid = [q for q in quotes if not (q and q in text)]
-        outcome = {"ok": not found, "unexpected": found}
+        outcome = {"ok": not found and not invalid, "unexpected": found}
         if invalid:
-            outcome["invalid_quotes"] = invalid
+            # 잘못된 인용은 위반으로 세지 않지만 통과로도 보지 않는다. 판정할 수 없어 다시 확인한다 (PR #28 리뷰)
+            outcome |= {"invalid_quotes": invalid, "undecided": not found}
         return outcome, result.cost["total"]
     items = checked_facts(doc)
     listing = "\n".join(f"{i}. {describe(f, n)}" for i, (_, f) in enumerate(items))
@@ -128,7 +129,8 @@ def main() -> int:
                     "prompt_version": PROMPT_VERSION, "cost_usd": round(previous.get("cost_usd", 0) + cost, 5)}
                 record["total_cost_usd"] = round(sum(r["cost_usd"] for r in record["documents"].values()), 5)
                 write_text_atomic(RESULT_PATH, yaml.safe_dump(record, allow_unicode=True, sort_keys=True))
-                print(f"{doc['id']}: {'통과' if outcome['ok'] else '부족'}")
+                state = "통과" if outcome["ok"] else ("판정 불가 (응답 오류)" if outcome.get("undecided") else "부족")
+                print(f"{doc['id']}: {state}")
     finally:
         tracer.flush()
     failed = sorted(i for i, r in record["documents"].items() if not r["ok"])
