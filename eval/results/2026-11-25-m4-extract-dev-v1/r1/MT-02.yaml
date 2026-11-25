@@ -1,0 +1,122 @@
+document_id: MT-02
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 서버개발팀
+    id: TM03
+  object:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  props:
+    scope: config
+  evidence_spans:
+  - 이벤트 시스템의 설정은 서버개발팀이 맡고 있다.
+  - 이벤트를 열거나 조정할 때 설정 값을 서버개발팀이 직접 넣는 방식이며
+  confidence: 0.9
+  match: conflict
+  reviewers:
+  - TM01
+  - TM03
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  object:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  props: {}
+  evidence_spans:
+  - 이벤트 시스템이 게임 데이터 테이블에 의존한다는 점이 짚였다.
+  - 테이블에 문제가 생기면 이벤트 시스템에도 영향이 간다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 이벤트가 정상적으로 돌지 않음
+    id: null
+  object:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  props: {}
+  evidence_spans:
+  - 설정 자체에 오류가 없어도 테이블이 어긋나 있으면 이벤트가 정상적으로 돌지 않을 수 있기 때문이다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM01
+  - TM03
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 이벤트가 정상적으로 돌지 않음
+    id: null
+  object:
+    type: Cause
+    name: 게임 데이터 테이블 어긋남
+    id: C07
+  props: {}
+  evidence_spans:
+  - 설정 자체에 오류가 없어도 테이블이 어긋나 있으면 이벤트가 정상적으로 돌지 않을 수 있기 때문이다.
+  confidence: 0.55
+  match: new
+  reviewers:
+  - TM01
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 게임 데이터 테이블 어긋남
+    id: C07
+  object:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  props:
+    scope: data
+  evidence_spans:
+  - 설정 자체에 오류가 없어도 테이블이 어긋나 있으면 이벤트가 정상적으로 돌지 않을 수 있기 때문이다.
+  confidence: 0.55
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+dropped: []
+stats:
+  raw: 5
+  names_by_code: 6
+  names_to_llm: 2
+  names_by_llm: 1
+  kept: 5
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 786
+    output: 2246
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0012269000000000002
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1740
+    output: 488
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.00041799999999999997
+  stop_reason: end_turn
+cost_usd: 0.001645

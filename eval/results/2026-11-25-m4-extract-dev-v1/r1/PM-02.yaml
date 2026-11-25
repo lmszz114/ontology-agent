@@ -1,0 +1,165 @@
+document_id: PM-02
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 플랫폼팀
+    id: TM09
+  object:
+    type: System
+    name: 공통 로그인
+    id: SY01
+  props:
+    scope: operation
+  evidence_spans:
+  - 공통 로그인의 운영은 플랫폼팀이 맡고 있다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM09
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 로그인 불가, 접속 장애
+    id: S2
+  object:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  props:
+    prior: 중간
+  evidence_spans:
+  - 이 증상만 보고 이 원인일 가능성은 중간 정도로 보았기 때문에
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM09
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: System
+    name: 공통 로그인
+    id: SY01
+  props:
+    scope: operation
+  evidence_spans:
+  - 원인은 공통 로그인의 운영 쪽 문제였다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM09
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: EvidenceCheck
+    name: 다른 타이틀의 로그인 상태 확인
+    id: E03
+  props:
+    required: true
+    expect: 다른 타이틀에서도 로그인이 실패한다.
+  evidence_spans:
+  - 실제로 다른 타이틀에서도 로그인이 실패했고, 그래서 개별 타이틀이 아니라 공통 로그인 쪽 문제로 판단했다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM09
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: Procedure
+    name: 긴급 공지
+    id: P3
+  props: {}
+  evidence_spans:
+  - '긴급 공지: 로그인이 막힌 상황을 이용자에게 먼저 알렸다.'
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM09
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: Procedure
+    name: 긴급 점검
+    id: P4
+  props: {}
+  evidence_spans:
+  - '긴급 점검: 공통 로그인을 점검 상태에 두고 상황을 정리했다.'
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM09
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - '원인 수정과 반영: 원인을 고쳐 서비스에 반영했다.'
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM09
+- relation: ALIAS
+  subject:
+    type: System
+    name: 통합 계정 인증
+    id: SY01
+  object:
+    type: Name
+    name: 공통 로그인
+    id: null
+  props: {}
+  evidence_spans:
+  - 공통 로그인의 운영은 플랫폼팀이 맡고 있다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM09
+dropped: []
+stats:
+  raw: 7
+  names_by_code: 11
+  names_to_llm: 2
+  names_by_llm: 2
+  kept: 8
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1139
+    output: 2683
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0014807
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1479
+    output: 43
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.00016940000000000002
+  stop_reason: end_turn
+cost_usd: 0.00165

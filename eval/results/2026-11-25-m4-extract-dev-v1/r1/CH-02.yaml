@@ -1,0 +1,119 @@
+document_id: CH-02
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 게이트웨이
+    id: SY09
+  object:
+    type: System
+    name: 통합 계정 인증
+    id: SY01
+  props: {}
+  evidence_spans:
+  - 게이트웨이는 통합 계정 인증에 의존하잖아요.
+  - 인증에 문제가 생기면 게이트웨이까지 영향이 오니까, 그쪽 먼저 의심해 봐야 할 듯해요.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM09
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: EvidenceCheck
+    name: 다른 타이틀 로그인 상태 확인
+    id: E03
+  props:
+    required: true
+    expect: 다른 타이틀 로그인도 같이 안 되는 상태여야 한다
+  evidence_spans:
+  - 다른 타이틀 로그인 상태 확인하면 돼요.
+  - 거기도 같이 안 되면 공통 계정 인증 장애일 가능성이 높고, 거기만 멀쩡하면 게이트웨이 쪽을 봐야죠.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM09
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 로그인 실패
+    id: S2
+  object:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  props:
+    prior: 중간
+  evidence_spans:
+  - 방금부터 로그인 실패 문의가 올라오고 있어요.
+  - 그럼 공통 계정 인증 장애인지부터 가려야겠네요.
+  confidence: 0.4
+  match: existing
+  reviewers:
+  - TM09
+- relation: ALIAS
+  subject:
+    type: System
+    name: 로그인 서버(게이트웨이)
+    id: SY09
+  object:
+    type: Name
+    name: 게이트웨이
+    id: null
+  props: {}
+  evidence_spans:
+  - 게이트웨이는 통합 계정 인증에 의존하잖아요.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: SymptomType
+    name: 로그인 불가, 접속 장애
+    id: S2
+  object:
+    type: Name
+    name: 로그인 실패
+    id: null
+  props: {}
+  evidence_spans:
+  - 방금부터 로그인 실패 문의가 올라오고 있어요.
+  confidence: 0.4
+  match: new
+  reviewers:
+  - TM05
+dropped: []
+stats:
+  raw: 3
+  names_by_code: 4
+  names_to_llm: 2
+  names_by_llm: 2
+  kept: 5
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1425
+    output: 2575
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0014553
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1729
+    output: 173
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0002594
+  stop_reason: end_turn
+cost_usd: 0.001715

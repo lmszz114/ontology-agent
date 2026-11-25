@@ -1,0 +1,55 @@
+document_id: MT-01
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 콘텐츠기획팀
+    id: TM01
+  object:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  props:
+    scope: config
+  evidence_spans:
+  - '콘텐츠기획팀: 이벤트 시스템의 설정을 맡는다.'
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM01
+- relation: OWNS
+  subject:
+    type: Team
+    name: 서버개발팀
+    id: TM03
+  object:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  props:
+    scope: logic
+  evidence_spans:
+  - '서버개발팀: 이벤트 시스템의 로직을 맡는다.'
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+dropped: []
+stats:
+  raw: 2
+  names_by_code: 4
+  names_to_llm: 0
+  kept: 2
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 969
+    output: 629
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0004367
+  stop_reason: end_turn
+cost_usd: 0.000437

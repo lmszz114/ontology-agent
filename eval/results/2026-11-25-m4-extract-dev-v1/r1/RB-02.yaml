@@ -1,0 +1,114 @@
+document_id: RB-02
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 복사 버그
+    id: C13
+  object:
+    type: Procedure
+    name: 아이템, 재화 회수와 제재
+    id: P7
+  props: {}
+  evidence_spans:
+  - 원인이 복사 버그로 확인되면 이 절차를 연다.
+  confidence: 0.95
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 어뷰징
+    id: C14
+  object:
+    type: Procedure
+    name: 아이템, 재화 회수와 제재
+    id: P7
+  props: {}
+  evidence_spans:
+  - 어뷰징, 곧 불법 프로그램이나 악용으로 아이템과 재화가 부당하게 늘어난 경우에도 연다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM11
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: Procedure
+    name: 아이템, 재화 회수와 제재
+    id: P7
+  props:
+    condition: 과지급
+  evidence_spans:
+  - 이벤트 설정 오류가 원인이고 그 결과가 과지급이라면 이 절차를 연다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM01
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 이벤트 지급 로직 오류
+    id: C12
+  object:
+    type: Procedure
+    name: 아이템, 재화 회수와 제재
+    id: P7
+  props:
+    condition: 과지급
+  evidence_spans:
+  - 이벤트 지급 로직 오류도 마찬가지로, 과지급이 발생했을 때 연다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 어뷰징 (불법 프로그램, 악용)
+    id: C14
+  object:
+    type: Name
+    name: 어뷰징
+    id: null
+  props: {}
+  evidence_spans:
+  - 어뷰징, 곧 불법 프로그램이나 악용으로 아이템과 재화가 부당하게 늘어난 경우에도 연다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM11
+dropped: []
+stats:
+  raw: 4
+  names_by_code: 7
+  names_to_llm: 1
+  names_by_llm: 1
+  kept: 5
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 966
+    output: 1982
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0011129
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1004
+    output: 26
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0001134
+  stop_reason: end_turn
+cost_usd: 0.001226

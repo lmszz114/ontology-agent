@@ -1,0 +1,187 @@
+document_id: CH-01
+run_id: 2026-11-25-m4-extract-dev-v1-r1
+candidates:
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 캐시 상점
+    id: SY12
+  object:
+    type: System
+    name: 메일함
+    id: SY13
+  props: {}
+  evidence_spans:
+  - 상점 구매품이 메일함으로 들어가는 구조라서, 메일함에 문제가 있으면 캐시 상점에도 바로 영향이 갑니다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM06
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 결제는 됐는데 아이템이 안 옴
+    id: S1
+  object:
+    type: System
+    name: 캐시 상점
+    id: SY12
+  props: {}
+  evidence_spans:
+  - 문의 주신 분들 대부분 캐시 상점에서 샀다고 하셔서요.
+  - 그래서 문의가 상점 구매 쪽에 몰린 것 같아요.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM03
+  - TM06
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 결제는 됐는데 아이템이 안 옴
+    id: S1
+  object:
+    type: Cause
+    name: 메일함 지급 누락
+    id: C02
+  props:
+    prior: 높음
+  evidence_spans:
+  - 근데 이거 진짜 메일함 지급 누락이 맞는지부터 확인해야 하지 않나요?
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM03
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 메일함 지급 누락
+    id: C02
+  object:
+    type: System
+    name: 메일함
+    id: SY13
+  props: {}
+  evidence_spans:
+  - 근데 이거 진짜 메일함 지급 누락이 맞는지부터 확인해야 하지 않나요?
+  confidence: 0.5
+  match: existing
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 메일함 지급 누락
+    id: C02
+  object:
+    type: EvidenceCheck
+    name: 메일함 보상 지급 기록 조회
+    id: E02
+  props:
+    required: true
+    expect: 지급 기록이 없으면 누락으로 본다
+  evidence_spans:
+  - 메일함, 보상 지급 기록 조회로 지급이 실제로 일어났는지 확인하면 누락인지 판가름이 납니다.
+  - 네, 결제는 정상이고 메일함에 지급 기록이 없어야 누락으로 보는 겁니다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 메일함 지급 누락
+    id: C02
+  object:
+    type: EvidenceCheck
+    name: 결제 기록 조회
+    id: E01
+  props:
+    required: true
+    expect: 결제는 정상 승인 상태여야 한다
+  evidence_spans:
+  - 맞아요. 누락 여부는 결제 기록 조회로 확인합니다.
+  - 네, 결제는 정상이고 메일함에 지급 기록이 없어야 누락으로 보는 겁니다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 메일함 지급 누락
+    id: C02
+  object:
+    type: Procedure
+    name: CS 안내 문구
+    id: null
+  props:
+    condition: 미지급
+  evidence_spans:
+  - 그때까지 CS 쪽은 "결제는 정상 확인, 지급 내역 확인 중"으로 안내해 주세요.
+  confidence: 0.5
+  match: new
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 우편함
+    id: SY13
+  object:
+    type: Name
+    name: 메일함
+    id: null
+  props: {}
+  evidence_spans:
+  - 상점 구매품이 메일함으로 들어가는 구조라서, 메일함에 문제가 있으면 캐시 상점에도 바로 영향이 갑니다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 우편함 지급 누락
+    id: C02
+  object:
+    type: Name
+    name: 메일함 지급 누락
+    id: null
+  props: {}
+  evidence_spans:
+  - 근데 이거 진짜 메일함 지급 누락이 맞는지부터 확인해야 하지 않나요?
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM03
+dropped: []
+stats:
+  raw: 7
+  names_by_code: 5
+  names_to_llm: 4
+  names_by_llm: 3
+  kept: 9
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1542
+    output: 3594
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0019765
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2420
+    output: 71
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0002775
+  stop_reason: end_turn
+cost_usd: 0.002254

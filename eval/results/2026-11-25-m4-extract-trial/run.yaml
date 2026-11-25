@@ -1,0 +1,29 @@
+org: org-a
+split: dev
+prompt_version: extraction-v1
+git_commit: 3dbb7d83a8917593d83176ed950b220a03d1adb6
+git_dirty: false
+seed_hash: 685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663
+plan_hash: 78e1cf80156c97d8a3675e5f86b62b25550b9347c7edb4faea6d884956a4569b
+models:
+  extraction: claude-haiku-5-5
+  normalization: claude-haiku-5-5
+started_at: '2026-11-25T14:19:09+09:00'
+reps: 1
+prices:
+  checked: '2026-11-24'
+  source: https://platform.claude.com/docs/en/about-claude/pricing
+  models:
+    claude-haiku-5-5:
+      input: 0.1
+      output: 0.5
+      cache_write_5m: 0.125
+      cache_write_1h: 0.2
+      cache_read: 0.01
+      long_prompt:
+        threshold: 100000
+        input: 0.5
+        output: 2.5
+        cache_write_5m: 0.625
+        cache_write_1h: 1.0
+        cache_read: 0.05
