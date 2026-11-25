@@ -27,6 +27,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
+from agents.extraction.rules import name_key
 from common.writers.extraction import classify
 from ontology.seed import PROVENANCE_FILE, SEED_DIR, load_seed, validate_seed
 
@@ -71,9 +72,15 @@ def _prov_key(rel: str, start: str, end: str, props: dict) -> tuple:
     return (rel, start, end, tuple(sorted(props.items())))
 
 
-def _add_once(items: list, value) -> None:
-    if value not in items:
-        items.append(value)
+def _add_once(items: list, value) -> bool:
+    """없으면 넣고 넣었는지 돌려준다. 별칭은 이름 정규화와 같이 공백과 대소문자를 무시하고 비교한다."""
+    if isinstance(value, str):
+        if any(isinstance(v, str) and name_key(v) == name_key(value) for v in items):
+            return False
+    elif value in items:
+        return False
+    items.append(value)
+    return True
 
 
 def _clash(c: dict, props: dict, node) -> str | None:
@@ -132,6 +139,7 @@ def apply_to_seed(seed_dir: Path, candidates: list[dict], org: str = "org-a") ->
             result.manual.append({"candidate_id": c["id"], "reason": clash})
             continue
         new = c["match"] == "new" and key not in index
+        inserted = False  # 이 배치가 시드에 실제로 넣었는지. 출처의 source를 정한다
         if new:
             # 같은 사실을 담은 후보가 여럿이면(반복 추출) 시드에는 한 번만 넣고 출처만 합친다.
             # 추출 뒤에 사람이 같은 사실을 시드에 직접 넣었으면 출처 키는 없어도 시드에 이미 있다. 그때도 다시 넣지 않는다
@@ -143,16 +151,18 @@ def apply_to_seed(seed_dir: Path, candidates: list[dict], org: str = "org-a") ->
                     if props.get("area"):
                         entry["area"] = props["area"]
                     owners.append(_flow(entry))
+                    inserted = True
             elif rel == "DEPENDS_ON":
-                _add_once(node("System", s["id"])["depends_on"], o["id"])
+                inserted = _add_once(node("System", s["id"])["depends_on"], o["id"])
             elif rel == "OBSERVED_IN":
-                _add_once(node("SymptomType", s["id"])["observed_in"], o["id"])
+                inserted = _add_once(node("SymptomType", s["id"])["observed_in"], o["id"])
             elif rel == "MAY_BE_CAUSED_BY":
                 causes = node("SymptomType", s["id"])["causes"]
                 if not any(ref["cause"] == o["id"] for ref in causes):  # prior가 다르면 _clash가 이미 돌렸다
                     causes.append(_flow({"cause": o["id"], "prior": c["props"]["prior"]}))
+                    inserted = True
             elif rel == "ALIAS":
-                _add_once(node(s["type"], s["id"])["aliases"], o["name"])
+                inserted = _add_once(node(s["type"], s["id"])["aliases"], o["name"])
         if key in index:
             entry = index[key]
             entry["docs"] = _flow_list(sorted(set(entry["docs"]) | {c["document_id"]}))
@@ -161,7 +171,8 @@ def apply_to_seed(seed_dir: Path, candidates: list[dict], org: str = "org-a") ->
             entry = CommentedMap({"rel": rel, "start": s["id"], "end": end})
             if props:
                 entry["props"] = _flow(props)
-            entry["source"] = "extracted" if c["match"] == "new" else "manual"
+            # 이 배치가 넣은 관계만 extracted다. 사람이 이미 시드에 넣은 사실은 new 후보여도 manual로 두고 출처 문서만 더한다
+            entry["source"] = "extracted" if inserted else "manual"
             entry["docs"] = _flow_list([c["document_id"]])
             entry["candidates"] = _flow_list([c["id"]])
             prov.append(entry)
@@ -198,6 +209,16 @@ def check_branch(root: Path = ROOT) -> str:
     if _git("status", "--porcelain", root=root):
         raise ApplyError("커밋하지 않은 변경이 있다. 반영 커밋에 다른 변경이 섞이지 않게 먼저 정리한다")
     return branch
+
+
+def _restore(root: Path, seed_dir: Path, files: list[str]) -> None:
+    """반영 전 상태(HEAD)로 시드 파일을 되돌린다. 스테이지에 올린 것도 내린다."""
+    if not files:
+        return
+    rel_dir = seed_dir.resolve().relative_to(root.resolve())
+    paths = [str(rel_dir / f) for f in files]
+    _git("reset", "-q", "--", *paths, root=root)
+    _git("checkout", "--", *paths, root=root)
 
 
 MANUAL_LINE = "  - "
@@ -279,8 +300,19 @@ def execute(driver, *, run_id: str, tracer, now: datetime, org: str = "org-a", r
         else:
             wanted = set(run["candidate_ids"])
             result = apply_to_seed(seed_dir, [c for c in list_candidates(driver) if c["id"] in wanted], org)
-            commit = commit_apply(run, result, root, seed_dir) if result.applied else None
+            try:
+                commit = commit_apply(run, result, root, seed_dir) if result.applied else None
+            except (subprocess.CalledProcessError, ApplyError) as exc:
+                # 커밋 전에 실패하면 고친 시드 파일을 되돌린다. 남겨 두면 다음 실행이 '커밋하지 않은 변경'으로 막혀
+                # 이 실행을 끝낼 수 없다 (M4 전체 점검). 실행 전에 작업 트리가 깨끗했으므로(check_branch) HEAD로 돌린다
+                _restore(root, seed_dir, result.changed_files)
+                detail = exc.stderr.strip() if isinstance(exc, subprocess.CalledProcessError) and exc.stderr else exc
+                raise ApplyError(f"반영 커밋에 실패해 시드를 되돌렸다: {detail}") from exc
             applied, manual = result.applied, result.manual
-        load_static(driver, load_seed(org, seed_dir=seed_dir))
+        try:
+            load_static(driver, load_seed(org, seed_dir=seed_dir))
+        except ValueError as exc:
+            # 커밋은 남아 있다. 고친 뒤 같은 실행을 다시 누르면 커밋을 찾아 적재와 완료 기록만 한다
+            raise ApplyError(f"반영 커밋 뒤 그래프 적재에 실패했다. 고친 뒤 다시 실행한다: {exc}") from exc
         done = mark_done(driver, tracer=tracer, run_id=run_id, now=now, commit=commit, manual=manual)
     return {"applied": applied, "manual": manual, "commit": commit, "run": done, "resumed": bool(found)}

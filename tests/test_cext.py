@@ -255,6 +255,9 @@ def test_grader_requires_graph_record_for_cext():
         check_basis({"run": run}, SEED)
     with pytest.raises(GradeError, match="그래프 기록"):
         check_basis({"run": run | {"cext_from": "x", "knowledge_graph": {}}}, SEED)
+    # 다른 구성인데 그래프 기록만 있으면 KeyError가 아니라 채점 오류로 멈춘다 (M4 전체 점검)
+    with pytest.raises(GradeError, match="그래프 기록"):
+        check_basis({"run": run | {"config": "C", "knowledge_graph": {"hash": "h", "builder": "b", "source": {}}}}, SEED)
 
 
 @pytest.mark.integration
@@ -272,6 +275,26 @@ def test_owner_query_with_owners_missing_scope(driver):
         owner = queries.get_owner_team(driver, "C02")
         assert owner["primary"] == [] and owner["other_owners"][0]["team_id"] == "TM03"
         assert {o["scope"] for o in owner["other_owners"][0]["owns"]} == {None, "logic"}
+    finally:
+        load_static(driver, SEED)
+
+
+@pytest.mark.integration
+def test_owner_query_keeps_owners_when_scope_comparison_is_null(driver):
+    """scope가 없는 쪽이 있으면 scope 비교가 null이다. 1차 담당은 아니지만 다른 담당에서 빠지면 안 된다 (M4 전체 점검)."""
+    from mcp_servers.ontology_query import queries
+    from ontology.load import load_static, write_graph
+
+    # dev 추출 r1처럼 원인 위치에 scope가 없는 경우와, 담당에 scope가 없고 area가 같은 경우
+    batch = [cand("LOCATED_IN", "C02", "SY13", {}), cand("OWNS", "TM03", "SY13", {"scope": "logic"}),
+             cand("LOCATED_IN", "C03", "SY12", {"scope": "config"}), cand("OWNS", "TM06", "SY12", {})]
+    g, _ = cext.build_cext_graph(SEED, batch)
+    try:
+        write_graph(driver, g, {"hash": "test", "org": "org-a", "kind": "C-ext"})
+        c02 = queries.get_owner_team(driver, "C02")
+        assert c02["primary"] == [] and [o["team_id"] for o in c02["other_owners"]] == ["TM03"]
+        c03 = queries.get_owner_team(driver, "C03")
+        assert c03["primary"] == [] and [o["team_id"] for o in c03["other_owners"]] == ["TM06"]
     finally:
         load_static(driver, SEED)
 

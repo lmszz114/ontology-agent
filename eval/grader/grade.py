@@ -16,10 +16,16 @@ from pathlib import Path
 import yaml
 
 from common.rules.severity import LEVELS
-from ontology.conditions import CONFIRM, RULE_OUT, Environment, evaluate_cause, required_checks
-from ontology.seed import load_seed, seed_hash
 from eval.labels import label_groups, label_incidents
 from eval.lock import lock_errors
+from ontology.conditions import (
+    CONFIRM,
+    RULE_OUT,
+    Environment,
+    evaluate_cause,
+    required_checks,
+)
+from ontology.seed import load_seed, seed_hash
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIO_DIR = Path(__file__).resolve().parents[1] / "scenarios"
@@ -84,8 +90,9 @@ def check_basis(result: dict, seed: dict) -> None:
     if run.get("seed_hash") and run["seed_hash"] != seed_hash(seed):
         raise GradeError(f"{run['scenario']}: 실행 때의 시드와 지금 시드가 다르다. 실행 커밋({run['git_commit'][:7]})에서 채점한다")
     graph = run.get("knowledge_graph")
-    if run.get("config") == "C-ext":
-        # C-ext 결과는 그래프 기록이 꼭 있어야 한다. 없으면 어떤 그래프로 돌았는지 확인할 수 없다 (PR #32 리뷰)
+    if run.get("config") == "C-ext" or graph is not None:
+        # C-ext 결과는 그래프 기록이 꼭 있어야 한다. 없으면 어떤 그래프로 돌았는지 확인할 수 없다 (PR #32 리뷰).
+        # 다른 구성이라도 그래프 기록이 있으면 같은 항목을 본다. 빠진 키로 KeyError가 나지 않게 한다 (M4 전체 점검)
         missing = [k for k in ("hash", "builder", "source") if not (graph or {}).get(k)]
         if not run.get("cext_from") or missing or not (graph["source"] or {}).get("rep"):
             raise GradeError(f"{run['scenario']}: C-ext 결과에 추출 결과 폴더나 그래프 기록이 없다 {missing}")

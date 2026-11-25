@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass, field
 
 from agents.extraction import prompts as P
-from agents.extraction.rules import Knowledge, prepare
+from agents.extraction.rules import Knowledge, name_key, prepare
 from common.models import LLM
 from common.writers.extraction import ALIAS_TARGETS, MAX_SPANS, RELATION_TYPES
 
@@ -112,8 +112,7 @@ def check_raw(raw_list: list[dict], text: str, result: DocResult) -> list[dict]:
     return kept
 
 
-def _key(name: str) -> str:
-    return re.sub(r"\s+", "", name).casefold()
+_key = name_key
 
 
 def name_index(seed: dict) -> dict[str, dict[str, str]]:
@@ -152,7 +151,7 @@ def normalize(llm: LLM, k: Knowledge, doc_id: str, cands: list[dict], result: Do
             ids.append(node["id"])
     asked = "\n".join(f"{i}. [{t}] {n}" for i, (t, n) in enumerate(items))
     data = _call(llm, task="normalization", name=f"normalize.{doc_id}", doc_id=doc_id, system=P.NORMALIZE_SYSTEM,
-                 content=f"노드 목록:\n" + "\n".join(catalog) + f"\n\n문서가 쓴 이름:\n{asked}",
+                 content="노드 목록:\n" + "\n".join(catalog) + f"\n\n문서가 쓴 이름:\n{asked}",
                  schema=P.normalize_schema(ids), max_tokens=2000, result=result)
     by_label = {label: {n["id"] for n in k.seed[LABEL_KEYS[label]]} for label in types}
     chosen = {}

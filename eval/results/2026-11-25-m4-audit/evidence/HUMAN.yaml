@@ -1,27 +1,28 @@
 # 근거 표본 사람 재확인 (M4 점검, 2026-11-25 KST)
 # 사람은 Sonnet 판정을 보지 않고 주장과 근거 문장만 보고 판정했다.
+# 후보 id의 순번은 2026-11-25 M4 전체 점검에서 그래프의 후보 id와 같게 1부터로 바꿨다(처음 기록은 0부터).
 # 사람이 "애매함"이라고 답한 두 건은 "일부 맞다고 볼 수 있다"는 설명을 따라 partial로 적었다.
 reviewer: 프로젝트 작성자
 date: "2026-11-25"
 how_picked: Sonnet이 partial이나 unsupported로 판정한 11개 전부와 supported 19개 중 무작위 5개
 judgments:
-  PM-08:012: {verdict: supported}
-  CH-04:004: {verdict: supported}
-  PM-04:000: {verdict: supported}
-  RB-02:001: {verdict: supported}
-  CH-02:004: {verdict: supported}
-  PM-06:003: {verdict: supported}
-  PM-05:002: {verdict: supported}
-  PM-07:007: {verdict: supported}
-  RB-01:003:
+  PM-08:013: {verdict: supported}
+  CH-04:005: {verdict: supported}
+  PM-04:001: {verdict: supported}
+  RB-02:002: {verdict: supported}
+  CH-02:005: {verdict: supported}
+  PM-06:004: {verdict: supported}
+  PM-05:003: {verdict: supported}
+  PM-07:008: {verdict: supported}
+  RB-01:004:
     verdict: partial
     note: 상품 설정 오류가 보상 지급 절차와 이어지는지 문장만으로는 분명하지 않다. 보상 지급이 미지급 상품을 지급한다는 뜻이면 일부 맞다
-  PM-10:009: {verdict: supported}
-  PM-02:003: {verdict: supported}
-  PM-03:004:
+  PM-10:010: {verdict: supported}
+  PM-02:004: {verdict: supported}
+  PM-03:005:
     verdict: partial
     note: 다른 타이틀 로그인이 정상이라는 것만으로 게임 로그인 서버 장애로 확정할 수 있는지는 문장에 없다. 일부 맞다
-  MT-03:001: {verdict: supported}
-  PM-05:000: {verdict: supported}
-  PM-10:000: {verdict: supported}
-  PM-08:002: {verdict: supported}
+  MT-03:002: {verdict: supported}
+  PM-05:001: {verdict: supported}
+  PM-10:001: {verdict: supported}
+  PM-08:003: {verdict: supported}

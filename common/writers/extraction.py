@@ -313,11 +313,22 @@ def review_candidate(driver: Driver, *, candidate_id: str, team_id: str, decisio
 
 
 def delete_run(driver: Driver, run_id: str) -> int:
-    """한 실행의 후보를 지우고 지운 수를 돌려준다. 문서는 남긴다."""
+    """한 실행의 후보를 지우고 지운 수를 돌려준다. 문서는 남긴다.
+
+    지식 반영(A17) 기록이 붙은 후보가 있으면 지우지 않는다. A17 기록은 다른 실행의 후보와 함께 묶이거나 이미 시드를
+    바꾼 기록이라, 함께 지우면 그 후보들이 다시 반영 대기로 보여 두 번 반영될 수 있다 (M4 전체 점검)
+    """
+    def work(tx) -> int:
+        # A17 요청(request_knowledge_apply)과 같은 후보 잠금을 먼저 건다. 검사와 삭제 사이에 A17 연결이 생기지 않는다 (PR #34 리뷰)
+        tx.run("MATCH (c:Candidate {run_id: $run}) SET c._lock = true", run=run_id).consume()
+        runs = tx.run("MATCH (r:ActionRun)-[:FOR]->(:Candidate {run_id: $run}) RETURN DISTINCT r.id AS id",
+                      run=run_id).value()
+        if runs:
+            raise RecordError(f"{run_id}: 지식 반영 기록이 붙은 후보가 있어 지우지 않는다: {sorted(runs)}")
+        return tx.run("MATCH (c:Candidate {run_id: $run}) DETACH DELETE c", run=run_id).consume().counters.nodes_deleted
+
     with driver.session() as session:
-        session.run("MATCH (r:ActionRun)-[:FOR]->(:Candidate {run_id: $run}) DETACH DELETE r", run=run_id).consume()
-        return session.run("MATCH (c:Candidate {run_id: $run}) DETACH DELETE c", run=run_id
-                           ).consume().counters.nodes_deleted
+        return session.execute_write(work)
 
 
 def reset_extraction_layer(driver: Driver) -> int:

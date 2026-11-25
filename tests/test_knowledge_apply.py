@@ -165,6 +165,21 @@ def test_fact_a_person_already_put_in_the_seed_is_not_added_twice(repo):
               if o["team"] == "TM03" and scope in o["scopes"] and o.get("area") is None]
     assert len(owners) == 1
     assert next(x for x in seed["systems"] if x["id"] == a)["depends_on"].count(b) == 1
+    # 이번 배치가 넣지 않은 사실이라 출처는 사람이 넣은 것(manual)으로 남는다. extracted로 바꾸지 않는다 (M4 전체 점검)
+    prov = yaml.safe_load((seed_dir / "provenance.yaml").read_text(encoding="utf-8"))["provenance"]
+    assert {e["source"] for e in prov} == {"manual"} and {c for e in prov for c in e["candidates"]} == {"o1x", "d1x"}
+
+
+def test_alias_spelled_with_other_spacing_or_case_is_not_a_new_alias(repo):
+    """별칭 비교는 이름 정규화와 같이 공백과 대소문자를 무시한다. 같은 별칭의 다른 표기를 시드에 다시 넣지 않는다."""
+    _, seed_dir = repo
+    alias = next(a for a in next(x for x in SEED["systems"] if x["id"] == "SY13")["aliases"] if len(a) > 1)
+    spaced = alias[0] + " " + alias[1:]
+    assert cand("a1", "ALIAS", "SY13", spaced)["match"] == "existing"
+    c = cand("a2", "ALIAS", "SY13", spaced) | {"match": "new"}  # 대조 전 후보라도 반영 때 다시 막는다
+    A.apply_to_seed(seed_dir, [c])
+    aliases = next(x for x in load_seed("org-a", seed_dir=seed_dir)["systems"] if x["id"] == "SY13")["aliases"]
+    assert spaced not in aliases
 
 
 def test_seed_check_rejects_two_owners_for_one_slot():
@@ -346,6 +361,43 @@ def test_execute_resumes_after_a_failure_past_the_commit(db, repo, monkeypatch):
     assert out["resumed"] and out["commit"] == head and out["applied"] == [dep_id]
     assert out["run"]["status"] == "done" and out["run"]["commit"] == head
     assert subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True).stdout.strip() == head
+
+
+@pytest.mark.integration
+def test_execute_restores_the_seed_when_the_commit_fails(db, repo, monkeypatch):
+    """커밋이 실패하면(작성자 설정 없음, 훅 거부 등) 고친 시드를 되돌린다. 남기면 다음 실행이 막혀 끝낼 수 없다."""
+    root, seed_dir = repo
+    subprocess.run(["git", "switch", "-qc", "kb-demo"], cwd=root, check=True)
+    a, b = _new_dependency()
+    run, tracer, _ = _approved_run(db, [cand("_", "DEPENDS_ON", a, b)])
+    real_git = A._git
+
+    def no_commit(*args, root=root):
+        if args[0] == "commit":
+            raise subprocess.CalledProcessError(1, ["git", *args], stderr="Please tell me who you are")
+        return real_git(*args, root=root)
+
+    monkeypatch.setattr(A, "_git", no_commit)
+    with pytest.raises(A.ApplyError, match="되돌렸다"):
+        A.execute(db, run_id=run["run_id"], tracer=tracer, now=NOW, root=root, seed_dir=seed_dir)
+    monkeypatch.setattr(A, "_git", real_git)
+    assert A.check_branch(root) == "kb-demo"  # 작업 트리가 깨끗해서 다시 실행할 수 있다
+    out = A.execute(db, run_id=run["run_id"], tracer=tracer, now=NOW, root=root, seed_dir=seed_dir)
+    assert out["run"]["status"] == "done" and out["commit"]
+
+
+@pytest.mark.integration
+def test_delete_run_refuses_candidates_with_a17_records(db):
+    """A17 기록이 붙은 후보를 지우면 그 기록이 함께 사라져 같은 후보를 다시 반영할 수 있게 된다. 지우지 않는다."""
+    from common.writers.events import RecordError
+    from common.writers.extraction import delete_run, list_candidates
+
+    a, b = _new_dependency()
+    _, _, (dep_id,) = _approved_run(db, [cand("_", "DEPENDS_ON", a, b)])
+    run_id = next(c for c in list_candidates(db) if c["id"] == dep_id)["run_id"]
+    with pytest.raises(RecordError, match="지식 반영 기록"):
+        delete_run(db, run_id)
+    assert any(c["id"] == dep_id for c in list_candidates(db))
 
 
 @pytest.mark.integration

@@ -15,11 +15,12 @@
 seed_matches_graph로 확인한다. 같은 입력이면 같은 결과가 나온다.
 """
 
+import re
 from dataclasses import dataclass
 
-from common.writers.extraction import check_candidate
 from neo4j import Driver
 
+from common.writers.extraction import check_candidate
 from ontology.load import Graph, build_graph, loaded_seed
 from ontology.seed import resolve_owner_teams, seed_hash
 
@@ -67,6 +68,11 @@ def seed_matches_graph(driver: Driver, seed: dict) -> bool:
     return meta is not None and meta["hash"] == seed_hash(seed)
 
 
+def name_key(name: str) -> str:
+    """이름 비교 키. 공백과 대소문자를 무시한다 (R8-4 이름 정규화의 코드 단계와 같다)."""
+    return re.sub(r"\s+", "", name).casefold()
+
+
 def _same(cprops: dict, kprops: dict, keys: tuple[str, ...]) -> bool:
     # 후보에 없는 속성은 비교하지 않는다. 빠진 속성은 C-ext가 정해진 기본값으로 채운다 (M4 결정 2)
     return all(kprops.get(key) == cprops[key] for key in keys if key in cprops)
@@ -87,7 +93,9 @@ def match(c: dict, k: Knowledge) -> str:
     if rel == "ALIAS":
         node = k.node(subject["type"], subject["id"])
         known = (node or {}).get("aliases") or []
-        return "existing" if obj["name"] in known or obj["name"] == (node or {}).get("name") else "new"
+        # 이름 정규화와 같은 키로 본다. 공백이나 대소문자만 다른 표기를 새 별칭으로 내지 않는다 (M4 전체 점검)
+        names = [*known, (node or {}).get("name") or ""]
+        return "existing" if any(name_key(obj["name"]) == name_key(n) for n in names) else "new"
     if obj.get("id") is None:
         return "new"
     same_ends = k.rels(rel, subject["id"], obj["id"])

@@ -1,7 +1,5 @@
 """추출 에이전트 처리 단계와 추출 채점기 (M4 PR 4). 가짜 LLM으로 돌아 비용이 없다."""
 
-import json
-import sys
 import types
 
 import pytest

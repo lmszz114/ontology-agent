@@ -8,6 +8,7 @@ area를 다른 팀이 OWNS). 별칭(ALIAS)은 K에 없는 이름을 쓸 수 있�
 LLM을 부르지 않는다.
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -23,6 +24,11 @@ RELATIONS = {"OWNS", "DEPENDS_ON", "OBSERVED_IN", "MAY_BE_CAUSED_BY", "LOCATED_I
 # 관계 속성 중 K와 비교하는 것. CHECKED_BY의 required는 시드의 when 유무로 정해진다
 COMPARED_PROPS = {"OWNS": ("scope", "area"), "LOCATED_IN": ("scope", "area"), "MAY_BE_CAUSED_BY": ("prior",),
                   "CHECKED_BY": ("required", "expect"), "RESOLVED_BY": ("condition",)}
+
+
+def _name_key(name: str) -> str:
+    """이름 정규화(R8-4)와 같은 비교 키. 공백과 대소문자를 무시한다."""
+    return re.sub(r"\s+", "", name).casefold()
 
 
 def load_plan(path: Path = PLAN_PATH) -> list[dict]:
@@ -89,7 +95,8 @@ def check_plan(seed: dict, docs: list[dict]) -> list[str]:
                     errors.append(f"{where}: 별칭을 붙일 수 없는 대상이다 (팀, 시스템, 증상, 원인의 id만): {fact['subject']}")
                 if not isinstance(fact["object"], str) or not fact["object"].strip():
                     errors.append(f"{where}: 별칭이 비어 있다")
-                elif fact["object"] == node_names.get(fact["subject"]):
+                elif _name_key(fact["object"]) == _name_key(node_names.get(fact["subject"]) or ""):
+                    # 띄어쓰기나 대소문자만 다른 표기도 원래 이름이다. 추출은 이런 이름을 별칭 후보로 내지 않는다 (M4 전체 점검)
                     errors.append(f"{where}: 별칭이 원래 이름과 같다: {fact['object']}")
             elif not _matches(fact, k.get((fact["rel"], fact["subject"], fact["object"]), [])):
                 errors.append(f"{where}: K에 없는 사실이다: {fact}")

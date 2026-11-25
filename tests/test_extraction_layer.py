@@ -4,10 +4,23 @@ import sys
 
 import pytest
 
-from agents.extraction.rules import Knowledge, match, prepare, reviewers, seed_matches_graph
+from agents.extraction.rules import (
+    Knowledge,
+    match,
+    prepare,
+    reviewers,
+    seed_matches_graph,
+)
 from common.writers.extraction import (
-    PROPS, CandidateError, RecordError, check_candidate, delete_run, list_candidates, record_candidates,
-    record_document, reset_extraction_layer,
+    PROPS,
+    CandidateError,
+    RecordError,
+    check_candidate,
+    delete_run,
+    list_candidates,
+    record_candidates,
+    record_document,
+    reset_extraction_layer,
 )
 from eval.corpus.check import load_plan
 from eval.corpus.load import document_fields, load_documents
