@@ -6,12 +6,12 @@ type: T6
 boundary: null
 source: 설계
 split: dev
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH01
   reporter: U6011
   at: 2026-12-20T11:00+09:00
-  text: (제보 문장 생성 전)
+  text: 오늘 올라온 업데이트 공지 보다가 발견했는데, 신규 던전 입장 조건 부분에 '레벨'이 '래벨'로 적혀 있더라고요. 게임하는 데는 지장 없지만 혹시 몰라서 알려 드립니다.
 environment:
   checks: []
   changes: []

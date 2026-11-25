@@ -6,12 +6,12 @@ type: T1
 boundary: null
 source: 설계
 split: test
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH01
   reporter: U4201
   at: 2027-01-16T21:10+09:00
-  text: (제보 문장 생성 전)
+  text: 3월드 거래소가 저녁 9시쯤부터 검색 한 번 하는 데 한참 걸리고, 아이템 등록하면 가끔 실패했다고 뜨네요. 저만 이런 건지 다른 분들은 어떠신가요?
 environment:
   checks:
   - check: E09

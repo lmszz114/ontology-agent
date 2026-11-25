@@ -6,12 +6,12 @@ type: T6
 boundary: null
 source: 설계
 split: test
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH02
   reporter: U6031
   at: 2027-02-04T10:20+09:00
-  text: (제보 문장 생성 전)
+  text: 안녕하세요, 계정 비밀번호가 기억나지 않아서 문의드립니다. 로그인 화면에서 비밀번호를 다시 설정하려면 어떤 절차를 거쳐야 하는지 안내해 주시면 감사하겠습니다.
 environment:
   checks: []
   changes: []

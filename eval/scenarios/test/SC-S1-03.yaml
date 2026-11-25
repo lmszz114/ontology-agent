@@ -6,12 +6,12 @@ type: T1
 boundary: null
 source: 설계
 split: test
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH02
   reporter: U3101
   at: 2027-01-05T19:20+09:00
-  text: (제보 문장 생성 전)
+  text: 안녕하세요, 오늘 19시쯤 캐시 상점에서 패키지를 결제했는데 카드사 승인 문자는 받았습니다. 그런데 게임 우편함을 확인해도 지급된 아이템이 아무것도 없어서 문의드립니다. 확인 부탁드립니다.
 environment:
   checks:
   - check: E01

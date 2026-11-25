@@ -27,6 +27,7 @@ from ontology.conditions import (
     CONFIRM, ConditionError, Environment, allowed_values, evaluate_cause, procedure_conditions, required_checks,
 )
 from ontology.seed import load_seed, resolve_owner_teams
+from eval.lock import lock_errors
 from eval.labels import INCIDENT_FIELDS, is_multi, label_groups, label_incidents
 
 SCENARIO_DIR = Path(__file__).parent / "scenarios"
@@ -463,7 +464,8 @@ def _incident_errors(seed: dict, scenario: dict, env: Environment, expected: dic
 
 
 def validate_all(seed: dict) -> list[str]:
-    errors: list[str] = []
+    # test 세트는 라벨을 잠근 뒤 바꾸지 않는다 (4단계 4-2, eval/lock.py)
+    errors: list[str] = [f"test 잠금: {e}" for e in lock_errors()]
     seen: set[str] = set()
     for split in SPLITS:
         for path in sorted((SCENARIO_DIR / split).glob("*.yaml")):

@@ -19,6 +19,7 @@ from common.rules.severity import LEVELS
 from ontology.conditions import CONFIRM, RULE_OUT, Environment, evaluate_cause, required_checks
 from ontology.seed import load_seed, seed_hash
 from eval.labels import label_groups, label_incidents
+from eval.lock import lock_errors
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIO_DIR = Path(__file__).resolve().parents[1] / "scenarios"
@@ -74,6 +75,11 @@ def check_basis(result: dict, seed: dict) -> None:
     실행기가 해시를 남기기 전의 결과에는 값이 없어 넘어간다
     """
     run = result["run"]
+    if run["split"] == "test":
+        # test 세트는 잠근 라벨로만 채점한다 (4단계 4-2, eval/lock.py)
+        locked = lock_errors()
+        if locked:
+            raise GradeError(f"{run['scenario']}: test 세트가 잠금과 다르다: {locked[:3]}")
     if run.get("seed_hash") and run["seed_hash"] != seed_hash(seed):
         raise GradeError(f"{run['scenario']}: 실행 때의 시드와 지금 시드가 다르다. 실행 커밋({run['git_commit'][:7]})에서 채점한다")
     if run.get("scenario_hash"):

@@ -6,24 +6,24 @@ type: T3
 boundary: null
 source: 설계
 split: test
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH01
   reporter: U5001
   at: 2027-01-24T09:02+09:00
-  text: (제보 문장 생성 전)
+  text: 9시 조금 넘어서 접속하려는데 계정 인증에서 계속 튕겨요. 비밀번호는 맞게 쳤고 다른 게임도 같은 계정이라 시도해봤는데 거기도 안 되네요. 같은 증상 있으신 분 계신가요?
 - channel: CH02
   reporter: U5002
   at: 2027-01-24T09:05+09:00
-  text: (제보 문장 생성 전)
+  text: 안녕하세요, 로그인할 때 아이디와 비밀번호를 정확히 입력했는데도 '인증에 실패했습니다'라는 메시지만 나옵니다. 혹시나 해서 비밀번호를 새로 바꿔 봤는데 마찬가지로 안 됩니다. 확인 부탁드립니다.
 - channel: CH02
   reporter: U5001
   at: 2027-01-24T09:09+09:00
-  text: (제보 문장 생성 전)
+  text: 안녕하세요, 몇 분 전에 커뮤니티에 로그인 인증 실패 글을 올렸는데 아직 답변이 없어 1:1로 다시 문의드립니다. 지금도 계속 로그인이 되지 않습니다. 확인 부탁드립니다.
 - channel: CH03
   reporter: E5003
   at: 2027-01-24T09:12+09:00
-  text: (제보 문장 생성 전)
+  text: 9시쯤부터 로그인 인증 실패했다는 문의가 계속 들어오고 있어요. 저희 게임 말고 다른 게임 하시는 분들 문의도 섞여 있는데, 한번 확인 부탁드립니다.
 environment:
   checks:
   - check: E03

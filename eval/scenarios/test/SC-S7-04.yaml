@@ -6,12 +6,12 @@ type: T2
 boundary: 거래소 버그 vs 악용
 source: 설계
 split: test
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH01
   reporter: U4801
   at: 2027-01-22T22:10+09:00
-  text: (제보 문장 생성 전)
+  text: 6월드 거래소 구매가 열 번 넘게 시도했는데 계속 실패합니다. 그러는 사이에 골드 시세는 하루 만에 반 토막이 났고요, 거래소 서버가 이상한 것 같은데 운영진 확인 좀 해주세요.
 environment:
   checks:
   - check: E11

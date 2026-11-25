@@ -6,12 +6,12 @@ type: T1
 boundary: null
 source: 설계
 split: test
-text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
 reports:
 - channel: CH01
   reporter: U4301
   at: 2027-01-17T20:20+09:00
-  text: (제보 문장 생성 전)
+  text: 20시 월드보스 시작하자마자 스킬이 몇 초씩 늦게 나가요. 보스 체력바도 멈춰 있다가 한 번에 쑥 줄어들고요. 다른 월드 친구들도 똑같이 렉 심하다고 하는데 저만 이런 건 아닌 것 같습니다.
 environment:
   checks:
   - check: E09
