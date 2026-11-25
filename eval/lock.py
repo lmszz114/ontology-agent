@@ -22,9 +22,21 @@ LOCK_PATH = SCENARIO_DIR / "test-lock.yaml"
 KST = timezone(timedelta(hours=9))
 
 
-def file_hashes(directory: Path = TEST_DIR) -> dict[str, str]:
-    """파일 이름마다 내용(바이트)의 sha256."""
-    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(directory.glob("*.yaml"))}
+def file_hashes(directory: Path = TEST_DIR, failures: list[str] | None = None) -> dict[str, str]:
+    """파일 이름마다 내용(바이트)의 sha256.
+
+    failures를 주면 읽지 못한 파일을 거기에 적고 건너뛴다. 주지 않으면 예외를 그대로 낸다.
+    잠금을 쓸 때는 읽지 못한 파일이 있으면 쓰지 않아야 해서 예외를 낸다
+    """
+    hashes = {}
+    for path in sorted(directory.glob("*.yaml")):
+        try:
+            hashes[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError as exc:
+            if failures is None:
+                raise
+            failures.append(f"{path.name}: 파일을 읽을 수 없다 ({type(exc).__name__})")
+    return hashes
 
 
 def read_lock(path: Path = LOCK_PATH) -> dict | None:
@@ -38,9 +50,13 @@ def lock_errors(directory: Path = TEST_DIR, path: Path = LOCK_PATH) -> list[str]
     lock = read_lock(path)
     if lock is None:
         return [f"test 세트 잠금 파일이 없다: {path.name}"]
-    locked, now = lock.get("files") or {}, file_hashes(directory)
-    errors = [f"{name}: 잠근 뒤에 내용이 바뀌었다" for name in sorted(locked) if name in now and now[name] != locked[name]]
-    errors += [f"{name}: 잠근 파일인데 없다" for name in sorted(set(locked) - set(now))]
+    # 읽지 못한 파일은 따로 알리고 나머지 파일은 계속 비교한다. 검증기가 다른 시나리오 검사까지 멈추지 않게 한다
+    unreadable: list[str] = []
+    locked, now = lock.get("files") or {}, file_hashes(directory, unreadable)
+    skipped = {line.split(":", 1)[0] for line in unreadable}
+    errors = list(unreadable)
+    errors += [f"{name}: 잠근 뒤에 내용이 바뀌었다" for name in sorted(locked) if name in now and now[name] != locked[name]]
+    errors += [f"{name}: 잠근 파일인데 없다" for name in sorted(set(locked) - set(now) - skipped)]
     errors += [f"{name}: 잠그지 않은 파일이다" for name in sorted(set(now) - set(locked))]
     return errors
 
