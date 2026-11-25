@@ -9,6 +9,7 @@ Incident에서 Document로 가는 DOCUMENTED_IN은 만들지 않는다. 평가�
 """
 
 import json
+import re
 
 from neo4j import Driver
 
@@ -82,9 +83,20 @@ DOCUMENT_KINDS = {"postmortem", "runbook", "chat", "meeting", "other"}
 CANDIDATE_STATUSES = {"pending", "approved", "rejected"}
 
 
+# 후보 id는 실행 ID, 문서 ID, 순번을 ':'로 잇는다. 두 ID에 ':'가 들어가면 다른 조합이 같은 id가 될 수 있어
+# 쓸 수 있는 글자를 정해 둔다 (PR #29 리뷰)
+ID_PATTERN = re.compile(r"[A-Za-z0-9_.-]+")
+
+
+def _require_id(value: str, name: str) -> None:
+    if not isinstance(value, str) or not ID_PATTERN.fullmatch(value):
+        raise RecordError(f"{name}에는 영문, 숫자, '_', '.', '-'만 쓴다: {value!r}")
+
+
 def record_document(driver: Driver, *, document_id: str, kind: str, title: str, text: str,
                     created_at: str, author_team: str | None = None) -> None:
     """원천 문서 하나를 쓴다. 이미 있으면 거부한다. 평가용 정보(dev와 test 구분, 정답 사실)는 넣지 않는다."""
+    _require_id(document_id, "document_id")
     if kind not in DOCUMENT_KINDS:
         raise RecordError(f"Document.kind에 쓸 수 없는 값이다: {kind}")
     if not text.strip() or not title.strip():
@@ -109,8 +121,8 @@ def record_candidates(driver: Driver, *, run_id: str, document_id: str, candidat
     후보는 agents.extraction.rules.prepare를 거쳐 match와 reviewers가 붙은 것이다. 상태는 pending으로 시작한다.
     후보 하나라도 거부되면 아무것도 쓰지 않는다.
     """
-    if not run_id.strip():
-        raise RecordError("run_id가 비어 있다")
+    _require_id(run_id, "run_id")
+    _require_id(document_id, "document_id")
     for c in candidates:
         check_candidate(c)
         if c.get("match") not in MATCHES:

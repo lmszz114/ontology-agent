@@ -77,6 +77,10 @@ def test_match_rules():
     # 같은 팀이 다른 scope를 맡는다는 말은 다른 팀과 겹치지 않으면 new다
     assert match(candidate(owns | {"props": {"scope": "execution"}}), K) == "new"
     # 같은 양끝인데 속성이 다르면 conflict
+    # 영역을 말하지 않은 OWNS 후보는 그 scope를 맡은 다른 팀과 겹친다 (PR #29 리뷰)
+    data = {"rel": "OWNS", "subject": "TM03", "object": "SY17", "props": {"scope": "data"}}
+    assert match(candidate(data), K) == "conflict"
+    assert match(candidate(data | {"subject": "TM01"}), K) == "existing"
     prior = {"rel": "MAY_BE_CAUSED_BY", "subject": "S1", "object": "C02", "props": {"prior": "낮음"}}
     assert match(candidate(prior), K) == "conflict"
     # 기존 노드를 못 찾은 쪽이 있으면 새 엔티티 후보다
@@ -200,6 +204,10 @@ def test_one_bad_candidate_writes_nothing(clean):
     assert list_candidates(db) == []
     with pytest.raises(RecordError):
         record_candidates(db, run_id="x1", document_id="PM-99", candidates=cands)
+    # ':'가 들어간 ID는 후보 id가 겹칠 수 있어 거부한다 (PR #29 리뷰)
+    for run, doc in (("x:1", "PM-01"), ("", "PM-01"), ("x1", "PM:01")):
+        with pytest.raises(RecordError):
+            record_candidates(db, run_id=run, document_id=doc, candidates=cands)
 
 
 @pytest.mark.integration

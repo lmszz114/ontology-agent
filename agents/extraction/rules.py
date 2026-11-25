@@ -98,7 +98,8 @@ def match(c: dict, k: Knowledge) -> str:
             return "existing"
         if "scope" in props and any(
             r["start"] != subject["id"] and r["props"].get("scope") == props["scope"]
-            and r["props"].get("area") == props.get("area")
+            # area도 후보에 있을 때만 비교한다. 영역을 말하지 않은 후보는 그 scope 전체를 맡는다는 말이다 (PR #29 리뷰)
+            and ("area" not in props or r["props"].get("area") == props["area"])
             for r in k.rels("OWNS", end=obj["id"])
         ):
             return "conflict"
