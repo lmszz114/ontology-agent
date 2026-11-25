@@ -131,7 +131,7 @@ def get_owner_team(driver: Driver, cause_id: str) -> dict:
     """원인의 1차 담당 팀과 협업으로 붙는 팀 (R5).
 
     1차 담당은 원인 위치의 scope와 area가 담당의 scope, area와 같은 팀이다.
-    area가 없는 쪽은 없는 쪽끼리만 맞는다.
+    area가 없는 쪽은 없는 쪽끼리만 맞는다. 원인 위치는 하나다 (3단계 3-1, C-ext 그래프도 지킨다).
     """
     _require(driver, "Cause", cause_id)
     row = _read(
@@ -144,7 +144,13 @@ def get_owner_team(driver: Driver, cause_id: str) -> dict:
         "| {team_id: t.id, name: t.name, scope: o.scope, area: o.area}] AS other_owners, "
         "[(t:Team)-[k:COLLABORATES_ON]->(sys) | {team_id: t.id, name: t.name, condition: k.condition}] AS collaborators",
         id=cause_id,
-    )[0]
+    )
+    if not row:
+        # 위치가 없는 원인. K에는 없고 추출 그래프(C-ext)에서 원인 위치를 뽑지 못하면 생긴다. 맡은 팀을 정할 수 없다
+        return {"cause_id": cause_id, "located_in": None, "primary": [], "other_owners": [], "collaborators": []}
+    row = row[0]
+    # 같은 담당 자리를 두 팀이 맡으면(C-ext의 옛날 정보) 둘 다 돌려준다. 순서를 고정해 같은 입력에 같은 답을 낸다
+    row["primary"].sort(key=lambda t: t["team_id"])
     primary_ids = {t["team_id"] for t in row["primary"]}
     # 같은 시스템의 다른 부분을 맡은 팀. 1차 담당 팀 자신은 뺀다
     others: dict[str, dict] = {}

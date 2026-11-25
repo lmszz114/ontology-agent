@@ -9,20 +9,32 @@
 - --resume: 결과 폴더에 이미 있는 시나리오를 건너뛴다. 커밋, 구성, 프롬프트, 시드가 같아야 한다
 - --allow-dirty: 커밋하지 않은 변경이 있어도 돌린다. 결과에 git_dirty: true가 남는다. --resume과 함께 쓸 수 없다
 - 개발용 그래프에 적재한 시드가 지금 시드 파일과 다르면 돌리지 않는다 (python -m ontology.load로 다시 적재)
+- --cext-from: 구성 C-ext의 추출 결과 폴더. 반복 N은 추출 반복 rN의 후보로 만든 그래프로 진단한다 (M4 PR 6 결정 1).
+  그래프는 반복을 시작할 때 C-ext DB(NEO4J_EXT_URI, 7689)에 다시 적재한다. 개발용 DB는 건드리지 않는다
 test 세트는 돌릴 수 없다 (4단계 4-2). 실행 전에 비용 승인 지점(CLAUDE.md 5장)을 확인한다.
 """
 
 import argparse
 import asyncio
+import os
 import sys
 from pathlib import Path
 
 from agents.diagnosis.prompts import PROMPT_VERSION
-from agents.diagnosis.run import KNOWLEDGE, run_scenario
+from agents.diagnosis.run import EXT_CONFIGS, KNOWLEDGE, run_scenario
 from common.models import LLM, load_model_config, make_anthropic_client
 from common.tracing import Tracer
-from eval.runner.runner import ROOT, RunnerError, check_dev_only, check_out_dir, git_state, plan, run_all
+from eval.runner.runner import (
+    ROOT,
+    RunnerError,
+    check_dev_only,
+    check_out_dir,
+    git_state,
+    plan,
+    run_all,
+)
 from eval.validate import load_scenarios
+from ontology import cext
 from ontology.db import get_driver
 from ontology.load import loaded_seed
 from ontology.seed import load_seed, seed_hash
@@ -39,7 +51,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--org", default="org-a")
     parser.add_argument("--resume", action="store_true", help="결과가 있는 시나리오는 건너뛴다")
     parser.add_argument("--allow-dirty", action="store_true", help="커밋하지 않은 변경이 있어도 돌린다")
+    parser.add_argument("--cext-from", help="구성 C-ext의 추출 결과 폴더 (eval/results 아래)")
     args = parser.parse_args(argv)
+    if (args.config in EXT_CONFIGS) != bool(args.cext_from):
+        parser.error("--cext-from은 구성 C-ext에만, C-ext에는 반드시 준다")
     if args.split == "test":
         # test 세트는 최종 실행(M8)에만 쓴다 (4단계 4-2). 실수로 돌리지 않게 막는다
         parser.error("test 세트는 최종 실행에서만 쓴다")
@@ -67,8 +82,24 @@ def prepare(args: argparse.Namespace):
     seed = seed_hash(load_seed(args.org))
     expected = {"config": args.config, "org": args.org, "split": "dev", "prompt_version": PROMPT_VERSION,
                 "git_commit": git.commit, "git_dirty": git.dirty, "seed_hash": seed}
+    if args.cext_from:
+        check_cext(args)
+        expected["cext_from"] = Path(args.cext_from).as_posix()
     todo = plan(paths, out=out, reps=args.reps, resume=args.resume, expected=expected)
     return out, git, todo, seed
+
+
+def check_cext(args: argparse.Namespace) -> None:
+    """C-ext 실행 전 확인: 추출 반복이 진단 반복 수만큼 있고 모두 온전한지, C-ext DB가 개발용 DB와 다른지."""
+    if cext.ext_uri().rstrip("/") == os.environ.get("NEO4J_URI", "bolt://localhost:7687").rstrip("/"):
+        raise RunnerError("C-ext DB(NEO4J_EXT_URI)가 개발용 DB(NEO4J_URI)와 같다. 개발용 그래프를 덮어쓰게 된다")
+    for rep in range(1, args.reps + 1):
+        try:
+            _, source = cext.load_candidates(Path(args.cext_from), f"r{rep}")
+        except (cext.CextError, OSError) as exc:
+            raise RunnerError(f"C-ext 추출 결과를 쓸 수 없다: {exc}") from exc
+        if source["extraction_seed_hash"] != seed_hash(load_seed(args.org)):
+            raise RunnerError(f"{args.cext_from}: 추출 때의 시드와 지금 시드가 다르다")
 
 
 def check_loaded_seed(driver, org: str, expected_hash: str) -> None:
@@ -88,15 +119,31 @@ async def main_async(args: argparse.Namespace) -> int:
           + (" (커밋하지 않은 변경 있음)" if git.dirty else ""))
     if not todo:
         return 0
-    with get_driver() as driver:
-        check_loaded_seed(driver, args.org, seed)
+    ext = args.config in EXT_CONFIGS
+    uri = cext.ext_uri() if ext else None
+    with get_driver(uri) as driver:
+        if not ext:
+            check_loaded_seed(driver, args.org, seed)
         tracer = Tracer.from_env()
         llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
         try:
-            async def run_one(scenario: dict, path: Path) -> dict:
-                return await run_scenario(scenario, path, config=args.config, org=args.org, tracer=tracer, llm=llm,
-                                          driver=driver)
-            await run_all(todo, out=out, git=git, run_one=run_one, prices=llm.config.price_record, seed_hash=seed)
+            # 반복마다 그 반복의 그래프로 돈다. C와 A는 반복 구분 없이 같은 그래프다
+            for rep in sorted({r for r, _ in todo}):
+                graph_info = None
+                if ext:
+                    graph_info = cext.load_cext(driver, load_seed(args.org), Path(args.cext_from), f"r{rep}")
+                    print(f"r{rep} C-ext 그래프 적재: {graph_info['source']['run_id']} {graph_info['hash'][:12]} "
+                          f"{graph_info['stats']['relationships']}")
+
+                async def run_one(scenario: dict, path: Path, info=graph_info) -> dict:
+                    result = await run_scenario(scenario, path, config=args.config, org=args.org, tracer=tracer,
+                                                llm=llm, driver=driver, neo4j_uri=uri)
+                    if info:
+                        # 실행에 쓴 그래프: 추출 결과 반복, 그래프 해시, 빌더 버전, 채운 기본값 수 (채점기가 해시를 다시 본다)
+                        result["run"] |= {"cext_from": Path(args.cext_from).as_posix(), "knowledge_graph": info}
+                    return result
+                await run_all([t for t in todo if t[0] == rep], out=out, git=git, run_one=run_one,
+                              prices=llm.config.price_record, seed_hash=seed)
         finally:
             tracer.flush()
     return 0

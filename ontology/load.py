@@ -229,12 +229,17 @@ def load_static(driver: Driver, seed: dict) -> dict:
     같은 트랜잭션에서 적재한 시드의 해시와 조직을 남긴다. 실행기가 시드 파일과 그래프가 같은지 이 값으로 본다
     """
     validate_seed(seed)
-    graph = build_graph(seed)
+    return write_graph(driver, build_graph(seed), {"hash": seed_hash(seed), "org": seed["org"]["id"], "kind": "K"})
 
+
+def write_graph(driver: Driver, graph: Graph, meta: dict) -> dict:
+    """그래프를 정적 지식 계층에 덮어쓰고 적재 기록(SeedMeta)을 한 트랜잭션에서 남긴다.
+
+    meta는 hash와 org를 꼭 가진다. 구성 C-ext는 K 시드가 아니라 추출 후보로 만든 그래프를 이 함수로 적재한다 (ontology/cext)
+    """
     def write(tx: ManagedTransaction) -> dict:
         result = _write(tx, graph)
-        tx.run(f"MERGE (m:{SEED_META} {{id: 'seed'}}) SET m.hash = $hash, m.org = $org",
-               hash=seed_hash(seed), org=seed["org"]["id"]).consume()
+        tx.run(f"MERGE (m:{SEED_META} {{id: 'seed'}}) SET m = $meta", meta={"id": "seed", **meta}).consume()
         return result
 
     with driver.session() as session:

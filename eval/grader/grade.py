@@ -37,7 +37,8 @@ OUTPUT_FIELDS = ("symptom", "scope", "severity", "hypotheses", "root_cause", "pr
                  "actions", "tool_calls")
 # 한 폴더 안에서 섞이면 반복 집계가 같은 조건의 반복이 아니게 되는 값
 # git_dirty는 실행기(eval/runner)가 남긴다. 그 전 결과에는 없어서 없음(None)으로 읽는다
-SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", "git_commit", "git_dirty", "seed_hash")
+SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", "git_commit", "git_dirty", "seed_hash",
+                  "cext_from")
 
 # 처음 틀린 단계를 찾는 순서 (4단계 5-5). 검색 단계는 구성 B를 붙일 때 더한다
 STAGES = (
@@ -82,6 +83,17 @@ def check_basis(result: dict, seed: dict) -> None:
             raise GradeError(f"{run['scenario']}: test 세트가 잠금과 다르다: {locked[:3]}")
     if run.get("seed_hash") and run["seed_hash"] != seed_hash(seed):
         raise GradeError(f"{run['scenario']}: 실행 때의 시드와 지금 시드가 다르다. 실행 커밋({run['git_commit'][:7]})에서 채점한다")
+    graph = run.get("knowledge_graph")
+    if graph:
+        # C-ext: 실행 때의 그래프를 지금 추출 결과 파일로 다시 만들 수 있어야 한다 (M4 PR 6)
+        from ontology import cext
+
+        try:
+            _, source = cext.load_candidates(Path(run["cext_from"]), graph["source"]["rep"])
+        except (cext.CextError, OSError) as exc:
+            raise GradeError(f"{run['scenario']}: C-ext 추출 결과를 읽을 수 없다: {exc}") from exc
+        if graph.get("builder") != cext.BUILDER_VERSION or cext.cext_hash(seed, source) != graph["hash"]:
+            raise GradeError(f"{run['scenario']}: 실행 때의 C-ext 그래프와 지금 추출 결과, 빌더로 만든 그래프가 다르다")
     if run.get("scenario_hash"):
         now = hashlib.sha256(scenario_path(run["split"], run["scenario"]).read_bytes()).hexdigest()
         if run["scenario_hash"] != now:
@@ -424,9 +436,13 @@ def grade_folder(folder: Path, seed: dict | None = None) -> dict:
     if seed is None:
         seed = load_seed(reps[0][1][0]["run"]["org"])
     graded = []
-    for _, results in reps:
+    for name, results in reps:
         for r in results:
             check_basis(r, seed)
+        # C-ext는 반복 안의 시나리오가 모두 같은 그래프로 돌아야 한다
+        graphs = {(r["run"].get("knowledge_graph") or {}).get("hash") for r in results}
+        if len(graphs) > 1:
+            raise GradeError(f"{folder}/{name}: 한 반복 안에서 C-ext 그래프가 섞였다")
     for name, results in reps:
         grades = [grade_scenario(r, load_scenario(r["run"]["split"], r["run"]["scenario"]), seed) for r in results]
         graded.append({"rep": name, "scenarios": grades, "metrics": aggregate(grades)})
@@ -464,6 +480,9 @@ def grade_folder(folder: Path, seed: dict | None = None) -> dict:
             "config": first["config"], "org": first["org"], "mode": first["mode"], "split": first["split"],
             "models": first["models"], "prompt_version": first["prompt_version"], "git_commit": first["git_commit"],
             "git_dirty": first.get("git_dirty"), "seed_hash": first.get("seed_hash"),
+            "cext_from": first.get("cext_from"),
+            "knowledge_graphs": {name: results[0]["run"]["knowledge_graph"]["hash"] for name, results in reps
+                                 if results[0]["run"].get("knowledge_graph")} or None,
             "scenarios": sorted(next(iter(scenario_sets))), "repetitions": len(graded),
             "started_at": started[0], "finished_at": started[-1],
         },

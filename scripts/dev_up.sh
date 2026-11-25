@@ -7,6 +7,7 @@
 #
 # 실행: scripts/dev_up.sh              # neo4j-test(7688)와 neo4j(7687)
 #       scripts/dev_up.sh neo4j-test   # 테스트용 DB만
+#       scripts/dev_up.sh neo4j-ext    # 구성 C-ext 그래프 DB(7689). C-ext 실행 전에 띄운다
 # 이미 떠 있으면 아무것도 바꾸지 않고 상태만 확인한다. 떠 있는 컨테이너는 다시 만들지 않으므로
 # compose 설정이나 이미지를 바꾼 뒤에는 `docker compose up -d <서비스>`로 따로 다시 만든다.
 set -euo pipefail
