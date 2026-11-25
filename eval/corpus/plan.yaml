@@ -1,0 +1,2285 @@
+# 현장 문서 묶음 D의 설계표와 추출 정답 (설계 4단계 3-5, M4). 2026-11-25 작성
+# facts는 문서에 들어가야 할 기준 지식 K의 사실이고 추출 정답이다. stale은 K와 어긋나는 옛날 정보이고 conflict로 잡혀야 정답이다.
+# ALIAS는 문서에서 쓸 다른 이름이다. 원문은 이 표로 Sonnet 5.5가 쓰고(PR 2), 정답 사실이 원문에 들어갔는지 확인한다.
+# 추출 프롬프트는 이 표를 고정한 뒤에 쓴다 (4단계 4-2)
+documents:
+- id: PM-01
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 우편함 배포 뒤 특정 월드 캐시 구매 지급이 빠진 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 우편함 배포 뒤 특정 월드 캐시 구매 지급이 빠진 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C02
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S1
+    object: C02
+    props:
+      prior: 높음
+  - rel: LOCATED_IN
+    subject: C02
+    object: SY13
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY13
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C02
+    object: E01
+    props:
+      required: true
+      expect: 결제 승인 기록이 있다
+  - rel: CHECKED_BY
+    subject: C02
+    object: E02
+    props:
+      required: true
+      expect: 우편함 지급 기록이 없다
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P6
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S1
+    object: SY13
+  - rel: DEPENDS_ON
+    subject: SY13
+    object: SY11
+  - rel: ALIAS
+    subject: SY13
+    object: 메일함
+  - rel: ALIAS
+    subject: TM03
+    object: 서버팀
+  stale: []
+- id: PM-02
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 공통 계정 인증 장애로 여러 타이틀 로그인이 막힌 사건'
+  created_at: '2026-10-15'
+  author_team: TM09
+  brief: 공통 계정 인증 장애로 여러 타이틀 로그인이 막힌 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C04
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S2
+    object: C04
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C04
+    object: SY01
+    props:
+      scope: operation
+  - rel: OWNS
+    subject: TM09
+    object: SY01
+    props:
+      scope: operation
+  - rel: CHECKED_BY
+    subject: C04
+    object: E03
+    props:
+      required: true
+      expect: 다른 타이틀에서도 로그인이 실패한다
+  - rel: RESOLVED_BY
+    subject: C04
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C04
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C04
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S2
+    object: SY01
+  - rel: ALIAS
+    subject: SY01
+    object: 공통 로그인
+  - rel: ALIAS
+    subject: TM09
+    object: 플랫폼 쪽
+  stale: []
+- id: PM-03
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 로그인 게이트웨이 세션 처리 버그로 이 타이틀만 접속 실패'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 로그인 게이트웨이 세션 처리 버그로 이 타이틀만 접속 실패. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C05
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S2
+    object: C05
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C05
+    object: SY09
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY09
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C05
+    object: E03
+    props:
+      required: true
+      expect: 다른 타이틀 로그인은 정상이다
+  - rel: CHECKED_BY
+    subject: C05
+    object: E04
+    props:
+      required: true
+      expect: 로그인 서버에 증상과 관련된 오류 로그가 있다
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S2
+    object: SY09
+  - rel: DEPENDS_ON
+    subject: SY09
+    object: SY01
+  - rel: ALIAS
+    subject: SY09
+    object: 게이트웨이
+  stale: []
+- id: PM-04
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 던전 몬스터 체력 값을 잘못 넣은 테이블 오류'
+  created_at: '2026-10-15'
+  author_team: TM01
+  brief: 던전 몬스터 체력 값을 잘못 넣은 테이블 오류. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C07
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S3
+    object: C07
+    props:
+      prior: 높음
+  - rel: LOCATED_IN
+    subject: C07
+    object: SY17
+    props:
+      scope: data
+      area: content
+  - rel: OWNS
+    subject: TM01
+    object: SY17
+    props:
+      scope: data
+      area: content
+  - rel: CHECKED_BY
+    subject: C07
+    object: E05
+    props:
+      required: true
+      expect: 증상 시작 전에 해당 콘텐츠 테이블의 변경 이력이 있다
+  - rel: CHECKED_BY
+    subject: C07
+    object: E12
+    props:
+      required: true
+      expect: QA가 같은 조건에서 재현했다
+  - rel: RESOLVED_BY
+    subject: C07
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C07
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY17
+    object: SY03
+  - rel: ALIAS
+    subject: SY17
+    object: 데이터 테이블
+  - rel: ALIAS
+    subject: TM01
+    object: 콘텐츠 기획
+  stale: []
+- id: PM-05
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 출석 이벤트 보상 설정을 잘못 넣어 과지급된 사건'
+  created_at: '2026-10-15'
+  author_team: TM01
+  brief: 출석 이벤트 보상 설정을 잘못 넣어 과지급된 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C11
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S4
+    object: C11
+    props:
+      prior: 높음
+  - rel: LOCATED_IN
+    subject: C11
+    object: SY15
+    props:
+      scope: config
+  - rel: OWNS
+    subject: TM01
+    object: SY15
+    props:
+      scope: config
+  - rel: CHECKED_BY
+    subject: C11
+    object: E07
+    props:
+      required: true
+      expect: 증상 시작 전에 이벤트 설정 변경 이력이 있다
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P6
+    props:
+      condition: 미지급
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P7
+    props:
+      condition: 과지급
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S4
+    object: SY15
+  - rel: DEPENDS_ON
+    subject: SY15
+    object: SY17
+  - rel: ALIAS
+    subject: SY15
+    object: 이벤트 툴
+  - rel: ALIAS
+    subject: TM01
+    object: 콘텐츠기획
+  stale: []
+- id: PM-06
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 작업장 계정이 골드를 대량으로 풀어 시세가 무너진 사건'
+  created_at: '2026-10-15'
+  author_team: TM11
+  brief: 작업장 계정이 골드를 대량으로 풀어 시세가 무너진 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C14
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S5
+    object: C14
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C14
+    object: SY22
+    props:
+      scope: config
+  - rel: OWNS
+    subject: TM11
+    object: SY22
+    props:
+      scope: config
+  - rel: CHECKED_BY
+    subject: C14
+    object: E11
+    props:
+      required: true
+      expect: 소수 계정에 거래와 행동이 집중돼 있다
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P7
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY22
+    object: SY11
+  - rel: ALIAS
+    subject: SY22
+    object: 어뷰징 탐지
+  - rel: ALIAS
+    subject: TM11
+    object: 보안 쪽
+  stale: []
+- id: PM-07
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 확률 테이블 값을 잘못 바꿔 공개 확률과 달라진 사건'
+  created_at: '2026-10-15'
+  author_team: TM02
+  brief: 확률 테이블 값을 잘못 바꿔 공개 확률과 달라진 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C16
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S6
+    object: C16
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C16
+    object: SY17
+    props:
+      scope: data
+      area: probability
+  - rel: OWNS
+    subject: TM02
+    object: SY17
+    props:
+      scope: data
+      area: probability
+  - rel: CHECKED_BY
+    subject: C16
+    object: E08
+    props:
+      required: true
+      expect: 테이블 수치와 공개 수치가 다르고, 실제 결과와 테이블 수치가 같다
+  - rel: CHECKED_BY
+    subject: C16
+    object: E05
+    props:
+      required: true
+      expect: 증상 시작 전에 확률 테이블 변경 이력이 있다
+  - rel: RESOLVED_BY
+    subject: C16
+    object: P8
+  - rel: RESOLVED_BY
+    subject: C16
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C16
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY17
+    object: SY03
+  - rel: ALIAS
+    subject: SY17
+    object: 확률 테이블
+  - rel: ALIAS
+    subject: TM02
+    object: 시스템 기획
+  stale: []
+- id: PM-08
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 거래소 서버 배포 뒤 등록 실패가 이어진 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 거래소 서버 배포 뒤 등록 실패가 이어진 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C18
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S7
+    object: C18
+    props:
+      prior: 높음
+  - rel: LOCATED_IN
+    subject: C18
+    object: SY14
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY14
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C18
+    object: E04
+    props:
+      required: true
+      expect: 거래소에 증상과 관련된 오류 로그가 있다
+  - rel: CHECKED_BY
+    subject: C18
+    object: E06
+    props:
+      required: true
+      expect: 증상 시작 전에 거래소 배포 이력이 있다
+  - rel: RESOLVED_BY
+    subject: C18
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C18
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C18
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C18
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S7
+    object: SY14
+  - rel: DEPENDS_ON
+    subject: SY14
+    object: SY10
+  - rel: ALIAS
+    subject: SY14
+    object: 경매장
+  stale: []
+- id: PM-09
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 게임 DB 부하로 거래소 응답이 늦어진 사건'
+  created_at: '2026-10-15'
+  author_team: TM10
+  brief: 게임 DB 부하로 거래소 응답이 늦어진 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C19
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S7
+    object: C19
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C19
+    object: SY11
+    props:
+      scope: operation
+  - rel: OWNS
+    subject: TM10
+    object: SY11
+    props:
+      scope: operation
+  - rel: CHECKED_BY
+    subject: C19
+    object: E09
+    props:
+      required: true
+      expect: 게임 DB의 자원(부하) 지표가 한계에 가깝거나 넘었다
+  - rel: RESOLVED_BY
+    subject: C19
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C19
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C19
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY11
+    object: SY05
+  - rel: ALIAS
+    subject: SY11
+    object: DB
+  - rel: ALIAS
+    subject: TM10
+    object: 인프라팀
+  stale: []
+- id: PM-10
+  kind: postmortem
+  split: dev
+  title: '장애 회고: 공성전 시간에 서버 자원이 모자라 렉이 난 사건'
+  created_at: '2026-10-15'
+  author_team: TM10
+  brief: 공성전 시간에 서버 자원이 모자라 렉이 난 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C20
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S8
+    object: C20
+    props:
+      prior: 높음
+  - rel: LOCATED_IN
+    subject: C20
+    object: SY05
+    props:
+      scope: operation
+  - rel: OWNS
+    subject: TM10
+    object: SY05
+    props:
+      scope: operation
+  - rel: CHECKED_BY
+    subject: C20
+    object: E09
+    props:
+      required: true
+      expect: 서버 인프라의 자원 지표가 한계에 가깝거나 넘었다
+  - rel: CHECKED_BY
+    subject: C20
+    object: E14
+    props:
+      required: true
+      expect: 대규모 콘텐츠 진행 시간과 겹친다
+  - rel: RESOLVED_BY
+    subject: C20
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C20
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C20
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S8
+    object: SY05
+  - rel: ALIAS
+    subject: SY05
+    object: 서버 인프라
+  - rel: ALIAS
+    subject: TM10
+    object: 인프라 운영
+  stale: []
+- id: PM-11
+  kind: postmortem
+  split: test
+  title: '장애 회고: 결제 승인 응답 오류로 결제는 됐는데 기록이 남지 않은 사건'
+  created_at: '2026-10-15'
+  author_team: TM09
+  brief: 결제 승인 응답 오류로 결제는 됐는데 기록이 남지 않은 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C01
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S1
+    object: C01
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C01
+    object: SY02
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM09
+    object: SY02
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C01
+    object: E01
+    props:
+      required: true
+      expect: 결제 승인 기록이 없거나 승인 오류가 남아 있다
+  - rel: RESOLVED_BY
+    subject: C01
+    object: P6
+    props:
+      condition: 미지급
+  - rel: RESOLVED_BY
+    subject: C01
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C01
+    object: P10
+  - rel: ALIAS
+    subject: SY02
+    object: 결제 시스템
+  - rel: ALIAS
+    subject: TM09
+    object: 플랫폼
+  stale: []
+- id: PM-12
+  kind: postmortem
+  split: test
+  title: '장애 회고: 패키지 상품 설정을 잘못 넣어 구성품이 빈 사건'
+  created_at: '2026-10-15'
+  author_team: TM06
+  brief: 패키지 상품 설정을 잘못 넣어 구성품이 빈 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C03
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S1
+    object: C03
+    props:
+      prior: 낮음
+  - rel: LOCATED_IN
+    subject: C03
+    object: SY12
+    props:
+      scope: config
+  - rel: OWNS
+    subject: TM06
+    object: SY12
+    props:
+      scope: config
+  - rel: CHECKED_BY
+    subject: C03
+    object: E07
+    props:
+      required: true
+      expect: 증상 시작 전에 해당 상품의 설정 변경 이력이 있다
+  - rel: RESOLVED_BY
+    subject: C03
+    object: P6
+  - rel: RESOLVED_BY
+    subject: C03
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C03
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S1
+    object: SY12
+  - rel: DEPENDS_ON
+    subject: SY12
+    object: SY02
+  - rel: ALIAS
+    subject: SY12
+    object: 캐시샵
+  - rel: ALIAS
+    subject: TM06
+    object: 사업PM
+  stale: []
+- id: PM-13
+  kind: postmortem
+  split: test
+  title: '장애 회고: 한 월드 서버군 네트워크 장애'
+  created_at: '2026-10-15'
+  author_team: TM10
+  brief: 한 월드 서버군 네트워크 장애. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C06
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S2
+    object: C06
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C06
+    object: SY05
+    props:
+      scope: operation
+  - rel: OWNS
+    subject: TM10
+    object: SY05
+    props:
+      scope: operation
+  - rel: CHECKED_BY
+    subject: C06
+    object: E09
+    props:
+      required: true
+      expect: 서버 인프라의 자원 지표가 한계에 가깝거나 넘었다, 또는 네트워크 지표가 비정상이다
+  - rel: RESOLVED_BY
+    subject: C06
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C06
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C06
+    object: P10
+  - rel: ALIAS
+    subject: SY05
+    object: 인프라
+  - rel: ALIAS
+    subject: TM10
+    object: 인프라 쪽
+  stale: []
+- id: PM-14
+  kind: postmortem
+  split: test
+  title: '장애 회고: 보상 계산 로직 배포 오류'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 보상 계산 로직 배포 오류. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C08
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S3
+    object: C08
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C08
+    object: SY10
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY10
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C08
+    object: E04
+    props:
+      required: true
+      expect: 월드 서버에 증상과 관련된 오류 로그가 있다
+  - rel: CHECKED_BY
+    subject: C08
+    object: E06
+    props:
+      required: true
+      expect: 증상 시작 전에 서버 배포 이력이 있다
+  - rel: CHECKED_BY
+    subject: C08
+    object: E12
+    props:
+      required: true
+      expect: QA가 같은 조건에서 재현했다
+  - rel: RESOLVED_BY
+    subject: C08
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C08
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C08
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S3
+    object: SY10
+  - rel: DEPENDS_ON
+    subject: SY10
+    object: SY11
+  - rel: ALIAS
+    subject: SY10
+    object: 월드서버
+  - rel: ALIAS
+    subject: TM03
+    object: 서버팀
+  stale: []
+- id: PM-15
+  kind: postmortem
+  split: test
+  title: '장애 회고: 클라이언트 패치 뒤 인벤토리 화면이 멈춘 사건'
+  created_at: '2026-10-15'
+  author_team: TM04
+  brief: 클라이언트 패치 뒤 인벤토리 화면이 멈춘 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C09
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S3
+    object: C09
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C09
+    object: SY18
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM04
+    object: SY18
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C09
+    object: E06
+    props:
+      required: true
+      expect: 증상 시작 전에 클라이언트 패치 이력이 있다
+  - rel: CHECKED_BY
+    subject: C09
+    object: E12
+    props:
+      required: true
+      expect: QA가 같은 조건에서 재현했다
+  - rel: RESOLVED_BY
+    subject: C09
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C09
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S3
+    object: SY18
+  - rel: DEPENDS_ON
+    subject: SY18
+    object: SY08
+  - rel: ALIAS
+    subject: SY18
+    object: 클라
+  - rel: ALIAS
+    subject: TM04
+    object: 클라팀
+  stale: []
+- id: PM-16
+  kind: postmortem
+  split: test
+  title: '장애 회고: 패치 배포가 일부 서버에서 실패한 사건'
+  created_at: '2026-10-15'
+  author_team: TM10
+  brief: 패치 배포가 일부 서버에서 실패한 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C10
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S3
+    object: C10
+    props:
+      prior: 낮음
+  - rel: LOCATED_IN
+    subject: C10
+    object: SY08
+    props:
+      scope: execution
+  - rel: OWNS
+    subject: TM10
+    object: SY08
+    props:
+      scope: execution
+  - rel: CHECKED_BY
+    subject: C10
+    object: E06
+    props:
+      required: true
+      expect: 증상 시작 전에 패치 배포 이력이 있고, 그 배포가 실패했거나 일부 대상에만 적용됐다
+  - rel: CHECKED_BY
+    subject: C10
+    object: E13
+    props:
+      required: true
+      expect: 배포가 끝난 뒤에도 최신 버전이 아닌 클라이언트가 남아 있다 (일부 유저 또는 전체 유저)
+  - rel: RESOLVED_BY
+    subject: C10
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C10
+    object: P10
+  - rel: ALIAS
+    subject: SY08
+    object: 런처
+  - rel: ALIAS
+    subject: TM10
+    object: 인프라운영
+  stale: []
+- id: PM-17
+  kind: postmortem
+  split: test
+  title: '장애 회고: 이벤트 지급 재시도 로직 버그로 보상이 덜 들어간 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 이벤트 지급 재시도 로직 버그로 보상이 덜 들어간 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C12
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S4
+    object: C12
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C12
+    object: SY15
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY15
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C12
+    object: E02
+    props:
+      required: true
+      expect: 보상 지급 기록이 이벤트 설정과 다르다 (누락 또는 중복)
+  - rel: CHECKED_BY
+    subject: C12
+    object: E04
+    props:
+      required: true
+      expect: 이벤트 시스템에 증상과 관련된 오류 로그가 있다 (지급 처리 오류)
+  - rel: RESOLVED_BY
+    subject: C12
+    object: P6
+    props:
+      condition: 미지급
+  - rel: RESOLVED_BY
+    subject: C12
+    object: P7
+    props:
+      condition: 과지급
+  - rel: RESOLVED_BY
+    subject: C12
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C12
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S4
+    object: SY15
+  - rel: DEPENDS_ON
+    subject: SY15
+    object: SY17
+  - rel: ALIAS
+    subject: SY15
+    object: 이벤트 시스템
+  - rel: ALIAS
+    subject: TM03
+    object: 서버 개발
+  stale: []
+- id: PM-18
+  kind: postmortem
+  split: test
+  title: '장애 회고: 창고 이동 중 접속 끊김으로 아이템이 복사된 버그'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 창고 이동 중 접속 끊김으로 아이템이 복사된 버그. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C13
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S5
+    object: C13
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C13
+    object: SY10
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY10
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C13
+    object: E12
+    props:
+      required: true
+      expect: QA가 같은 조건에서 재현했다 (복사 재현)
+  - rel: CHECKED_BY
+    subject: C13
+    object: E04
+    props:
+      required: true
+      expect: 월드 서버에 증상과 관련된 오류 로그가 있다
+  - rel: RESOLVED_BY
+    subject: C13
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C13
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C13
+    object: P7
+  - rel: RESOLVED_BY
+    subject: C13
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S5
+    object: SY10
+  - rel: DEPENDS_ON
+    subject: SY10
+    object: SY11
+  - rel: ALIAS
+    subject: SY10
+    object: 월드 서버
+  - rel: ALIAS
+    subject: TM03
+    object: 서버팀
+  stale: []
+- id: PM-19
+  kind: postmortem
+  split: test
+  title: '장애 회고: 확률 공개 페이지 수치를 잘못 올린 사건'
+  created_at: '2026-10-15'
+  author_team: TM06
+  brief: 확률 공개 페이지 수치를 잘못 올린 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C15
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S6
+    object: C15
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C15
+    object: SY21
+    props:
+      scope: data
+  - rel: OWNS
+    subject: TM06
+    object: SY21
+    props:
+      scope: data
+  - rel: CHECKED_BY
+    subject: C15
+    object: E08
+    props:
+      required: true
+      expect: 공개 수치와 테이블 수치가 다르고, 테이블 수치와 실제 결과가 같다
+  - rel: CHECKED_BY
+    subject: C15
+    object: E05
+    props:
+      required: true
+      expect: 증상 시작 전에 확률 테이블 변경 이력이 없다
+  - rel: RESOLVED_BY
+    subject: C15
+    object: P8
+  - rel: RESOLVED_BY
+    subject: C15
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C15
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S6
+    object: SY21
+  - rel: DEPENDS_ON
+    subject: SY21
+    object: SY17
+  - rel: ALIAS
+    subject: SY21
+    object: 확률 공개 페이지
+  - rel: ALIAS
+    subject: TM06
+    object: 사업PM팀
+  stale: []
+- id: PM-20
+  kind: postmortem
+  split: test
+  title: '장애 회고: 확률 모듈 배포 뒤 실제 결과가 테이블과 달라진 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 확률 모듈 배포 뒤 실제 결과가 테이블과 달라진 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C17
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S6
+    object: C17
+    props:
+      prior: 낮음
+  - rel: LOCATED_IN
+    subject: C17
+    object: SY16
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY16
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C17
+    object: E08
+    props:
+      required: true
+      expect: 테이블 수치와 공개 수치가 같은데, 실제 결과가 테이블 수치와 다르다
+  - rel: RESOLVED_BY
+    subject: C17
+    object: P8
+  - rel: RESOLVED_BY
+    subject: C17
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C17
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C17
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY16
+    object: SY17
+  - rel: ALIAS
+    subject: SY16
+    object: 확률 모듈
+  stale: []
+- id: PM-21
+  kind: postmortem
+  split: test
+  title: '장애 회고: 월드보스 판정 처리 로직이 비효율적이라 렉이 난 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 월드보스 판정 처리 로직이 비효율적이라 렉이 난 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C21
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S8
+    object: C21
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C21
+    object: SY10
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY10
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C21
+    object: E09
+    props:
+      required: true
+      expect: 서버 인프라의 자원에는 여유가 있다
+  - rel: CHECKED_BY
+    subject: C21
+    object: E04
+    props:
+      required: true
+      expect: 특정 콘텐츠 처리 지연 로그가 있다
+  - rel: CHECKED_BY
+    subject: C21
+    object: E14
+    props:
+      required: true
+      expect: 대규모 콘텐츠 진행 시간과 겹친다
+  - rel: RESOLVED_BY
+    subject: C21
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C21
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S8
+    object: SY10
+  - rel: DEPENDS_ON
+    subject: SY10
+    object: SY11
+  - rel: ALIAS
+    subject: SY10
+    object: 월드 서버
+  stale: []
+- id: PM-22
+  kind: postmortem
+  split: test
+  title: '장애 회고: 우편함 큐 처리 오류로 일부 유저 구매 지급이 빠진 두 번째 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 우편함 큐 처리 오류로 일부 유저 구매 지급이 빠진 두 번째 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C02
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S1
+    object: C02
+    props:
+      prior: 높음
+  - rel: LOCATED_IN
+    subject: C02
+    object: SY13
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY13
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C02
+    object: E01
+    props:
+      required: true
+      expect: 결제 승인 기록이 있다
+  - rel: CHECKED_BY
+    subject: C02
+    object: E02
+    props:
+      required: true
+      expect: 우편함 지급 기록이 없다
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P6
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S1
+    object: SY13
+  - rel: DEPENDS_ON
+    subject: SY13
+    object: SY11
+  - rel: ALIAS
+    subject: SY13
+    object: 우편 시스템
+  stale: []
+- id: PM-23
+  kind: postmortem
+  split: test
+  title: '장애 회고: 로그인 서버 오류 로그 폭증으로 접속이 막힌 두 번째 사건'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 로그인 서버 오류 로그 폭증으로 접속이 막힌 두 번째 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C05
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S2
+    object: C05
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C05
+    object: SY09
+    props:
+      scope: logic
+  - rel: OWNS
+    subject: TM03
+    object: SY09
+    props:
+      scope: logic
+  - rel: CHECKED_BY
+    subject: C05
+    object: E03
+    props:
+      required: true
+      expect: 다른 타이틀 로그인은 정상이다
+  - rel: CHECKED_BY
+    subject: C05
+    object: E04
+    props:
+      required: true
+      expect: 로그인 서버에 증상과 관련된 오류 로그가 있다
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P10
+  - rel: OBSERVED_IN
+    subject: S2
+    object: SY09
+  - rel: DEPENDS_ON
+    subject: SY09
+    object: SY01
+  - rel: ALIAS
+    subject: SY09
+    object: 로그인 서버
+  stale: []
+- id: PM-24
+  kind: postmortem
+  split: test
+  title: '장애 회고: 거래소 특정 계정 집중 거래로 시세가 붕괴한 사건'
+  created_at: '2026-10-15'
+  author_team: TM11
+  brief: 거래소 특정 계정 집중 거래로 시세가 붕괴한 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C14
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S7
+    object: C14
+    props:
+      prior: 낮음
+  - rel: LOCATED_IN
+    subject: C14
+    object: SY22
+    props:
+      scope: config
+  - rel: OWNS
+    subject: TM11
+    object: SY22
+    props:
+      scope: config
+  - rel: CHECKED_BY
+    subject: C14
+    object: E11
+    props:
+      required: true
+      expect: 소수 계정에 거래와 행동이 집중돼 있다
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P7
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY22
+    object: SY11
+  - rel: ALIAS
+    subject: SY22
+    object: 탐지 시스템
+  - rel: ALIAS
+    subject: SY14
+    object: 경매장
+  stale: []
+- id: PM-25
+  kind: postmortem
+  split: test
+  title: '장애 회고: 대형 이벤트 날 게임 DB 쿼리 대기가 길어진 두 번째 사건'
+  created_at: '2026-10-15'
+  author_team: TM10
+  brief: 대형 이벤트 날 게임 DB 쿼리 대기가 길어진 두 번째 사건. 사건 경과, 확인한 근거, 원인, 담당, 조치를 사람 말투로 쓴다
+  causes:
+  - C19
+  facts:
+  - rel: MAY_BE_CAUSED_BY
+    subject: S7
+    object: C19
+    props:
+      prior: 중간
+  - rel: LOCATED_IN
+    subject: C19
+    object: SY11
+    props:
+      scope: operation
+  - rel: OWNS
+    subject: TM10
+    object: SY11
+    props:
+      scope: operation
+  - rel: CHECKED_BY
+    subject: C19
+    object: E09
+    props:
+      required: true
+      expect: 게임 DB의 자원(부하) 지표가 한계에 가깝거나 넘었다
+  - rel: RESOLVED_BY
+    subject: C19
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C19
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C19
+    object: P10
+  - rel: DEPENDS_ON
+    subject: SY11
+    object: SY05
+  - rel: ALIAS
+    subject: SY11
+    object: 게임 DB
+  stale: []
+- id: RB-01
+  kind: runbook
+  split: dev
+  title: '런북: 보상 지급'
+  created_at: '2026-10-15'
+  author_team: TM06
+  brief: 보상 지급 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C01
+  - C02
+  - C03
+  - C11
+  facts:
+  - rel: RESOLVED_BY
+    subject: C01
+    object: P6
+    props:
+      condition: 미지급
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P6
+  - rel: RESOLVED_BY
+    subject: C03
+    object: P6
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P6
+    props:
+      condition: 미지급
+  stale: []
+- id: RB-02
+  kind: runbook
+  split: dev
+  title: '런북: 아이템, 재화 회수와 제재'
+  created_at: '2026-10-15'
+  author_team: TM11
+  brief: 아이템, 재화 회수와 제재 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C11
+  - C12
+  - C13
+  - C14
+  facts:
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P7
+    props:
+      condition: 과지급
+  - rel: RESOLVED_BY
+    subject: C12
+    object: P7
+    props:
+      condition: 과지급
+  - rel: RESOLVED_BY
+    subject: C13
+    object: P7
+  - rel: RESOLVED_BY
+    subject: C14
+    object: P7
+  stale: []
+- id: RB-03
+  kind: runbook
+  split: dev
+  title: '런북: 원인 수정과 반영'
+  created_at: '2026-10-15'
+  author_team: TM05
+  brief: 원인 수정과 반영 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C01
+  - C02
+  - C03
+  - C04
+  facts:
+  - rel: RESOLVED_BY
+    subject: C01
+    object: P10
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P10
+  - rel: RESOLVED_BY
+    subject: C03
+    object: P10
+  - rel: RESOLVED_BY
+    subject: C04
+    object: P10
+  stale: []
+- id: RB-04
+  kind: runbook
+  split: test
+  title: '런북: 긴급 공지'
+  created_at: '2026-10-15'
+  author_team: TM06
+  brief: 긴급 공지 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C01
+  - C02
+  - C03
+  - C04
+  facts:
+  - rel: RESOLVED_BY
+    subject: C01
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C02
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C03
+    object: P3
+  - rel: RESOLVED_BY
+    subject: C04
+    object: P3
+  stale: []
+- id: RB-05
+  kind: runbook
+  split: test
+  title: '런북: 긴급 점검'
+  created_at: '2026-10-15'
+  author_team: TM10
+  brief: 긴급 점검 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C04
+  - C05
+  - C06
+  - C08
+  facts:
+  - rel: RESOLVED_BY
+    subject: C04
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C06
+    object: P4
+  - rel: RESOLVED_BY
+    subject: C08
+    object: P4
+  stale: []
+- id: RB-06
+  kind: runbook
+  split: test
+  title: '런북: 롤백'
+  created_at: '2026-10-15'
+  author_team: TM03
+  brief: 롤백 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C05
+  - C07
+  - C08
+  - C13
+  facts:
+  - rel: RESOLVED_BY
+    subject: C05
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C07
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C08
+    object: P5
+  - rel: RESOLVED_BY
+    subject: C13
+    object: P5
+  stale: []
+- id: RB-07
+  kind: runbook
+  split: test
+  title: '런북: 확률 표기 정정'
+  created_at: '2026-10-15'
+  author_team: TM02
+  brief: 확률 표기 정정 절차의 대응 방법. 언제 이 절차를 여는지(어떤 원인 때문에 여는지)와 단계를 쓴다
+  causes:
+  - C15
+  - C16
+  - C17
+  facts:
+  - rel: RESOLVED_BY
+    subject: C15
+    object: P8
+  - rel: RESOLVED_BY
+    subject: C16
+    object: P8
+  - rel: RESOLVED_BY
+    subject: C17
+    object: P8
+  stale: []
+- id: RB-08
+  kind: runbook
+  split: test
+  title: '런북: 패치 배포 (2024년판)'
+  created_at: '2024-03-02'
+  author_team: TM04
+  brief: 옛날 런북이다. 패치 배포 실행을 클라이언트개발팀이 맡던 시절의 문서. 런처 서버와 클라이언트의 관계도 적는다
+  causes:
+  - C10
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY18
+    object: SY08
+  - rel: ALIAS
+    subject: SY08
+    object: 패치 서버
+  stale:
+  - rel: OWNS
+    subject: TM04
+    object: SY08
+    props:
+      scope: execution
+- id: CH-01
+  kind: chat
+  split: dev
+  title: 슬랙 대화 CH-01
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 우편함 지급 누락 대응 중 서버팀과 CS의 대화. 처음엔 결제 문제로 의심했다가 결제 기록 확인 뒤 정정한다. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C02
+  facts:
+  - rel: CHECKED_BY
+    subject: C02
+    object: E01
+    props:
+      required: true
+  - rel: CHECKED_BY
+    subject: C02
+    object: E02
+    props:
+      required: true
+  - rel: DEPENDS_ON
+    subject: SY12
+    object: SY13
+  - rel: ALIAS
+    subject: SY13
+    object: 메일함
+  stale: []
+- id: CH-02
+  kind: chat
+  split: dev
+  title: 슬랙 대화 CH-02
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 로그인 장애 때 다른 타이틀 로그인도 되는지 확인하자는 대화. 잡담이 섞인다. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C04
+  - C05
+  facts:
+  - rel: CHECKED_BY
+    subject: C04
+    object: E03
+    props:
+      required: true
+  - rel: DEPENDS_ON
+    subject: SY09
+    object: SY01
+  - rel: ALIAS
+    subject: SY09
+    object: 게이트웨이
+  stale: []
+- id: CH-03
+  kind: chat
+  split: dev
+  title: 슬랙 대화 CH-03
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 테이블 오류인지 서버 적용 오류인지 QA 재현 결과를 기다리는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C07
+  - C08
+  facts:
+  - rel: CHECKED_BY
+    subject: C07
+    object: E12
+    props:
+      required: true
+  - rel: CHECKED_BY
+    subject: C07
+    object: E05
+    props:
+      required: true
+  - rel: ALIAS
+    subject: TM08
+    object: QA
+  stale: []
+- id: CH-04
+  kind: chat
+  split: dev
+  title: 슬랙 대화 CH-04
+  created_at: '2024-05-20'
+  author_team: null
+  brief: 옛날 이야기. 확률 테이블은 콘텐츠기획팀이 관리한다고 말하는 신입과 정정하지 않고 넘어가는 대화 (옛날 정보). 추측, 정정, 잡담이 섞인다
+  causes:
+  - C16
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY21
+    object: SY17
+  - rel: ALIAS
+    subject: SY21
+    object: 확률 페이지
+  stale:
+  - rel: OWNS
+    subject: TM01
+    object: SY17
+    props:
+      scope: data
+      area: probability
+- id: CH-05
+  kind: chat
+  split: dev
+  title: 슬랙 대화 CH-05
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 거래소 지연 때 게임 DB 지표를 먼저 보자는 인프라팀 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C19
+  facts:
+  - rel: CHECKED_BY
+    subject: C19
+    object: E09
+    props:
+      required: true
+  - rel: DEPENDS_ON
+    subject: SY14
+    object: SY11
+  - rel: ALIAS
+    subject: SY14
+    object: 경매장
+  - rel: ALIAS
+    subject: SY11
+    object: DB
+  stale: []
+- id: CH-06
+  kind: chat
+  split: dev
+  title: 슬랙 대화 CH-06
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 이벤트 보상 과지급 때 회수 절차를 열지 논의하는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C11
+  facts:
+  - rel: RESOLVED_BY
+    subject: C11
+    object: P7
+    props:
+      condition: 과지급
+  - rel: DEPENDS_ON
+    subject: SY15
+    object: SY13
+  - rel: ALIAS
+    subject: SY15
+    object: 이벤트 툴
+  stale: []
+- id: CH-07
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-07
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 결제 승인 오류 대응. 플랫폼팀이 결제 기록부터 본다. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C01
+  facts:
+  - rel: CHECKED_BY
+    subject: C01
+    object: E01
+    props:
+      required: true
+  - rel: OWNS
+    subject: TM09
+    object: SY02
+    props:
+      scope: logic
+  - rel: ALIAS
+    subject: SY02
+    object: 결제 시스템
+  stale: []
+- id: CH-08
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-08
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 패치 뒤 화면 깨짐. 구버전 클라이언트 비율을 확인하자는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C10
+  - C09
+  facts:
+  - rel: CHECKED_BY
+    subject: C10
+    object: E13
+    props:
+      required: true
+  - rel: DEPENDS_ON
+    subject: SY18
+    object: SY08
+  - rel: ALIAS
+    subject: SY08
+    object: 런처
+  stale: []
+- id: CH-09
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-09
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 복사 의심 제보에 QA 재현과 서버 로그를 같이 보자는 대화. 어뷰징인지도 의심한다. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C13
+  - C14
+  facts:
+  - rel: CHECKED_BY
+    subject: C13
+    object: E12
+    props:
+      required: true
+  - rel: CHECKED_BY
+    subject: C13
+    object: E04
+    props:
+      required: true
+  stale: []
+- id: CH-10
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-10
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 확률 표기 문의 대응. 공개 페이지 수치와 테이블을 비교하자는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C15
+  - C16
+  facts:
+  - rel: CHECKED_BY
+    subject: C15
+    object: E08
+    props:
+      required: true
+  - rel: OWNS
+    subject: TM06
+    object: SY21
+    props:
+      scope: data
+  - rel: ALIAS
+    subject: SY21
+    object: 공개 페이지
+  stale: []
+- id: CH-11
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-11
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 월드보스 렉. 자원 지표와 콘텐츠 일정을 같이 보자는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C20
+  - C21
+  facts:
+  - rel: CHECKED_BY
+    subject: C20
+    object: E14
+    props:
+      required: true
+  - rel: CHECKED_BY
+    subject: C21
+    object: E04
+    props:
+      required: true
+  stale: []
+- id: CH-12
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-12
+  created_at: '2024-05-20'
+  author_team: null
+  brief: 옛날 대화. 어뷰징 탐지 시스템을 서버개발팀이 맡던 시절 이야기 (옛날 정보). 추측, 정정, 잡담이 섞인다
+  causes:
+  - C14
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY22
+    object: SY11
+  - rel: ALIAS
+    subject: SY22
+    object: 탐지 시스템
+  stale:
+  - rel: OWNS
+    subject: TM03
+    object: SY22
+    props:
+      scope: config
+- id: CH-13
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-13
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 이벤트 지급 로직 오류. 이벤트 시스템 로그를 보자는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C12
+  facts:
+  - rel: CHECKED_BY
+    subject: C12
+    object: E04
+    props:
+      required: true
+  - rel: OWNS
+    subject: TM03
+    object: SY15
+    props:
+      scope: logic
+  stale: []
+- id: CH-14
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-14
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 확률 모듈 배포 뒤 결과 이상. 배포 이력을 보자는 대화. 추측, 정정, 잡담이 섞인다
+  causes:
+  - C17
+  facts:
+  - rel: CHECKED_BY
+    subject: C17
+    object: E08
+    props:
+      required: true
+  - rel: DEPENDS_ON
+    subject: SY16
+    object: SY17
+  - rel: ALIAS
+    subject: SY16
+    object: 확률 모듈
+  stale: []
+- id: CH-15
+  kind: chat
+  split: test
+  title: 슬랙 대화 CH-15
+  created_at: '2026-10-20'
+  author_team: null
+  brief: 점심 메뉴와 장비 교체 잡담 위주. 마지막에 모니터링 담당을 짧게 언급한다. 추측, 정정, 잡담이 섞인다
+  causes: []
+  facts:
+  - rel: OWNS
+    subject: TM10
+    object: SY04
+    props:
+      scope: operation
+  - rel: ALIAS
+    subject: SY04
+    object: 모니터링
+  stale: []
+- id: MT-01
+  kind: meeting
+  split: dev
+  title: 회의록 MT-01
+  created_at: '2026-10-28'
+  author_team: null
+  brief: 담당 조정 회의. 이벤트 시스템의 설정 데이터와 로직 담당을 정리한다
+  causes:
+  - C11
+  - C12
+  facts:
+  - rel: OWNS
+    subject: TM01
+    object: SY15
+    props:
+      scope: config
+  - rel: OWNS
+    subject: TM03
+    object: SY15
+    props:
+      scope: logic
+  - rel: ALIAS
+    subject: SY15
+    object: 이벤트 시스템
+  stale: []
+- id: MT-02
+  kind: meeting
+  split: dev
+  title: 회의록 MT-02
+  created_at: '2024-02-14'
+  author_team: null
+  brief: 옛날 회의록. 이벤트 설정을 서버개발팀이 직접 넣던 시절 (옛날 정보)
+  causes:
+  - C11
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY15
+    object: SY17
+  stale:
+  - rel: OWNS
+    subject: TM03
+    object: SY15
+    props:
+      scope: config
+- id: MT-03
+  kind: meeting
+  split: dev
+  title: 회의록 MT-03
+  created_at: '2026-10-28'
+  author_team: null
+  brief: 정기 점검 회의. 캐시 상점과 결제, 우편함의 연결 구조를 설명한다
+  causes:
+  - C03
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY12
+    object: SY02
+  - rel: DEPENDS_ON
+    subject: SY12
+    object: SY13
+  - rel: OWNS
+    subject: TM06
+    object: SY12
+    props:
+      scope: config
+  - rel: ALIAS
+    subject: SY12
+    object: 캐시샵
+  stale: []
+- id: MT-04
+  kind: meeting
+  split: test
+  title: 회의록 MT-04
+  created_at: '2026-10-28'
+  author_team: null
+  brief: 담당 조정 회의. 게임 데이터 테이블의 콘텐츠 영역과 확률 영역 담당을 나눈다
+  causes:
+  - C07
+  - C16
+  facts:
+  - rel: OWNS
+    subject: TM01
+    object: SY17
+    props:
+      scope: data
+      area: content
+  - rel: OWNS
+    subject: TM02
+    object: SY17
+    props:
+      scope: data
+      area: probability
+  - rel: ALIAS
+    subject: SY17
+    object: 데이터 테이블
+  stale: []
+- id: MT-05
+  kind: meeting
+  split: test
+  title: 회의록 MT-05
+  created_at: '2024-02-14'
+  author_team: null
+  brief: 옛날 회의록. 게임 DB 운영을 서버개발팀이 하던 시절 (옛날 정보)
+  causes:
+  - C19
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY11
+    object: SY05
+  - rel: ALIAS
+    subject: SY11
+    object: DB
+  stale:
+  - rel: OWNS
+    subject: TM03
+    object: SY11
+    props:
+      scope: operation
+- id: MT-06
+  kind: meeting
+  split: test
+  title: 회의록 MT-06
+  created_at: '2026-10-28'
+  author_team: null
+  brief: 정기 점검 회의. 거래소와 월드 서버, 게임 DB 의존 관계를 확인한다
+  causes:
+  - C18
+  - C19
+  facts:
+  - rel: DEPENDS_ON
+    subject: SY14
+    object: SY10
+  - rel: DEPENDS_ON
+    subject: SY14
+    object: SY11
+  - rel: OWNS
+    subject: TM03
+    object: SY14
+    props:
+      scope: logic
+  - rel: ALIAS
+    subject: SY14
+    object: 경매장
+  stale: []
+- id: NZ-01
+  kind: distractor
+  split: dev
+  title: 겨울 이벤트 기획 회의 (보상 구성 아이디어, 일정)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 겨울 이벤트 기획 회의 (보상 구성 아이디어, 일정). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-02
+  kind: distractor
+  split: dev
+  title: '사내 공지: 사무실 이전 안내'
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 사내 공지: 사무실 이전 안내. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-03
+  kind: distractor
+  split: dev
+  title: 신규 직원 온보딩 체크리스트
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 신규 직원 온보딩 체크리스트. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-04
+  kind: distractor
+  split: dev
+  title: 길드 대항전 기획 초안
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 길드 대항전 기획 초안. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-05
+  kind: distractor
+  split: dev
+  title: 사내 동호회 모집 공지
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 사내 동호회 모집 공지. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-06
+  kind: distractor
+  split: dev
+  title: 분기 매출 리뷰 요약 (수치는 가상)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 분기 매출 리뷰 요약 (수치는 가상). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-07
+  kind: distractor
+  split: dev
+  title: UI 개편 사용자 조사 결과
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: UI 개편 사용자 조사 결과. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-08
+  kind: distractor
+  split: dev
+  title: 사운드 리소스 관리 규칙
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 사운드 리소스 관리 규칙. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-09
+  kind: distractor
+  split: test
+  title: 코스튬 아트 리뷰 회의
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 코스튬 아트 리뷰 회의. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-10
+  kind: distractor
+  split: test
+  title: 사내 보안 교육 일정 공지 (계정 비밀번호 변경 안내, 게임 장애와 무관)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 사내 보안 교육 일정 공지 (계정 비밀번호 변경 안내, 게임 장애와 무관). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-11
+  kind: distractor
+  split: test
+  title: 우편 발송 업무(실제 택배) 담당자 변경 공지 (게임 우편함과 무관)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 우편 발송 업무(실제 택배) 담당자 변경 공지 (게임 우편함과 무관). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-12
+  kind: distractor
+  split: test
+  title: 확률론 스터디 모임 공지 (게임 확률과 무관)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 확률론 스터디 모임 공지 (게임 확률과 무관). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-13
+  kind: distractor
+  split: test
+  title: 거래처 미팅 메모 (외주 아트 업체)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 거래처 미팅 메모 (외주 아트 업체). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-14
+  kind: distractor
+  split: test
+  title: 서버실 냉방기 교체 일정 (클라우드 이전 전 이야기, 게임 서버 장애와 무관)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 서버실 냉방기 교체 일정 (클라우드 이전 전 이야기, 게임 서버 장애와 무관). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-15
+  kind: distractor
+  split: test
+  title: 이벤트 홀 대관 안내 (오프라인 행사)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 이벤트 홀 대관 안내 (오프라인 행사). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-16
+  kind: distractor
+  split: test
+  title: 콘텐츠 스토리 설정집 일부
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 콘텐츠 스토리 설정집 일부. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-17
+  kind: distractor
+  split: test
+  title: 번역 용어집 업데이트
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 번역 용어집 업데이트. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-18
+  kind: distractor
+  split: test
+  title: 사내 카페 메뉴 개편 공지
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 사내 카페 메뉴 개편 공지. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-19
+  kind: distractor
+  split: test
+  title: 연말 워크숍 일정
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 연말 워크숍 일정. 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
+- id: NZ-20
+  kind: distractor
+  split: test
+  title: 로그 수집 표준 문서 작성 가이드 초안 (구체 담당 없음)
+  created_at: '2026-10-15'
+  author_team: null
+  brief: '관계없는 문서: 로그 수집 표준 문서 작성 가이드 초안 (구체 담당 없음). 장애 원인, 담당, 시스템 관계에 대한 사실을 담지 않는다. 비슷한 단어가 나와도 다른 뜻이다'
+  causes: []
+  facts: []
+  stale: []
