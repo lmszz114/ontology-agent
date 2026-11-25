@@ -69,8 +69,14 @@ def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str]) -> tuple[dict,
         result = llm.call(task="grading", name=f"corpus.verify.{doc['id']}", system=NOISE_SYSTEM,
                           messages=[{"role": "user", "content": f"원문:\n{text}"}], output_schema=NOISE_SCHEMA,
                           max_tokens=1500, metadata={"doc": doc["id"], "prompt_version": PROMPT_VERSION})
-        quotes = result.json()["quotes"]
-        return {"ok": not quotes, "unexpected": quotes}, result.cost["total"]
+        quotes = [q.strip() for q in result.json()["quotes"]]
+        # 원문에 글자 그대로 있는 인용만 위반으로 본다. 빈 인용이나 원문에 없는 인용은 응답 오류로 따로 남긴다 (PR #28 리뷰)
+        found = [q for q in quotes if q and q in text]
+        invalid = [q for q in quotes if not (q and q in text)]
+        outcome = {"ok": not found, "unexpected": found}
+        if invalid:
+            outcome["invalid_quotes"] = invalid
+        return outcome, result.cost["total"]
     items = checked_facts(doc)
     listing = "\n".join(f"{i}. {describe(f, n)}" for i, (_, f) in enumerate(items))
     # 사실 목록은 원래 이름으로 적혀 있다. 문서가 쓰는 다른 이름을 알려줘야 같은 대상인지 판단한다
@@ -100,6 +106,9 @@ def main() -> int:
     seed, plan = load_seed(args.org), load_plan()
     n = names(seed)
     wanted = set(args.only.split(",")) if args.only else None
+    unknown = sorted(wanted - {d["id"] for d in plan}) if wanted else []
+    if unknown:
+        parser.error(f"설계표에 없는 문서 id다: {unknown}")
     todo = [d for d in plan if wanted is None or d["id"] in wanted]
     absent = [d["id"] for d in todo if not doc_path(d).exists()]
     if absent:

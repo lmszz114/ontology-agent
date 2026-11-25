@@ -420,10 +420,10 @@ documents:
     prompt_version: doc-gen-v1
     stop_reason: end_turn
   RB-05:
-    cost_usd: 0.01762
-    generations: 1
+    cost_usd: 0.03394
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v2
     stop_reason: end_turn
   RB-06:
     cost_usd: 0.01869
@@ -443,4 +443,4 @@ documents:
     model: claude-sonnet-5-5
     prompt_version: doc-gen-v1
     stop_reason: end_turn
-total_cost_usd: 1.31116
+total_cost_usd: 1.32748

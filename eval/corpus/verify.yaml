@@ -350,10 +350,10 @@ documents:
     ok: true
     prompt_version: doc-verify-v1
   RB-05:
-    cost_usd: 0.00505
+    cost_usd: 0.01137
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-06:
     cost_usd: 0.00473
     missing: []
@@ -369,4 +369,4 @@ documents:
     missing: []
     ok: true
     prompt_version: doc-verify-v1
-total_cost_usd: 0.67086
+total_cost_usd: 0.67718

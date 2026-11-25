@@ -78,3 +78,82 @@ def test_generated_docs_exist_for_every_planned_doc():
     from eval.corpus.generate import doc_path
 
     assert all(doc_path(d).exists() for d in PLAN)
+
+
+class _FakeResult:
+    def __init__(self, data, stop="end_turn", text=""):
+        import types
+        self._data, self.cost = data, {"total": 0.001}
+        self.message = types.SimpleNamespace(stop_reason=stop)
+        self.text, self.model = text, "fake"
+
+    def json(self):
+        return self._data
+
+
+class _FakeLLM:
+    def __init__(self, result):
+        self.result = result
+
+    def call(self, **kwargs):
+        return self.result
+
+
+def test_distractor_violation_needs_a_quote_from_the_text():
+    """방해 문서는 원문에 글자 그대로 있는 인용만 위반으로 본다. 빈 인용과 없는 인용은 응답 오류로 남긴다 (PR #28 리뷰)."""
+    from eval.corpus.verify import verify_doc
+
+    doc = _doc("NZ-01")
+    text = "겨울 이벤트 일정 회의. 서버개발팀이 우편함을 맡는다."
+    ok, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["", "원문에 없는 문장"]})), doc, text, {})
+    assert ok["ok"] and ok["unexpected"] == [] and ok["invalid_quotes"] == ["", "원문에 없는 문장"]
+    bad, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["서버개발팀이 우편함을 맡는다."]})), doc, text, {})
+    assert not bad["ok"] and bad["unexpected"] == ["서버개발팀이 우편함을 맡는다."]
+
+
+def test_alias_is_checked_in_text_not_by_the_model():
+    from eval.corpus.verify import missing_aliases
+
+    doc = _doc("PM-08")  # 거래소 = '경매장'
+    assert missing_aliases(doc, "경매장 등록이 실패했다") == []
+    assert [m["fact"]["object"] for m in missing_aliases(doc, "거래소 등록이 실패했다")] == ["경매장"]
+
+
+@pytest.mark.parametrize("module", ["eval.corpus.generate", "eval.corpus.verify"])
+def test_unknown_only_ids_are_rejected(module, monkeypatch, capsys):
+    import importlib
+    import sys
+
+    mod = importlib.import_module(module)
+    monkeypatch.setattr(sys, "argv", [module, "--only", "PM-001"])
+    with pytest.raises(SystemExit):
+        mod.main()
+    assert "설계표에 없는 문서 id" in capsys.readouterr().err
+
+
+def test_truncated_generation_is_not_saved(tmp_path, monkeypatch):
+    """끝나지 않은 응답(max_tokens)은 정식 경로에 쓰지 않고 비용만 기록한다 (PR #28 리뷰)."""
+    import sys
+
+    from eval.corpus import generate
+
+    monkeypatch.setattr(generate, "DOCS_DIR", tmp_path / "docs")
+    monkeypatch.setattr(generate, "RECORD_PATH", tmp_path / "generation.yaml")
+    monkeypatch.setattr(generate, "Tracer", type("T", (), {"from_env": staticmethod(lambda: _NullTracer())}))
+    monkeypatch.setattr(generate, "make_anthropic_client", lambda: None)
+    monkeypatch.setattr(generate, "LLM", lambda *a: _FakeLLM(_FakeResult(None, stop="max_tokens", text="# 잘린 문서")))
+    monkeypatch.setattr(sys, "argv", ["generate", "--only", "NZ-01"])
+    assert generate.main() == 1
+    assert not (tmp_path / "docs" / "dev" / "NZ-01.md").exists()
+    import yaml
+    record = yaml.safe_load((tmp_path / "generation.yaml").read_text(encoding="utf-8"))
+    assert record["documents"]["NZ-01"]["generations"] == 1 and record["documents"]["NZ-01"]["stop_reason"] == "max_tokens"
+
+
+class _NullTracer:
+    def run(self, *a, **k):
+        import contextlib
+        return contextlib.nullcontext()
+
+    def flush(self):
+        pass

@@ -22,7 +22,7 @@ from common.tracing import Tracer
 from eval.corpus.check import load_plan
 from ontology.seed import load_seed
 
-PROMPT_VERSION = "doc-gen-v1"
+PROMPT_VERSION = "doc-gen-v2"
 CORPUS_DIR = Path(__file__).parent
 DOCS_DIR = CORPUS_DIR / "docs"
 RECORD_PATH = CORPUS_DIR / "generation.yaml"
@@ -44,6 +44,7 @@ SYSTEM = """너는 가상 MMORPG 라이브 서비스 회사의 사내 문서를 
 - 사실을 표처럼 나열하지 않는다. 여러 문장에 흩어 쓰고, 돌려 말하기와 대명사를 섞는다. 다만 읽는 사람이 사실을 알아낼 수 있어야 한다
 - '다른 이름'이 주어지면 그 대상을 문서의 대부분에서 그 이름으로 부른다
 - '옛날 정보'는 문서가 쓰인 당시의 사실로 자연스럽게 쓴다. 지금은 다르다는 말을 넣지 않는다
+- 주어진 원인, 절차, 담당은 일부일 수 있다. 목록에 없는 경우는 해당하지 않는다거나 이것들뿐이라고 단정하지 않는다
 - 실제 회사, 게임, 서비스, 사람 이름을 쓰지 않는다. 사람은 '김OO'처럼 성과 OO로 쓴다
 - 마크다운 본문만 쓴다. 제목은 '# '로 시작하는 한 줄이다"""
 
@@ -114,12 +115,16 @@ def main() -> int:
     seed, plan = load_seed(args.org), load_plan()
     n = names(seed)
     wanted = set(args.only.split(",")) if args.only else None
+    unknown = sorted(wanted - {d["id"] for d in plan}) if wanted else []
+    if unknown:
+        parser.error(f"설계표에 없는 문서 id다: {unknown}")
     todo = [d for d in plan if (wanted is None or d["id"] in wanted) and (args.force or not doc_path(d).exists())]
     record = yaml.safe_load(RECORD_PATH.read_text(encoding="utf-8")) if RECORD_PATH.exists() else {"documents": {}}
 
     tracer = Tracer.from_env()
     llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
     total = 0.0
+    truncated: list[str] = []
     try:
         with tracer.run("generate_corpus", tags=["mode:generation"], metadata={"prompt_version": PROMPT_VERSION},
                         input={"documents": len(todo)}):
@@ -128,9 +133,14 @@ def main() -> int:
                                   messages=[{"role": "user", "content": prompt(doc, n)}], max_tokens=4000,
                                   metadata={"doc": doc["id"], "prompt_version": PROMPT_VERSION})
                 text = result.text.strip() + "\n"
-                path = doc_path(doc)
-                path.parent.mkdir(parents=True, exist_ok=True)
-                write_text_atomic(path, text)
+                cut = result.message.stop_reason != "end_turn"
+                if cut:
+                    # 잘리거나 끝나지 않은 응답은 정식 경로에 쓰지 않는다. 다음 실행이 이 문서를 다시 만든다 (PR #28 리뷰)
+                    truncated.append(f"{doc['id']}: {result.message.stop_reason}")
+                else:
+                    path = doc_path(doc)
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    write_text_atomic(path, text)
                 cost = result.cost["total"]
                 total += cost
                 previous = record["documents"].get(doc["id"], {})
@@ -142,10 +152,13 @@ def main() -> int:
                 record["total_cost_usd"] = round(sum(r["cost_usd"] for r in record["documents"].values()), 5)
                 # 문서마다 저장한다. 중간에 멈춰도 이미 비용을 낸 결과가 남는다
                 write_text_atomic(RECORD_PATH, yaml.safe_dump(record, allow_unicode=True, sort_keys=True))
-                print(f"{doc['id']}: {len(text)}자, ${cost:.5f}")
+                print(f"{doc['id']}: {len(text)}자, ${cost:.5f}" + (" (저장 안 함)" if cut else ""))
     finally:
         tracer.flush()
     print(f"문서 {len(todo)}개, 이번 비용 ${total:.5f}, 누적 ${record.get('total_cost_usd', 0):.5f}")
+    if truncated:
+        print("끝까지 쓰지 못해 저장하지 않은 문서:\n" + "\n".join(truncated), file=sys.stderr)
+        return 1
     return 0
 
 
