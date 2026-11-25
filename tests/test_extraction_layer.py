@@ -30,7 +30,7 @@ def candidate(fact: dict, span: str = "근거 문장") -> dict:
     """설계표의 정답 사실을 이름 정규화까지 마친 후보 모양으로 바꾼다."""
     obj = {"type": "Name", "name": fact["object"], "id": None} if fact["rel"] == "ALIAS" else _end(fact["object"])
     return {"relation": fact["rel"], "subject": _end(fact["subject"]), "object": obj,
-            "props": dict(fact.get("props") or {}), "evidence_span": span, "confidence": 0.9}
+            "props": dict(fact.get("props") or {}), "evidence_spans": [span], "confidence": 0.9}
 
 
 def test_check_candidate_rejects_undefined_values():
@@ -42,7 +42,10 @@ def test_check_candidate_rejects_undefined_values():
         good | {"props": {"scope": "design"}},
         good | {"props": {"prior": "높음"}},  # OWNS에 없는 속성
         good | {"confidence": 1.5},
-        good | {"evidence_span": "  "},
+        good | {"evidence_spans": ["  "]},
+        good | {"evidence_spans": []},
+        good | {"evidence_spans": ["가", "나", "다", "라"]},
+        good | {"evidence_spans": "문자열 하나"},
         candidate({"rel": "CHECKED_BY", "subject": "C02", "object": "E02", "props": {"required": "yes"}}),
         candidate({"rel": "ALIAS", "subject": "SY13", "object": "메일함"}) | {
             "object": {"type": "Name", "name": "메일함", "id": "SY13"}},
@@ -195,7 +198,7 @@ def test_candidates_round_trip(clean):
 def test_one_bad_candidate_writes_nothing(clean):
     db = clean
     _, cands = _pm01(db)
-    bad = cands[:1] + [cands[1] | {"evidence_span": "원문에 없는 문장이다"}]
+    bad = cands[:1] + [cands[1] | {"evidence_spans": [cands[1]["evidence_spans"][0], "원문에 없는 문장이다"]}]
     with pytest.raises(RecordError):
         record_candidates(db, run_id="x1", document_id="PM-01", candidates=bad)
     unknown = cands[:1] + [cands[1] | {"subject": cands[1]["subject"] | {"id": "C99"}}]
