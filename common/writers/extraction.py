@@ -93,26 +93,53 @@ def _require_id(value: str, name: str) -> None:
         raise RecordError(f"{name}에는 영문, 숫자, '_', '.', '-'만 쓴다: {value!r}")
 
 
-def record_document(driver: Driver, *, document_id: str, kind: str, title: str, text: str,
-                    created_at: str, author_team: str | None = None) -> None:
-    """원천 문서 하나를 쓴다. 이미 있으면 거부한다. 평가용 정보(dev와 test 구분, 정답 사실)는 넣지 않는다."""
-    _require_id(document_id, "document_id")
-    if kind not in DOCUMENT_KINDS:
-        raise RecordError(f"Document.kind에 쓸 수 없는 값이다: {kind}")
-    if not text.strip() or not title.strip():
-        raise RecordError(f"{document_id}: 제목과 원문이 있어야 한다")
+def _check_document(doc: dict) -> None:
+    _require_id(doc["document_id"], "document_id")
+    if doc["kind"] not in DOCUMENT_KINDS:
+        raise RecordError(f"Document.kind에 쓸 수 없는 값이다: {doc['kind']}")
+    if not doc["text"].strip() or not doc["title"].strip():
+        raise RecordError(f"{doc['document_id']}: 제목과 원문이 있어야 한다")
 
-    def write(tx) -> None:
-        if tx.run("MATCH (d:Document {id: $id}) RETURN d.id", id=document_id).single():
-            raise RecordError(f"이미 있는 Document다: {document_id}")
-        if author_team is not None and not tx.run("MATCH (t:Team {id: $id}) RETURN t.id", id=author_team).single():
-            raise RecordError(f"정의되지 않은 팀이다: {author_team}")
-        tx.run("CREATE (d:Document {id: $id, kind: $kind, title: $title, text: $text, created_at: $at}) "
-               "SET d.author_team = $team",
-               id=document_id, kind=kind, title=title, text=text, at=created_at, team=author_team).consume()
+
+_RESET = "MATCH (n) WHERE n:Candidate OR n:Document DETACH DELETE n"
+
+
+def record_documents(driver: Driver, documents: list[dict], *, replace: bool = False) -> int:
+    """원천 문서 여럿을 한 트랜잭션으로 쓴다. 하나라도 거부되면 아무것도 쓰지 않는다. 이미 있는 문서는 거부한다.
+
+    replace면 같은 트랜잭션에서 지식 추출 계층(문서와 후보)을 먼저 비운다. 지우기와 쓰기가 한 번에 커밋되어
+    중간에 실패해도 반쯤 지워지거나 반쯤 적재된 그래프가 남지 않는다 (PR #29 리뷰).
+    평가용 정보(dev와 test 구분, 정답 사실)는 넣지 않는다. 각 문서는 document_id, kind, title, text, created_at,
+    author_team(없을 수 있다)을 가진다.
+    """
+    ids = [d["document_id"] for d in documents]
+    if len(set(ids)) != len(ids):
+        raise RecordError("같은 문서가 두 번 있다")
+    for doc in documents:
+        _check_document(doc)
+
+    def write(tx) -> int:
+        if replace:
+            tx.run(_RESET).consume()
+        for doc in documents:
+            if tx.run("MATCH (d:Document {id: $id}) RETURN d.id", id=doc["document_id"]).single():
+                raise RecordError(f"이미 있는 Document다: {doc['document_id']}")
+            team = doc.get("author_team")
+            if team is not None and not tx.run("MATCH (t:Team {id: $id}) RETURN t.id", id=team).single():
+                raise RecordError(f"정의되지 않은 팀이다: {team}")
+            tx.run("CREATE (d:Document {id: $id, kind: $kind, title: $title, text: $text, created_at: $at}) "
+                   "SET d.author_team = $team",
+                   id=doc["document_id"], kind=doc["kind"], title=doc["title"], text=doc["text"],
+                   at=doc["created_at"], team=team).consume()
+        return len(documents)
 
     with driver.session() as session:
-        session.execute_write(write)
+        return session.execute_write(write)
+
+
+def record_document(driver: Driver, **document) -> None:
+    """원천 문서 하나를 쓴다. 이미 있으면 거부한다."""
+    record_documents(driver, [document])
 
 
 def record_candidates(driver: Driver, *, run_id: str, document_id: str, candidates: list[dict]) -> list[str]:
@@ -212,8 +239,6 @@ def delete_run(driver: Driver, run_id: str) -> int:
 
 def reset_extraction_layer(driver: Driver) -> int:
     """지식 추출 계층(Document, Candidate)을 모두 지우고 지운 수를 돌려준다. 정적, 사건 계층은 건드리지 않는다."""
-    deleted = 0
+    # 문서와 후보를 한 번에 지운다. 나눠 지우면 그 사이에 쓴 후보가 문서 연결 없이 남을 수 있다 (PR #29 리뷰)
     with driver.session() as session:
-        for label in EXTRACTION_LABELS:
-            deleted += session.run(f"MATCH (n:{label}) DETACH DELETE n").consume().counters.nodes_deleted
-    return deleted
+        return session.run(_RESET).consume().counters.nodes_deleted

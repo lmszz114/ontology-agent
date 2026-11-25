@@ -222,6 +222,14 @@ def test_layers_are_reset_separately(clean):
     with db.session() as s:
         docs = s.run("MATCH (d:Document) RETURN count(d) AS n").single()["n"]
     assert docs == sum(1 for d in PLAN if d["split"] == "dev")
+    # 다시 적재하다 실패하면 아무것도 바뀌지 않는다. 지우기와 쓰기가 한 트랜잭션이다 (PR #29 리뷰)
+    broken = [dict(d) for d in PLAN if d["split"] == "dev"]
+    broken[-1]["author_team"] = "TM99"
+    with pytest.raises(RecordError):
+        load_documents(db, "dev", broken, replace=True)
+    with db.session() as s:
+        assert s.run("MATCH (d:Document) RETURN count(d) AS n").single()["n"] == docs
+    assert load_documents(db, "dev", replace=True)  # 같은 명령으로 다시 돌리면 된다
     reset_extraction_layer(db)
     with db.session() as s:
         assert s.run("MATCH (d:Document) RETURN count(d) AS n").single()["n"] == 0

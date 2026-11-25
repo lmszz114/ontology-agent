@@ -10,7 +10,7 @@ test 문서는 M8에서 처음 추출한다 (4단계 4-2). 그래서 --split tes
 import argparse
 import sys
 
-from common.writers.extraction import record_document, reset_extraction_layer
+from common.writers.extraction import record_documents
 from eval.corpus.check import load_plan
 from eval.corpus.generate import doc_path
 from ontology.db import get_driver
@@ -28,28 +28,28 @@ def document_fields(doc: dict) -> dict:
             "created_at": doc["created_at"], "author_team": doc.get("author_team")}
 
 
-def load_documents(driver, split: str, plan: list[dict] | None = None) -> list[str]:
+def load_documents(driver, split: str, plan: list[dict] | None = None, *, replace: bool = False) -> list[str]:
+    """한 split의 문서를 한 트랜잭션으로 적재한다. replace면 같은 트랜잭션에서 지식 추출 계층을 먼저 비운다.
+
+    중간에 실패하면 아무것도 바뀌지 않아 같은 명령으로 다시 돌리면 된다 (PR #29 리뷰).
+    """
     plan = load_plan() if plan is None else plan
-    ids = []
-    for doc in plan:
-        if doc["split"] == split:
-            record_document(driver, **document_fields(doc))
-            ids.append(doc["id"])
-    return ids
+    docs = [document_fields(d) for d in plan if d["split"] == split]
+    record_documents(driver, docs, replace=replace)
+    return [d["document_id"] for d in docs]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="현장 문서를 Document 노드로 적재")
     parser.add_argument("--split", required=True, choices=["dev", "test"])
-    parser.add_argument("--reset", action="store_true", help="지식 추출 계층(문서와 후보)을 먼저 지운다")
+    parser.add_argument("--reset", action="store_true",
+                        help="이 DB의 지식 추출 계층(모든 문서와 후보)을 지우고 적재한다. 지우기와 적재는 한 트랜잭션이다")
     parser.add_argument("--allow-test", action="store_true", help="test 문서 적재 (M8 최종 실행에서만)")
     args = parser.parse_args()
     if args.split == "test" and not args.allow_test:
         parser.error("test 문서는 M8 최종 실행에서만 적재한다 (4단계 4-2). --allow-test가 필요하다")
     with get_driver() as driver:
-        if args.reset:
-            print(f"지식 추출 계층 {reset_extraction_layer(driver)}개 노드를 지웠다")
-        ids = load_documents(driver, args.split)
+        ids = load_documents(driver, args.split, replace=args.reset)
     print(f"{args.split} 문서 {len(ids)}개 적재")
     return 0
 
