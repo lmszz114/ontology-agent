@@ -185,8 +185,9 @@ def test_grader_excludes_incomplete_reps_and_counts_empty_reps_as_zero(tmp_path)
     _write_rep(tmp_path, "r1", [("PM-01", [good], [], 1), ("CH-04", [], [], 0)])
     _write_rep(tmp_path, "r2", [("PM-01", [], [], 0), ("CH-04", [], [], 0)])
     _write_rep(tmp_path, "r3", [("PM-01", [good], [], 1)])  # 중단된 반복
+    _write_rep(tmp_path, "r4", [("CH-04", [], [], 0)])  # 기록한 반복 수보다 많은 폴더도 검사한다
     result = g.grade(tmp_path)
-    assert result["incomplete_reps"] == {"r3": ["CH-04"]} and result["reps"] == 2
+    assert result["incomplete_reps"] == {"r3": ["CH-04"], "r4": ["PM-01"]} and result["reps"] == 2
     assert result["per_rep"]["r2"]["overall"]["f1"] == 0.0 and result["per_rep"]["r2"]["overall"]["precision"] is None
     r1 = result["per_rep"]["r1"]["overall"]["f1"]
     assert result["summary"]["overall"]["f1"]["mean"] == round(r1 / 2, 4)
