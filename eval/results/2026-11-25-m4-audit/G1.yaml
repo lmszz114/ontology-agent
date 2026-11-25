@@ -3,7 +3,7 @@ min_len: 8
 splits:
   dev:
     documents: 30
-    sentences: 922
+    sentences: 929
     same: 0
     contains: 0
     same_ratio: 0.0
@@ -11,7 +11,7 @@ splits:
     examples: []
   test:
     documents: 44
-    sentences: 1326
+    sentences: 1328
     same: 0
     contains: 4
     same_ratio: 0.0

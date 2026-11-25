@@ -42,3 +42,14 @@ def test_merge_human_counts_agreement_and_rejects_unknown():
         merge_human(ev, human | {"judgments": {"Z": {"verdict": "supported"}}})
     with pytest.raises(ValueError):
         merge_human(ev, human | {"judgments": {"A": {"verdict": "맞음"}}})
+
+
+def test_missing_or_empty_rep_stops(tmp_path):
+    import pytest
+
+    (tmp_path / "run.yaml").write_text("split: dev\n", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        load_rep(tmp_path, "r99")
+    (tmp_path / "r1").mkdir()
+    with pytest.raises(SystemExit):
+        load_rep(tmp_path, "r1")

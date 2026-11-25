@@ -50,9 +50,14 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().rstrip(".!?。").strip()
 
 
+# 제목, 인용, 글머리표, 번호 목록 기호만 뗀다. "10분 이상"처럼 숫자로 시작하는 문장은 그대로 둔다 (PR #33 리뷰)
+MARKER = re.compile(r"^\s*(?:#+|>|[-*]|\d+[.)])\s+")
+
+
 def sentences(text: str) -> list[str]:
-    parts = re.split(r"(?<=[.!?])\s+|\n+", text)
-    return [_norm(p.lstrip("#>-*0123456789. ")) for p in parts if _norm(p.lstrip("#>-*0123456789. "))]
+    # 줄마다 목록 기호를 먼저 뗀다. 문장으로 먼저 나누면 "1."이 따로 떨어진다
+    parts = [p for line in text.splitlines() for p in re.split(r"(?<=[.!?])\s+", MARKER.sub("", line))]
+    return [n for n in map(_norm, parts) if n]
 
 
 def check(plan: list[dict], seed: dict) -> dict:

@@ -57,11 +57,15 @@ def load_rep(folder: Path, rep: str) -> list[dict]:
     run = yaml.safe_load((folder / "run.yaml").read_text(encoding="utf-8"))
     if run.get("split") != "dev":
         raise SystemExit(f"{folder}: dev 문서 추출 결과만 쓴다 (split={run.get('split')})")
+    if not (folder / rep).is_dir():
+        raise SystemExit(f"{folder / rep}: 반복 폴더가 없다")
     out = []
     for path in sorted((folder / rep).glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
         for i, c in enumerate(data.get("candidates") or []):
             out.append(c | {"document_id": data["document_id"], "candidate": f"{data['document_id']}:{i:03d}"})
+    if not out:
+        raise SystemExit(f"{folder / rep}: 후보가 없다. 빈 표본으로 기록을 쓰지 않는다")
     return out
 
 
