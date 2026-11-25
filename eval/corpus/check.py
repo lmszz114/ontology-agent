@@ -67,6 +67,7 @@ def check_plan(seed: dict, docs: list[dict]) -> list[str]:
     causes = {c["id"] for c in seed["causes"]}
     # aliases 속성이 있는 노드 (3단계 2-1): 팀, 시스템, 증상, 원인
     alias_targets = {item["id"] for key in ("teams", "systems", "symptoms", "causes") for item in seed[key]}
+    node_names = {item["id"]: item["name"] for key in ("teams", "systems", "symptoms", "causes") for item in seed[key]}
     for d in docs:
         where = d["id"]
         if d.get("kind") not in KINDS or not where.startswith(KINDS[d["kind"]] + "-"):
@@ -88,6 +89,8 @@ def check_plan(seed: dict, docs: list[dict]) -> list[str]:
                     errors.append(f"{where}: 별칭을 붙일 수 없는 대상이다 (팀, 시스템, 증상, 원인의 id만): {fact['subject']}")
                 if not isinstance(fact["object"], str) or not fact["object"].strip():
                     errors.append(f"{where}: 별칭이 비어 있다")
+                elif fact["object"] == node_names.get(fact["subject"]):
+                    errors.append(f"{where}: 별칭이 원래 이름과 같다: {fact['object']}")
             elif not _matches(fact, k.get((fact["rel"], fact["subject"], fact["object"]), [])):
                 errors.append(f"{where}: K에 없는 사실이다: {fact}")
         for fact in d.get("stale") or []:

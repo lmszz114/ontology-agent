@@ -1,0 +1,446 @@
+documents:
+  CH-01:
+    cost_usd: 0.02359
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-02:
+    cost_usd: 0.02088
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-03:
+    cost_usd: 0.02006
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-04:
+    cost_usd: 0.02075
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-05:
+    cost_usd: 0.02076
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-06:
+    cost_usd: 0.02154
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-07:
+    cost_usd: 0.02357
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-08:
+    cost_usd: 0.02573
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-09:
+    cost_usd: 0.02201
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-10:
+    cost_usd: 0.04784
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-11:
+    cost_usd: 0.01903
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-12:
+    cost_usd: 0.01944
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-13:
+    cost_usd: 0.01872
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-14:
+    cost_usd: 0.02067
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  CH-15:
+    cost_usd: 0.0134
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  MT-01:
+    cost_usd: 0.01054
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  MT-02:
+    cost_usd: 0.01265
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  MT-03:
+    cost_usd: 0.00962
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  MT-04:
+    cost_usd: 0.00792
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  MT-05:
+    cost_usd: 0.01025
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  MT-06:
+    cost_usd: 0.01811
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-01:
+    cost_usd: 0.00941
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-02:
+    cost_usd: 0.01318
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-03:
+    cost_usd: 0.01088
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-04:
+    cost_usd: 0.00947
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-05:
+    cost_usd: 0.01337
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-06:
+    cost_usd: 0.00948
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-07:
+    cost_usd: 0.01094
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-08:
+    cost_usd: 0.02905
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v3
+    stop_reason: end_turn
+  NZ-09:
+    cost_usd: 0.01089
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-10:
+    cost_usd: 0.01919
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v3
+    stop_reason: end_turn
+  NZ-11:
+    cost_usd: 0.02061
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v3
+    stop_reason: end_turn
+  NZ-12:
+    cost_usd: 0.02298
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v3
+    stop_reason: end_turn
+  NZ-13:
+    cost_usd: 0.00914
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-14:
+    cost_usd: 0.02621
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v3
+    stop_reason: end_turn
+  NZ-15:
+    cost_usd: 0.01086
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-16:
+    cost_usd: 0.00983
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-17:
+    cost_usd: 0.02562
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v3
+    stop_reason: end_turn
+  NZ-18:
+    cost_usd: 0.01255
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-19:
+    cost_usd: 0.01269
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  NZ-20:
+    cost_usd: 0.01108
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-01:
+    cost_usd: 0.02166
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-02:
+    cost_usd: 0.01905
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-03:
+    cost_usd: 0.02125
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-04:
+    cost_usd: 0.02276
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-05:
+    cost_usd: 0.02149
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-06:
+    cost_usd: 0.02438
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-07:
+    cost_usd: 0.02371
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-08:
+    cost_usd: 0.02146
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-09:
+    cost_usd: 0.023
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-10:
+    cost_usd: 0.02104
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-11:
+    cost_usd: 0.01957
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-12:
+    cost_usd: 0.02293
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-13:
+    cost_usd: 0.02063
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-14:
+    cost_usd: 0.02437
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-15:
+    cost_usd: 0.02157
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-16:
+    cost_usd: 0.0214
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-17:
+    cost_usd: 0.02466
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-18:
+    cost_usd: 0.02253
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-19:
+    cost_usd: 0.02211
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-20:
+    cost_usd: 0.02257
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-21:
+    cost_usd: 0.02245
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-22:
+    cost_usd: 0.02168
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-23:
+    cost_usd: 0.02116
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-24:
+    cost_usd: 0.02343
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  PM-25:
+    cost_usd: 0.02139
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+  RB-01:
+    cost_usd: 0.03097
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-02:
+    cost_usd: 0.03544
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-03:
+    cost_usd: 0.03401
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-04:
+    cost_usd: 0.02512
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-05:
+    cost_usd: 0.03394
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-06:
+    cost_usd: 0.03402
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-07:
+    cost_usd: 0.03301
+    generations: 2
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v2
+    stop_reason: end_turn
+  RB-08:
+    cost_usd: 0.01083
+    generations: 1
+    model: claude-sonnet-5-5
+    prompt_version: doc-gen-v1
+    stop_reason: end_turn
+total_cost_usd: 1.4941

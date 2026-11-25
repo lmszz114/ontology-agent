@@ -553,9 +553,6 @@ documents:
     subject: S8
     object: SY05
   - rel: ALIAS
-    subject: SY05
-    object: 서버 인프라
-  - rel: ALIAS
     subject: TM10
     object: 인프라 운영
   stale: []
@@ -939,9 +936,6 @@ documents:
     subject: SY15
     object: SY17
   - rel: ALIAS
-    subject: SY15
-    object: 이벤트 시스템
-  - rel: ALIAS
     subject: TM03
     object: 서버 개발
   stale: []
@@ -1000,9 +994,6 @@ documents:
   - rel: DEPENDS_ON
     subject: SY10
     object: SY11
-  - rel: ALIAS
-    subject: SY10
-    object: 월드 서버
   - rel: ALIAS
     subject: TM03
     object: 서버팀
@@ -1171,9 +1162,6 @@ documents:
   - rel: DEPENDS_ON
     subject: SY10
     object: SY11
-  - rel: ALIAS
-    subject: SY10
-    object: 월드 서버
   stale: []
 - id: PM-22
   kind: postmortem
@@ -1383,9 +1371,6 @@ documents:
   - rel: DEPENDS_ON
     subject: SY11
     object: SY05
-  - rel: ALIAS
-    subject: SY11
-    object: 게임 DB
   stale: []
 - id: RB-01
   kind: runbook
@@ -1935,9 +1920,6 @@ documents:
     object: SY04
     props:
       scope: operation
-  - rel: ALIAS
-    subject: SY04
-    object: 모니터링
   stale: []
 - id: MT-01
   kind: meeting
@@ -1960,9 +1942,6 @@ documents:
     object: SY15
     props:
       scope: logic
-  - rel: ALIAS
-    subject: SY15
-    object: 이벤트 시스템
   stale: []
 - id: MT-02
   kind: meeting

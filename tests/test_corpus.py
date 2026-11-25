@@ -52,3 +52,168 @@ def test_plan_errors_are_reported(did, mutate, message):
 def test_every_cause_needs_a_postmortem():
     docs = [d for d in copy.deepcopy(PLAN) if d["id"] != "PM-11"]  # C01의 유일한 회고
     assert any("C01" in e and "회고가 없는" in e for e in check_plan(SEED, docs))
+
+
+def test_relevant_docs_follow_cause_and_skip_stale():
+    """검색 정답 문서는 정답 원인을 다루는 문서이고 옛날 정보 문서는 뺀다 (eval/corpus/relevant.py)."""
+    from eval.corpus.relevant import relevant_docs, stale_docs
+    from eval.validate import load_scenarios
+
+    dev = {s["id"]: s for s in load_scenarios("dev")}
+    test = {s["id"]: s for s in load_scenarios("test")}
+    # C11(이벤트 설정 오류): 회고, 대화, 회의록, 런북. 이벤트 설정을 서버개발팀이 하던 옛날 회의록(MT-02)은 뺀다
+    assert relevant_docs(dev["SC-S4-01"]) == [["CH-06", "MT-01", "PM-05", "RB-01", "RB-02"]]
+    assert stale_docs(dev["SC-S4-01"]) == [["MT-02"]]
+    # 사건 둘이면 사건마다, 원인 미확정과 범위 밖은 비어 있다
+    assert len(relevant_docs(test["SC-S6-06"])) == 2
+    assert relevant_docs(test["SC-S1-09"]) == [[]] and relevant_docs(test["SC-OOS-02"]) == []
+    # 모든 원인 있는 사건은 정답 문서가 하나 이상 있다
+    for s in list(dev.values()) + list(test.values()):
+        from eval.labels import label_incidents
+        for incident, docs in zip(label_incidents(s["expected"]), relevant_docs(s)):
+            assert bool(docs) == bool(incident.get("root_cause")), s["id"]
+
+
+def test_generated_docs_exist_for_every_planned_doc():
+    from eval.corpus.generate import doc_path
+
+    assert all(doc_path(d).exists() for d in PLAN)
+
+
+class _FakeResult:
+    def __init__(self, data, stop="end_turn", text=""):
+        import types
+        self._data, self.cost = data, {"total": 0.001}
+        self.message = types.SimpleNamespace(stop_reason=stop)
+        self.text, self.model = text, "fake"
+
+    def json(self):
+        return self._data
+
+
+class _FakeLLM:
+    def __init__(self, result):
+        self.result = result
+
+    def call(self, **kwargs):
+        return self.result
+
+
+def test_distractor_violation_needs_a_quote_from_the_text():
+    """방해 문서는 원문에 글자 그대로 있는 인용만 위반으로 본다. 빈 인용과 없는 인용은 응답 오류로 남긴다 (PR #28 리뷰)."""
+    from eval.corpus.verify import verify_doc
+
+    doc = _doc("NZ-01")
+    text = "겨울 이벤트 일정 회의. 서버개발팀이 우편함을 맡는다."
+    # 잘못된 인용만 온 응답은 위반도 통과도 아니다. 판정 불가로 남겨 다시 확인한다
+    odd, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["", "원문에 없는 문장"]})), doc, text, {})
+    assert not odd["ok"] and odd["undecided"] and odd["unexpected"] == []
+    assert odd["invalid_quotes"] == ["", "원문에 없는 문장"]
+    clean, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": []})), doc, text, {})
+    assert clean["ok"] and "undecided" not in clean
+    bad, _ = verify_doc(_FakeLLM(_FakeResult({"quotes": ["서버개발팀이 우편함을 맡는다."]})), doc, text, {})
+    assert not bad["ok"] and bad["unexpected"] == ["서버개발팀이 우편함을 맡는다."]
+
+
+def test_alias_is_checked_in_text_not_by_the_model():
+    from eval.corpus.verify import missing_aliases
+
+    doc = _doc("PM-08")  # 거래소 = '경매장'
+    assert missing_aliases(doc, "경매장 등록이 실패했다") == []
+    assert [m["fact"]["object"] for m in missing_aliases(doc, "거래소 등록이 실패했다")] == ["경매장"]
+
+
+@pytest.mark.parametrize("module", ["eval.corpus.generate", "eval.corpus.verify"])
+def test_unknown_only_ids_are_rejected(module, monkeypatch, capsys):
+    import importlib
+    import sys
+
+    mod = importlib.import_module(module)
+    monkeypatch.setattr(sys, "argv", [module, "--only", "PM-001"])
+    with pytest.raises(SystemExit):
+        mod.main()
+    assert "설계표에 없는 문서 id" in capsys.readouterr().err
+
+
+def test_truncated_generation_is_not_saved(tmp_path, monkeypatch):
+    """끝나지 않은 응답(max_tokens)은 정식 경로에 쓰지 않고 비용만 기록한다 (PR #28 리뷰)."""
+    import sys
+
+    from eval.corpus import generate
+
+    monkeypatch.setattr(generate, "DOCS_DIR", tmp_path / "docs")
+    monkeypatch.setattr(generate, "RECORD_PATH", tmp_path / "generation.yaml")
+    monkeypatch.setattr(generate, "Tracer", type("T", (), {"from_env": staticmethod(lambda: _NullTracer())}))
+    monkeypatch.setattr(generate, "make_anthropic_client", lambda: None)
+    monkeypatch.setattr(generate, "LLM", lambda *a: _FakeLLM(_FakeResult(None, stop="max_tokens", text="# 잘린 문서")))
+    monkeypatch.setattr(sys, "argv", ["generate", "--only", "NZ-01"])
+    assert generate.main() == 1
+    assert not (tmp_path / "docs" / "dev" / "NZ-01.md").exists()
+    import yaml
+    record = yaml.safe_load((tmp_path / "generation.yaml").read_text(encoding="utf-8"))
+    assert record["documents"]["NZ-01"]["generations"] == 1 and record["documents"]["NZ-01"]["stop_reason"] == "max_tokens"
+
+
+class _NullTracer:
+    def run(self, *a, **k):
+        import contextlib
+        return contextlib.nullcontext()
+
+    def flush(self):
+        pass
+
+
+def test_manual_check_counts_only_while_its_quote_is_in_the_text():
+    """사람 확인 기록은 근거 문장이 지금 원문에 있을 때만 '없음'을 되돌린다 (PR #28, RB-08)."""
+    from eval.corpus.verify import apply_manual
+
+    doc = {"id": "RB-08"}
+    fact = {"rel": "OWNS", "subject": "TM04", "object": "SY08", "props": {"scope": "execution"}}
+    other = {"rel": "OWNS", "subject": "TM04", "object": "SY08", "props": {"scope": "logic"}}
+    outcome = {"ok": False, "missing": [{"kind": "stale", "fact": fact, "reason": "없다고 판단"},
+                                        {"kind": "stale", "fact": other, "reason": "없다고 판단"}]}
+    check = {"doc": "RB-08", "kind": "stale", "fact": fact, "quote": "배포 실행은 우리 팀이 맡는다.", "checked_at": "x"}
+    # 속성이 다른 사실은 되돌리지 않는다
+    partial = apply_manual(outcome, doc, "배포 실행은 우리 팀이 맡는다.", [check])
+    assert not partial["ok"] and [m["fact"] for m in partial["missing"]] == [other]
+    assert partial["manual_confirmed"][0]["reason"] == "없다고 판단"
+    # 문서를 다시 써서 문장이 바뀌면 기록은 무효다
+    assert apply_manual(outcome, doc, "다른 문장", [check]) == outcome
+    done = apply_manual({"ok": False, "missing": [outcome["missing"][0]]}, doc, "배포 실행은 우리 팀이 맡는다.", [check])
+    assert done["ok"] and apply_manual(done, doc, "배포 실행은 우리 팀이 맡는다.", [check]) == done
+    # 이미 되돌린 기록도 원문에서 문장이 사라지면 '없음'으로 돌아간다
+    back = apply_manual(done, doc, "다른 문장", [check])
+    assert not back["ok"] and "manual_confirmed" not in back and back["missing"][0]["reason"] == "없다고 판단"
+
+
+def test_manual_checks_point_at_real_quotes():
+    from eval.corpus.generate import doc_path
+    from eval.corpus.verify import load_manual
+
+    for check in load_manual():
+        assert check["quote"] in doc_path(_doc(check["doc"])).read_text(encoding="utf-8"), check["doc"]
+
+
+def test_manual_only_fails_for_docs_never_verified(tmp_path, monkeypatch, capsys):
+    """--manual-only는 확인 기록이 없는 문서를 통과로 세지 않는다 (PR #28 리뷰)."""
+    import sys
+
+    import eval.corpus.verify as verify
+
+    monkeypatch.setattr(verify, "RESULT_PATH", tmp_path / "verify.yaml")
+    monkeypatch.setattr(sys, "argv", ["verify", "--only", "RB-08", "--manual-only"])
+    assert verify.main() == 1
+    assert "RB-08" in capsys.readouterr().err
+    assert not (tmp_path / "verify.yaml").exists()
+
+
+# 방해 문서가 '게임과 관계없다'고 스스로 해명하면 추출기에게 답을 알려주는 셈이다 (doc-gen-v3, PR #28 표본 검토)
+DISCLAIMERS = ("관련이 없", "관계가 없", "관계없", "무관", "혼동", "헷갈", "다루지 않", "여기서 말하는", "을 뜻한다", "를 뜻한다")
+
+
+def test_distractors_do_not_explain_themselves():
+    from eval.corpus.generate import doc_path
+
+    found = [(d["id"], w) for d in PLAN if d["kind"] == "distractor"
+             for w in DISCLAIMERS if w in doc_path(d).read_text(encoding="utf-8")]
+    assert found == []
