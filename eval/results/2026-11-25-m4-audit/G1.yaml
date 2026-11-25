@@ -1,0 +1,31 @@
+k_sentences: 61
+min_len: 8
+splits:
+  dev:
+    documents: 30
+    sentences: 922
+    same: 0
+    contains: 0
+    same_ratio: 0.0
+    contains_ratio: 0.0
+    examples: []
+  test:
+    documents: 44
+    sentences: 1326
+    same: 0
+    contains: 4
+    same_ratio: 0.0
+    contains_ratio: 0.003
+    examples:
+    - document: PM-15
+      sentence: 이번 건의 원인 분석과 수정도 클라팀 소관이다
+      kind: 포함
+    - document: PM-17
+      sentence: 그래서 원인 분석과 수정은 서버 개발이 주도했다
+      kind: 포함
+    - document: PM-18
+      sentence: 그래서 이번 건의 원인 분석과 수정도 서버팀이 주도했다
+      kind: 포함
+    - document: PM-22
+      sentence: 우편 시스템 로직의 원인 분석과 수정은 서버개발팀이 맡았다
+      kind: 포함
