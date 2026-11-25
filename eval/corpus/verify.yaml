@@ -330,43 +330,52 @@ documents:
     ok: true
     prompt_version: doc-verify-v1
   RB-01:
-    cost_usd: 0.00491
+    cost_usd: 0.0107
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-02:
-    cost_usd: 0.00535
+    cost_usd: 0.01097
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-03:
-    cost_usd: 0.00556
+    cost_usd: 0.01108
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-04:
-    cost_usd: 0.00491
+    cost_usd: 0.01052
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-05:
-    cost_usd: 0.01137
+    cost_usd: 0.01769
     missing: []
     ok: true
     prompt_version: doc-verify-v2
   RB-06:
-    cost_usd: 0.00473
+    cost_usd: 0.0125
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-07:
-    cost_usd: 0.00435
+    cost_usd: 0.0091
     missing: []
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
   RB-08:
-    cost_usd: 0.01135
-    missing: []
-    ok: true
-    prompt_version: doc-verify-v1
-total_cost_usd: 0.67718
+    cost_usd: 0.01516
+    missing:
+    - fact:
+        object: SY08
+        props:
+          scope: execution
+        rel: OWNS
+        subject: TM04
+      kind: stale
+      reason: 없다고 판단
+      said: 클라이언트개발팀이 통합 런처(패치 서버)의 실행을(를) 맡는다
+    ok: false
+    prompt_version: doc-verify-v2
+total_cost_usd: 0.72237
