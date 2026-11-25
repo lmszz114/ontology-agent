@@ -223,12 +223,23 @@ def test_layers_are_reset_separately(clean):
         docs = s.run("MATCH (d:Document) RETURN count(d) AS n").single()["n"]
     assert docs == sum(1 for d in PLAN if d["split"] == "dev")
     # 다시 적재하다 실패하면 아무것도 바뀌지 않는다. 지우기와 쓰기가 한 트랜잭션이다 (PR #29 리뷰)
+    pm01 = next(d for d in PLAN if d["id"] == "PM-01")
+    span = next(line for line in document_fields(pm01)["text"].splitlines() if len(line) > 20)
+    kept = record_candidates(db, run_id="x1", document_id="PM-01",
+                             candidates=prepare([candidate(f, span) for f in pm01["facts"][:3]], K))
+    before = list_candidates(db)
     broken = [dict(d) for d in PLAN if d["split"] == "dev"]
     broken[-1]["author_team"] = "TM99"
     with pytest.raises(RecordError):
         load_documents(db, "dev", broken, replace=True)
     with db.session() as s:
         assert s.run("MATCH (d:Document) RETURN count(d) AS n").single()["n"] == docs
+    # 후보와 그 연결(문서, 기존 노드, 검수 팀)도 그대로 남는다 (PR #29 리뷰)
+    assert list_candidates(db) == before and [c["id"] for c in before] == kept
+    with db.session() as s:
+        links = s.run("MATCH (c:Candidate)-[r:PROPOSES|REVIEWED_BY]->() RETURN count(r) AS n").single()["n"]
+    assert links == sum((c["subject"].get("id") is not None) + (c["object"].get("id") is not None)
+                        + len(set(c["reviewers"])) for c in prepare([candidate(f, span) for f in pm01["facts"][:3]], K))
     assert load_documents(db, "dev", replace=True)  # 같은 명령으로 다시 돌리면 된다
     reset_extraction_layer(db)
     with db.session() as s:
