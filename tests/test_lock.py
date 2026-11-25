@@ -22,3 +22,16 @@ def test_lock_detects_changed_added_and_missing_files(tmp_path):
     (test_dir / "c.yaml").write_text("id: c\n", encoding="utf-8")
     assert lock_errors(test_dir, lock) == [
         "a.yaml: 잠근 뒤에 내용이 바뀌었다", "b.yaml: 잠근 파일인데 없다", "c.yaml: 잠그지 않은 파일이다"]
+
+
+def test_grader_refuses_test_results_when_lock_differs(monkeypatch):
+    """test 결과는 잠근 라벨로만 채점한다. 잠금과 다르면 채점을 멈춘다."""
+    import pytest
+
+    from eval.grader import grade
+
+    monkeypatch.setattr(grade, "lock_errors", lambda: ["a.yaml: 잠근 뒤에 내용이 바뀌었다"])
+    with pytest.raises(grade.GradeError, match="잠금과 다르다"):
+        grade.check_basis({"run": {"scenario": "SC-S1-03", "split": "test"}}, grade.load_seed())
+    # dev 결과는 잠금과 상관없다
+    grade.check_basis({"run": {"scenario": "SC-S1-01", "split": "dev"}}, grade.load_seed())
