@@ -159,14 +159,19 @@ def main() -> int:
         return 1
     record = yaml.safe_load(RESULT_PATH.read_text(encoding="utf-8")) if RESULT_PATH.exists() else {"documents": {}}
     if args.manual_only:
+        # 확인한 적 없는 문서는 사람 확인만으로 통과시키지 않는다. 먼저 LLM 확인을 돌린다 (PR #28 리뷰)
+        unverified = [d["id"] for d in todo if d["id"] not in record["documents"]]
         for doc in todo:
             if doc["id"] in record["documents"]:
                 text = doc_path(doc).read_text(encoding="utf-8")
                 record["documents"][doc["id"]] = apply_manual(record["documents"][doc["id"]], doc, text, confirmations)
-        write_text_atomic(RESULT_PATH, yaml.safe_dump(record, allow_unicode=True, sort_keys=True))
+        if len(unverified) < len(todo):
+            write_text_atomic(RESULT_PATH, yaml.safe_dump(record, allow_unicode=True, sort_keys=True))
         failed = sorted(i for i, r in record["documents"].items() if not r["ok"])
         print(f"사람 확인 반영, 부족 {len(failed)}개 {failed}")
-        return 1 if failed else 0
+        if unverified:
+            print(f"확인 기록이 없는 문서가 있다. --manual-only 없이 먼저 확인한다: {unverified}", file=sys.stderr)
+        return 1 if failed or unverified else 0
     tracer = Tracer.from_env()
     llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
     try:
