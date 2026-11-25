@@ -1,0 +1,246 @@
+{
+  "run": {
+    "scenario": "SC-S5-01",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:32:37.060766+09:00",
+    "finished_at": "2026-11-25T16:32:47.134408+09:00",
+    "seconds": 10.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "203f506b71c965a5b5deb0e377a8d824",
+    "llm_calls": 4,
+    "usage": {
+      "input": 12107,
+      "output": 1700,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0020607,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "60bb5563d29203e25dfae7c65e06b72fc532476a1420e7c88082b525d67a6a81",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r2",
+        "run_id": "2026-11-25-m4-extract-dev-r2",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "9242f691a12dff0a7b3cce06fce4115a152dbd12bbc471b495e0ad11e5f476f8"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 179,
+        "dropped_new_entity": 15,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 5,
+        "aliases_added": 29,
+        "args_from_location": 7,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 11,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 16,
+          "RESOLVED_BY": 36
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 162,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "cfec9a9b9e22376759b168e1946f7781f60232be9e6a6c7695cfdc2aa3951dc4"
+  },
+  "outputs": [
+    {
+      "symptom": "S5",
+      "incident_id": "INC-5a4d27c0e446",
+      "report_ids": [
+        "RP-063a74eafdd7"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C14",
+          "rank": 1,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E11",
+              "tool": "query_account_activity",
+              "args": {},
+              "result": "confirm",
+              "detail": "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C14",
+      "primary_team": "TM11",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P7",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-8d04d58374a9"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ce87d17107f9"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-23eb7ad5ea4d"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-188a63d624e4"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-c4a02566b97d"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-d0a81fe6ab8c"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-081470e98eae"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-deeccfe3879d"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-f801f3bd3070"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-befb6f045839"
+        },
+        {
+          "action_id": "A11",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-aa45bb04eac3"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C14",
+          "tool": "query_account_activity",
+          "check_id": "E11",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S5 아이템 복사, 재화 비정상 증식 (영향 범위 some_users, 심각도 SEV2)\n-> 원인 C14 어뷰징 (불법 프로그램, 악용) (점수 2): confirm, 근거 ['E11']. E11 계정별 거래·행동 집중도 조회 결과, 최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다. 판정 근거 E11의 기대값인 '소수 계정에 거래와 행동이 몰려 있음'과 일치하며, E11은 required=true인 유일한 확정 근거이므로 C14 어뷰징 가설을 확정한다. 다만 이 조회는 집중도만 보여 주므로, 불법 프로그램이나 악용의 구체적 수단은 보안팀 확인이 추가로 필요하다.\n-> 1차 담당 TM11",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

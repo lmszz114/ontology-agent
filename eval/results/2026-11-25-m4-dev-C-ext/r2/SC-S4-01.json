@@ -1,0 +1,200 @@
+{
+  "run": {
+    "scenario": "SC-S4-01",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:32:24.824549+09:00",
+    "finished_at": "2026-11-25T16:32:28.507083+09:00",
+    "seconds": 3.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "0d716eaca9f790eb914e802cc4f721eb",
+    "llm_calls": 2,
+    "usage": {
+      "input": 4532,
+      "output": 568,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0007372,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "60bb5563d29203e25dfae7c65e06b72fc532476a1420e7c88082b525d67a6a81",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r2",
+        "run_id": "2026-11-25-m4-extract-dev-r2",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "9242f691a12dff0a7b3cce06fce4115a152dbd12bbc471b495e0ad11e5f476f8"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 179,
+        "dropped_new_entity": 15,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 5,
+        "aliases_added": 29,
+        "args_from_location": 7,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 11,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 16,
+          "RESOLVED_BY": 36
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 162,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "990c85fbde0fb2307bed4907a4230b570d12f65c4244f50e7f195a0464920df0"
+  },
+  "outputs": [
+    {
+      "symptom": "S4",
+      "incident_id": "INC-f898afa15ecd",
+      "report_ids": [
+        "RP-065395d25169"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-cab4f8044d62"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-a61ae94eeaba"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-fe5d034a91ad"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6887af25c5de"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7b5d9e3d3cd6"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ad9b415ab4e7"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-aee8bae805f7"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-0d91ef1544af"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S4 이벤트 보상 오지급, 과지급 (영향 범위 all_service, 심각도 SEV2)",
+      "needs_human": [
+        "원인 후보를 받지 못했다",
+        "원인이 확정되지 않았다. 상위 가설: []"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

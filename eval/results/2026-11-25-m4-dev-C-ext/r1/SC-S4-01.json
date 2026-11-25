@@ -1,0 +1,278 @@
+{
+  "run": {
+    "scenario": "SC-S4-01",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:26:14.853359+09:00",
+    "finished_at": "2026-11-25T16:26:34.828941+09:00",
+    "seconds": 20.0,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "ce943e24d9682b5126196142f0fc89fd",
+    "llm_calls": 7,
+    "usage": {
+      "input": 24682,
+      "output": 3230,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0040832,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "f16a2d60be47ccf0059a27f3e6d2e16169e85f830e694af4708b0500995760b5",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r1",
+        "run_id": "2026-11-25-m4-extract-dev-r1",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "063d2a68d22d08cb0023c83502175ea595a38689b4a37c7e6f0107e58ef38d43"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 7,
+        "aliases_added": 26,
+        "args_from_location": 6,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 13,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 18,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "990c85fbde0fb2307bed4907a4230b570d12f65c4244f50e7f195a0464920df0"
+  },
+  "outputs": [
+    {
+      "symptom": "S4",
+      "incident_id": "INC-a8d6a8ecba67",
+      "report_ids": [
+        "RP-eda44231825d"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C11",
+          "rank": 1,
+          "score": 5,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "rule_out",
+              "detail": "출석 이벤트 달성자의 보상 지급 기록이 설정된 수량의 두 배로 남아 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "rule_out",
+              "detail": "오늘 15:50에 출석 이벤트의 보상 수량 설정이 수정됐다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C02",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "rule_out",
+              "detail": "결제 승인 기록이 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "rule_out",
+              "detail": "출석 이벤트 달성자의 보상 지급 기록이 설정된 수량의 두 배로 남아 있다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-33699cfc36e8"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-5347a7bd9afe"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-a04befcc3ca1"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e6c43608c5b4"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-11297ab9f367"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-4d2c7f602993"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-eb42f77b1797"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-1ee84fe965f2"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_payment_record",
+          "check_id": "E01",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S4 이벤트 보상 오지급, 과지급 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C11 이벤트 설정 오류 (점수 5): rule_out, 근거 ['E02', 'E07']. E02(우편함, 보상 지급 기록 조회)는 출석 이벤트 달성자의 보상 지급 기록이 설정 수량의 두 배로 남아 있다고 확인했다. 판정 기준은 '실제로 보상이 미지급 상태이다'였으나 결과는 지급이 이중으로 이루어졌음을 보여주므로 expect와 다르다. E07(설정 변경 이력 조회, SY15)은 증상 시작(16:25) 이전인 15:50에 출석 이벤트 보상 수량 설정이 수정됐다고 확인해 expect와 일치한다. 필수 근거 중 하나(E02)가 expect와 다르므로 규칙에 따라 C11 이벤트 설정 오류 가설은 배제한다. 다만 E02의 expect 문구('미지급')는 중복 지급 증상과 맞지 않아 보이므로 판정 기준 작성을 재검토할 필요가 있다. E07의 설정 변경 시점과 중복 지급 기록의 관계는 이 두 결과만으로는 확정할 수 없다.\n-> 원인 C02 우편함 지급 누락 (점수 2): rule_out, 근거 ['E01', 'E02']. C02(우편함 지급 누락) 가설의 필수 근거 두 개를 확인했다. E01(query_payment_record)은 '결제 승인 기록이 있다'로 기대값 '결제 승인이 정상으로 나온다'와 일치한다. E02는 이미 조회한 K1(query_mailbox_log {}, 동일 인자) 결과로 판단했다. K1에서 출석 이벤트 달성자의 보상 지급 기록이 설정 수량의 두 배로 남아 있어, 기대값 '메일함에 지급 기록이 없다'와 다르다. 필수 근거 하나가 기대값과 다르므로 지급 누락은 배제된다. 지급 기록이 실제로 중복 생성되고 있으므로 누락이 아닌 중복 지급 쪽 원인을 봐야 한다. K2에서 오늘 15:50에 출석 이벤트 보상 수량 설정이 수정된 점도 이 방향과 맞는다.",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: []"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

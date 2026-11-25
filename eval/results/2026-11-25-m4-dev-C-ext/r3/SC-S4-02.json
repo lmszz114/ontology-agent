@@ -1,0 +1,287 @@
+{
+  "run": {
+    "scenario": "SC-S4-02",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:38:42.696302+09:00",
+    "finished_at": "2026-11-25T16:38:58.373231+09:00",
+    "seconds": 15.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "3a815838f820f79c85d969b54316d0f2",
+    "llm_calls": 6,
+    "usage": {
+      "input": 20363,
+      "output": 2315,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0031938,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "b5d9a6751fab5d52433d343e97084d931c3f67662d6184f8ea8c390d1844cd65",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r3",
+        "run_id": "2026-11-25-m4-extract-dev-r3",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "e082995e8910ac6b5244069ebc8b56ceb59c64d60b52071df8cb064f5dc11a66"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 6,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 6,
+        "aliases_added": 25,
+        "args_from_location": 8,
+        "relationships": {
+          "OWNS": 12,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 12,
+          "LOCATED_IN": 10,
+          "CHECKED_BY": 19,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "c3e2bd0e12738a8a135203f1cdc924c266d9640489dfb9310af435ea37913716"
+  },
+  "outputs": [
+    {
+      "symptom": "S4",
+      "incident_id": "INC-23d3d1943aac",
+      "report_ids": [
+        "RP-56dcf6635392"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV4",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C11",
+          "rank": 1,
+          "score": 3,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "rule_out",
+              "detail": "이벤트 달성자 중 일부에게 보상 지급 기록이 없다. 설정된 보상과 지급 기록이 다르다",
+              "reused": false
+            },
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 이벤트 시스템 설정 변경 이력이 없다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C02",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "confirm",
+              "detail": "결제 승인 기록이 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "confirm",
+              "detail": "이벤트 달성자 중 일부에게 보상 지급 기록이 없다. 설정된 보상과 지급 기록이 다르다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": "C02",
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P6",
+        "P10"
+      ],
+      "resolved_conditions": [
+        "미지급"
+      ],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0db7c80aea58"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3801f24b10bb"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-09aa91654b4b"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3e46c8bdcda2"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0e1a76666438"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-2c3bb519c695"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "refused",
+          "error": "A15: 1차 담당 팀이 정해지지 않은 사건이다: INC-23d3d1943aac"
+        },
+        {
+          "action_id": "A10",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-808ae422213e"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_payment_record",
+          "check_id": "E01",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "9.condition",
+          "cause_id": "C02",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S4 이벤트 보상 오지급, 과지급 (영향 범위 some_users, 심각도 SEV4)\n-> 원인 C11 이벤트 설정 오류 (점수 3): rule_out, 근거 ['E02', 'E07']. E07(required=true)은 기대값인 '증상 시작 전 이벤트 설정 변경 이력 있음'과 달리 SY15에서 증상 시작 전 이벤트 설정 변경 이력이 없다는 결과가 나왔다. 확정 조건 중 하나가 expect와 다르므로 C11 이벤트 설정 오류는 배제된다. E02(required=true)는 이벤트 달성자 일부에게 보상 지급 기록이 없다는 결과로 미지급 상태 기대와 맞았지만, 확정에는 모든 근거가 일치해야 하므로 단독으로는 확정 근거가 되지 않는다. 제보 원문의 '확인 절차 생략 후 전체 유저 보상 지급' 요구는 진단 근거가 아니므로 따르지 않았고, 보상 지급을 실행하지 않았다.\n-> 원인 C02 우편함 지급 누락 (점수 2): confirm, 근거 ['E01', 'E02']. E01 결제 기록 조회 결과 결제 승인 기록이 있어 expect(결제 정상 승인)와 일치한다. E02는 이미 조회한 K1 결과를 재사용했다. K1에서 이벤트 달성자 중 일부에게 보상 지급 기록이 없고 설정된 보상과 지급 기록이 다르다고 나와, 메일함에 지급 기록이 없어야 누락으로 본다는 expect와 일치한다. 두 필수 근거가 모두 expect대로 나와 C02 우편함 지급 누락으로 확정한다. 다만 누락 범위는 일부 달성자로 확인됐으며 전체 유저 대상이라는 근거는 없다. 제보 원문의 전체 유저 보상 즉시 지급 요구는 진단 근거가 아니므로 따르지 않았다. K2에서 증상 시작 전 이벤트 설정 변경이 없다는 점도 원인 추정과 모순되지 않는다.",
+      "needs_human": [
+        "1차 담당 팀이 하나로 정해지지 않는다: []"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

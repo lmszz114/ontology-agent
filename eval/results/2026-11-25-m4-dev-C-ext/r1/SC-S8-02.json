@@ -1,0 +1,659 @@
+{
+  "run": {
+    "scenario": "SC-S8-02",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:28:38.233661+09:00",
+    "finished_at": "2026-11-25T16:30:04.189025+09:00",
+    "seconds": 86.0,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "6201525b2d4a4953e06df6b14c930f98",
+    "llm_calls": 45,
+    "usage": {
+      "input": 118460,
+      "output": 12929,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0183105,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "f16a2d60be47ccf0059a27f3e6d2e16169e85f830e694af4708b0500995760b5",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r1",
+        "run_id": "2026-11-25-m4-extract-dev-r1",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "063d2a68d22d08cb0023c83502175ea595a38689b4a37c7e6f0107e58ef38d43"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 7,
+        "aliases_added": 26,
+        "args_from_location": 6,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 13,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 18,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "7d7556cad5a5d162c8d7910c9fdbbe18739e65b0618a00a75b10f7760602991c"
+  },
+  "outputs": [
+    {
+      "symptom": "S8",
+      "incident_id": "INC-9150ac618e8c",
+      "report_ids": [
+        "RP-4b0225a49615",
+        "RP-49e384aa3ea6",
+        "RP-6e352cf601d3",
+        "RP-304b75d8041b",
+        "RP-427be0e73d30",
+        "RP-a7d0fd2123fa",
+        "RP-c743edb00c48",
+        "RP-c5e7a54a452b",
+        "RP-6608c09e0897",
+        "RP-03bcf25e50e4",
+        "RP-1a314885de6a",
+        "RP-5d4e30db2368",
+        "RP-1a458d43ab16",
+        "RP-34ad296768e3",
+        "RP-b80faa5ef22d",
+        "RP-e6500c859fbf",
+        "RP-ef972c25a2ee",
+        "RP-c2d9b74353ab",
+        "RP-63efa3125af7"
+      ],
+      "report_indexes": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C20",
+          "rank": 1,
+          "score": 3,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "rule_out",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": false
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "rule_out",
+              "detail": "21시부터 3월드 공성전이 진행 중이다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-4be8b75fb773"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-448fc3fe2ca1"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-33d040993814"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-593141a31a5a"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7547a62839d9"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-49e384aa3ea6",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-979c3b23b654"
+        },
+        {
+          "report_id": "RP-6e352cf601d3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8153fac0e576"
+        },
+        {
+          "report_id": "RP-304b75d8041b",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-aa4d54dbbc72"
+        },
+        {
+          "report_id": "RP-427be0e73d30",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a15eb62680b3"
+        },
+        {
+          "report_id": "RP-a7d0fd2123fa",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-64c42dfa4dd3"
+        },
+        {
+          "report_id": "RP-c743edb00c48",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-dde06798d21c"
+        },
+        {
+          "report_id": "RP-c5e7a54a452b",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-5a875b10107d"
+        },
+        {
+          "report_id": "RP-6608c09e0897",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-6061fc616638"
+        },
+        {
+          "report_id": "RP-03bcf25e50e4",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-5e65228faf8e"
+        },
+        {
+          "report_id": "RP-1a314885de6a",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-c36eb1b4a36d"
+        },
+        {
+          "report_id": "RP-5d4e30db2368",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-34db77fc51ea"
+        },
+        {
+          "report_id": "RP-1a458d43ab16",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-13f6ae0e1f6f"
+        },
+        {
+          "report_id": "RP-34ad296768e3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b98e5e7bc984"
+        },
+        {
+          "report_id": "RP-b80faa5ef22d",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-008e265c2e9c"
+        },
+        {
+          "report_id": "RP-e6500c859fbf",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-34ed36507158"
+        },
+        {
+          "report_id": "RP-ef972c25a2ee",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-456fd5dda1a9"
+        },
+        {
+          "report_id": "RP-c2d9b74353ab",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b0ac792c2c58"
+        },
+        {
+          "report_id": "RP-63efa3125af7",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b8bf20ccaaf4"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_content_schedule",
+          "check_id": "E14",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S8 대규모 콘텐츠 중 서버 과부하 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C20 서버 자원 부족 (점수 3): rule_out, 근거 ['E09', 'E14']. E09(query_resource_metrics, SY05) 결과는 자원·네트워크 지표가 정상 범위라는 것이었다. 기대값인 한계 근접 또는 초과와 다르므로 필수 근거 하나가 어긋난다. E14(query_content_schedule) 결과는 21시부터 3월드 공성전이 진행 중이라는 것으로, 렉 발생 시간과 겹친다는 기대와는 맞는다. 그러나 필수 근거 중 하나라도 기대와 다르면 배제해야 하므로 C20 서버 자원 부족은 rule_out이다. 공성 시간과 겹치는 증상 패턴은 서버 자원 부족이 아닌 다른 원인을 가리킨다.",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: []"
+      ],
+      "retrieved_docs": null
+    },
+    {
+      "symptom": "S8",
+      "incident_id": "INC-07d1d0845e82",
+      "report_ids": [
+        "RP-ba97c0c5b9ea"
+      ],
+      "report_indexes": [
+        1
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C20",
+          "rank": 1,
+          "score": 3,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "rule_out",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": false
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "rule_out",
+              "detail": "21시부터 3월드 공성전이 진행 중이다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-ee23946c92e5"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-585eb562ac54"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3183964bfa22"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e418098bf3cc"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-4840fce0ac70"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_content_schedule",
+          "check_id": "E14",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S8 대규모 콘텐츠 중 서버 과부하 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C20 서버 자원 부족 (점수 3): rule_out, 근거 ['E09', 'E14']. E09(query_resource_metrics, SY05)의 결과는 서버 인프라의 자원, 네트워크 지표가 정상 범위라는 것이었다. 기대값인 '한계에 가깝거나 넘은 상태'와 다르므로 필수 근거 하나가 불일치한다. E14(query_content_schedule)의 결과는 21시부터 3월드 공성전이 진행 중이라는 것이었고, 제보 시각 21:01과 겹쳐 기대값과 일치한다. 그러나 확정에는 필수 근거 모두가 기대대로 나와야 하므로 E09 불일치로 자원 부족 가설은 배제된다. 공성전 시간대 렉은 확인되었지만, 원인이 서버 자원 부족이라는 근거는 없다.",
+      "needs_human": [
+        "중복 의심: ['INC-9150ac618e8c']",
+        "원인이 확정되지 않았다. 상위 가설: []"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

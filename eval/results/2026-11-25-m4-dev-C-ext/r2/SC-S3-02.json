@@ -1,0 +1,510 @@
+{
+  "run": {
+    "scenario": "SC-S3-02",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:30:57.127714+09:00",
+    "finished_at": "2026-11-25T16:32:22.072907+09:00",
+    "seconds": 84.9,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "4da5b57aed2834c22e9899ce2729583a",
+    "llm_calls": 40,
+    "usage": {
+      "input": 97178,
+      "output": 12338,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0158868,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "60bb5563d29203e25dfae7c65e06b72fc532476a1420e7c88082b525d67a6a81",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r2",
+        "run_id": "2026-11-25-m4-extract-dev-r2",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "9242f691a12dff0a7b3cce06fce4115a152dbd12bbc471b495e0ad11e5f476f8"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 179,
+        "dropped_new_entity": 15,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 5,
+        "aliases_added": 29,
+        "args_from_location": 7,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 11,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 16,
+          "RESOLVED_BY": 36
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 162,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "c09f70308e58fa1102edd6bcd339dce455a0a5d87a9888036b2922f91caf096d"
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-60e658bc131f",
+      "report_ids": [
+        "RP-b49a17a50c9e",
+        "RP-16eedb278a06",
+        "RP-966eb3fc6fc3",
+        "RP-656327019223",
+        "RP-b34d46397cda",
+        "RP-9e0a64595d7a",
+        "RP-9206a8c28543",
+        "RP-59495fa378bd",
+        "RP-882109e0a85d",
+        "RP-fa01a793c731",
+        "RP-da238536df46",
+        "RP-c1653fd9cff1",
+        "RP-15569bd3fd05",
+        "RP-848f5f14210d",
+        "RP-6a9b938f1824",
+        "RP-6a30a1e9544c",
+        "RP-1a97e52e6cf7",
+        "RP-8e0d57d1528f",
+        "RP-8c56b537da39",
+        "RP-8a12591acf91"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C07",
+          "rank": 1,
+          "score": 3,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM01",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-586c6aa98b6f"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-abb850670175"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-a5a4b3f294ed"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7cab07724c67"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-5230c2cc746e"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-16eedb278a06",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-89b9c15c016a"
+        },
+        {
+          "report_id": "RP-966eb3fc6fc3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-0d0ac8b42afb"
+        },
+        {
+          "report_id": "RP-656327019223",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8894df5a0590"
+        },
+        {
+          "report_id": "RP-b34d46397cda",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-1d744073c42a"
+        },
+        {
+          "report_id": "RP-9e0a64595d7a",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-74c089050a99"
+        },
+        {
+          "report_id": "RP-9206a8c28543",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-e2301863e05a"
+        },
+        {
+          "report_id": "RP-59495fa378bd",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b21dcfbe6bce"
+        },
+        {
+          "report_id": "RP-882109e0a85d",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8f709a9a5fe2"
+        },
+        {
+          "report_id": "RP-fa01a793c731",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-1fce7b2e96e5"
+        },
+        {
+          "report_id": "RP-da238536df46",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-3a7f961fc926"
+        },
+        {
+          "report_id": "RP-c1653fd9cff1",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a89e37d543a9"
+        },
+        {
+          "report_id": "RP-15569bd3fd05",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-27737f5dd6b8"
+        },
+        {
+          "report_id": "RP-848f5f14210d",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-26f5c8f78a78"
+        },
+        {
+          "report_id": "RP-6a9b938f1824",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-d2d921a04014"
+        },
+        {
+          "report_id": "RP-6a30a1e9544c",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-96550d1c0cde"
+        },
+        {
+          "report_id": "RP-1a97e52e6cf7",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-7d56ff272ff1"
+        },
+        {
+          "report_id": "RP-8e0d57d1528f",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-fcf51dbbfc44"
+        },
+        {
+          "report_id": "RP-8c56b537da39",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-624d82a5611e"
+        },
+        {
+          "report_id": "RP-8a12591acf91",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-4dfcd220335f"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C07 콘텐츠 테이블 값 오류 (점수 3): inconclusive, 근거 []. C07의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 1차 담당 TM01",
+      "needs_human": [
+        "C07의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "원인이 확정되지 않았다. 상위 가설: ['C07']"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

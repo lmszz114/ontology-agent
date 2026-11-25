@@ -1,0 +1,546 @@
+{
+  "run": {
+    "scenario": "SC-S3-02",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:24:38.520277+09:00",
+    "finished_at": "2026-11-25T16:26:12.196799+09:00",
+    "seconds": 93.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "76fdc013eb2ba5e719fc4231b3a4f45c",
+    "llm_calls": 42,
+    "usage": {
+      "input": 109791,
+      "output": 13994,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.017976100000000002,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "f16a2d60be47ccf0059a27f3e6d2e16169e85f830e694af4708b0500995760b5",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r1",
+        "run_id": "2026-11-25-m4-extract-dev-r1",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "063d2a68d22d08cb0023c83502175ea595a38689b4a37c7e6f0107e58ef38d43"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 7,
+        "aliases_added": 26,
+        "args_from_location": 6,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 13,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 18,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "c09f70308e58fa1102edd6bcd339dce455a0a5d87a9888036b2922f91caf096d"
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-7871007f68f0",
+      "report_ids": [
+        "RP-2f8713734b64",
+        "RP-ff5c78d1b490",
+        "RP-0f889b7ac742",
+        "RP-10b8fb98f3dd",
+        "RP-de6e61d418b3",
+        "RP-757217c42473",
+        "RP-f923111be0f3",
+        "RP-bb9af9352dc1",
+        "RP-5986588a9f6b",
+        "RP-12396397ad4c",
+        "RP-86feda30e124",
+        "RP-13f066463ce2",
+        "RP-5d503f419ad5",
+        "RP-2e8416fb000e",
+        "RP-9395a5aed444",
+        "RP-d94d2d62056d",
+        "RP-aed48f912ef1",
+        "RP-eb649123fb5a",
+        "RP-b5c413626264",
+        "RP-1387da0a3410"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C07",
+          "rank": 1,
+          "score": 3,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "args": {
+                "area": "content"
+              },
+              "result": "inconclusive",
+              "detail": "증상 시작 전에 게임 데이터 테이블 콘텐츠 영역의 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "args": {},
+              "result": "inconclusive",
+              "detail": "QA가 2월드 테스트 계정으로 같은 퀘스트의 보상 수령 오류를 재현했다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-5f0eea9032de"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-26fce84d7477"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-51f42acd82e8"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e4c10a206d01"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6860473fb189"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-ff5c78d1b490",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-57ae3a9a6bae"
+        },
+        {
+          "report_id": "RP-0f889b7ac742",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-9b52d57f2874"
+        },
+        {
+          "report_id": "RP-10b8fb98f3dd",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-1bbf2de1dd8f"
+        },
+        {
+          "report_id": "RP-de6e61d418b3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-2835573d0d37"
+        },
+        {
+          "report_id": "RP-757217c42473",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-3b3a4b942bd8"
+        },
+        {
+          "report_id": "RP-f923111be0f3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-0544ac4c0f72"
+        },
+        {
+          "report_id": "RP-bb9af9352dc1",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-153d1a35e916"
+        },
+        {
+          "report_id": "RP-5986588a9f6b",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-cb3912f2f759"
+        },
+        {
+          "report_id": "RP-12396397ad4c",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-da899320847c"
+        },
+        {
+          "report_id": "RP-86feda30e124",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-12312583613a"
+        },
+        {
+          "report_id": "RP-13f066463ce2",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-d2d121698d92"
+        },
+        {
+          "report_id": "RP-5d503f419ad5",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-84ca45a7e193"
+        },
+        {
+          "report_id": "RP-2e8416fb000e",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-6b4a527bb0eb"
+        },
+        {
+          "report_id": "RP-9395a5aed444",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8731bb1cebd0"
+        },
+        {
+          "report_id": "RP-d94d2d62056d",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-bdedc2da6019"
+        },
+        {
+          "report_id": "RP-aed48f912ef1",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-2ed96bd757bd"
+        },
+        {
+          "report_id": "RP-eb649123fb5a",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f63bab0d1c93"
+        },
+        {
+          "report_id": "RP-b5c413626264",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-c8dc32aac05c"
+        },
+        {
+          "report_id": "RP-1387da0a3410",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-ea8a78a90126"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C07",
+          "tool": "query_table_change",
+          "check_id": "E05",
+          "args": {
+            "area": "content"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C07",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C07 콘텐츠 테이블 값 오류 (점수 3): inconclusive, 근거 ['E05', 'E12']. E12(필수): QA가 2월드 테스트 계정으로 같은 퀘스트의 보상 수령 오류를 재현했다. 다만 재현 결과는 오류가 발생한다는 사실만 보여주고, 콘텐츠 테이블의 특정 값이 잘못되었다는 것은 확인하지 못했다. E05(참고): 증상 시작 전 콘텐츠 영역 테이블 변경 이력이 없다. 변경이 없다는 것은 최근 값 변경이 원인이 아니라는 뜻이지만, 기존 값 자체가 잘못되어 있을 가능성(잠복 오류)을 배제하지는 못한다. 필수 근거 중 재현 결과가 콘텐츠 테이블 값 오류와 직접 연결되지 않아 확정도 배제도 할 수 없다. 부족한 것: 해당 퀘스트 보상 콘텐츠의 실제 테이블 값과 기대값의 대조(예: 2월드 적용 값 확인), 그리고 재현이 테이블 값 때문인지 가르는 추가 검증. 또한 영향 범위가 2월드 한정이므로 2월드에만 적용되는 설정 차이인지도 함께 확인이 필요하다.",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: ['C07']"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
