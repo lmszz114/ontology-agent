@@ -208,6 +208,24 @@ def test_same_server_written_differently_is_refused():
     cext.check_ext_uri("bolt://localhost:7689", "bolt://127.0.0.1:7687")  # 기본 7689는 통과
 
 
+def test_unresolvable_address_stops(monkeypatch):
+    """한쪽 주소만 풀리지 않으면 이름과 IP를 비교하게 되어 같은 서버를 놓친다. 확인할 수 없으면 멈춘다."""
+    import socket
+
+    real = socket.getaddrinfo
+
+    def fake(host, *args, **kwargs):
+        if host == "dev-db":
+            raise socket.gaierror("이름을 풀 수 없다")
+        return real(host, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", fake)
+    with pytest.raises(cext.CextError, match="주소를 풀 수 없어"):
+        cext.check_ext_uri("bolt://127.0.0.1:7687", "bolt://dev-db:7687")
+    with pytest.raises(cext.CextError, match="주소를 풀 수 없어"):
+        cext.check_ext_uri("bolt://dev-db:7689", "bolt://localhost:7687")
+
+
 def test_resume_refuses_results_from_another_graph(tmp_path, monkeypatch):
     """같은 추출 폴더라도 후보가 바뀌었으면 앞 결과와 한 반복에 섞지 않는다 (LLM 호출 전에 멈춘다)."""
     from eval.runner.__main__ import check_cext, parse_args

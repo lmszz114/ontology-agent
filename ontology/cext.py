@@ -70,13 +70,16 @@ def dev_uri() -> str:
 
 
 def _endpoints(uri: str) -> set[tuple[str, int]]:
-    """URI가 가리키는 (IP, 포트). 이름을 풀지 못하면 소문자 호스트 이름 그대로 쓴다."""
+    """URI가 가리키는 (IP, 포트). 주소를 풀지 못하면 멈춘다.
+
+    한쪽만 풀리지 않을 때 이름과 IP를 비교하면 같은 서버도 다르게 보여 검사를 통과한다 (PR #32 리뷰).
+    """
     parsed = urlsplit(uri)
     host, port = (parsed.hostname or "localhost").lower(), parsed.port or 7687
     try:
         return {(info[4][0], port) for info in socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)}
-    except OSError:
-        return {(host, port)}
+    except OSError as exc:
+        raise CextError(f"{uri}의 주소를 풀 수 없어 개발용 DB와 같은 서버인지 확인하지 못했다: {exc}") from exc
 
 
 def check_ext_uri(ext: str | None = None, dev: str | None = None) -> None:
