@@ -30,18 +30,26 @@ SEED_FILES = {
 }
 
 
+PROVENANCE_FILE = "provenance.yaml"
+
+
 def _read(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def load_seed(org: str = "org-a") -> dict:
-    """시드와 조직 설정을 하나의 dict로 돌려준다."""
+def load_seed(org: str = "org-a", seed_dir: Path = SEED_DIR) -> dict:
+    """시드와 조직 설정을 하나의 dict로 돌려준다. seed_dir은 지식 반영(A17)을 반영 전에 검증할 때 바꾼다."""
     seed: dict = {}
     for filename, key in SEED_FILES.items():
-        data = _read(SEED_DIR / filename)
+        data = _read(seed_dir / filename)
         seed[key] = data[key]
         if key == "severities":
             seed["escalation_procedure"] = data["escalation_procedure"]
+
+    # 반영된 지식의 출처. 비어 있으면 넣지 않아 시드 해시가 바뀌지 않는다 (M4 PR 5)
+    provenance = (_read(seed_dir / PROVENANCE_FILE) or {}).get("provenance") if (seed_dir / PROVENANCE_FILE).exists() else None
+    if provenance:
+        seed["provenance"] = provenance
 
     org_data = _read(PACKAGES_DIR / org / "org.yaml")
     seed["org"] = org_data["org"]

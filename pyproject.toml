@@ -10,6 +10,8 @@ dependencies = [
     "mcp>=2.3",
     "neo4j>=5.26",
     "pyyaml>=6.0",
+    "ruamel-yaml>=0.19.1",
+    "streamlit>=1.67.0",
 ]
 
 [dependency-groups]

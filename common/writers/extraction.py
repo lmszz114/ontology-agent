@@ -105,7 +105,9 @@ def _check_document(doc: dict) -> None:
         raise RecordError(f"{doc['document_id']}: 제목과 원문이 있어야 한다")
 
 
-_RESET = "MATCH (n) WHERE n:Candidate OR n:Document DETACH DELETE n"
+# 후보에 붙은 지식 반영(A17) 실행 기록도 함께 지운다. 사건 계층 초기화는 이 기록을 남긴다 (M4 PR 5 결정 1)
+_RESET = ("MATCH (n) WHERE n:Candidate OR n:Document OR (n:ActionRun AND (n)-[:FOR]->(:Candidate)) "
+          "DETACH DELETE n")
 
 
 def record_documents(driver: Driver, documents: list[dict], *, replace: bool = False) -> int:
@@ -219,9 +221,10 @@ def list_candidates(driver: Driver, *, run_id: str | None = None, status: str | 
         "WHERE ($run IS NULL OR c.run_id = $run) AND ($status IS NULL OR c.status = $status) "
         "AND ($doc IS NULL OR d.id = $doc) "
         "AND ($team IS NULL OR EXISTS { (c)-[:REVIEWED_BY]->(:Team {id: $team}) }) "
-        "OPTIONAL MATCH (c)-[:REVIEWED_BY]->(t:Team) "
-        "WITH c, d, collect(t.id) AS reviewers "
-        "RETURN c {.*, document_id: d.id, reviewers: reviewers} AS c ORDER BY c.id"
+        "OPTIONAL MATCH (c)-[rb:REVIEWED_BY]->(t:Team) "
+        "WITH c, d, collect(t.id) AS reviewers, collect(CASE WHEN rb.decision IS NULL THEN null "
+        "ELSE {team: t.id, decision: rb.decision} END) AS decisions "
+        "RETURN c {.*, document_id: d.id, reviewers: reviewers, decisions: decisions} AS c ORDER BY c.id"
     )
     with driver.session() as session:
         rows = session.run(query, run=run_id, status=status, team=team_id, doc=document_id).data()
@@ -230,14 +233,61 @@ def list_candidates(driver: Driver, *, run_id: str | None = None, status: str | 
         c = row["c"]
         c["props"] = json.loads(c["props"])
         c["reviewers"] = sorted(c["reviewers"])
+        c["decisions"] = {d["team"]: d["decision"] for d in c["decisions"]}
+        # 기록할 때와 같은 모양(subject, object)으로도 돌려준다. 대조, 반영 코드가 이 모양을 받는다
+        for side in ("subject", "object"):
+            c[side] = {"type": c[f"{side}_type"], "name": c[f"{side}_name"], "id": c.get(f"{side}_id")}
         c.pop("_lock", None)
         out.append(c)
     return out
 
 
+DECISIONS = {"approve": "approved", "reject": "rejected"}
+
+
+def review_candidate(driver: Driver, *, candidate_id: str, team_id: str, decision: str, now) -> dict:
+    """검수 팀 하나의 판단을 기록하고 후보의 상태를 돌려준다 (R8-6, M4 PR 5 결정 6).
+
+    배정된 팀이 모두 승인하면 approved, 한 팀이라도 반려하면 rejected다. 반려도 지우지 않고 남긴다 (R8-8).
+    배정되지 않은 팀, 이미 판단한 팀, 이미 결정된 후보는 거부한다. 판단과 상태 변경은 잠금을 건 한 트랜잭션이다.
+    """
+    if decision not in DECISIONS:
+        raise RecordError(f"decision은 approve 또는 reject다: {decision}")
+    if getattr(now, "utcoffset", lambda: None)() is None:
+        raise RecordError("now는 시간대가 붙은 datetime이어야 한다")
+
+    def write(tx) -> dict:
+        if not tx.run("MATCH (c:Candidate {id: $id}) SET c._lock = true RETURN c.id", id=candidate_id).single():
+            raise RecordError(f"없는 Candidate다: {candidate_id}")
+        row = tx.run("MATCH (c:Candidate {id: $id}) OPTIONAL MATCH (c)-[rb:REVIEWED_BY]->(t:Team) "
+                     "RETURN c.status AS status, collect({team: t.id, decision: rb.decision}) AS reviews",
+                     id=candidate_id).single()
+        if row["status"] != "pending":
+            raise RecordError(f"{candidate_id}: 이미 검수가 끝난 후보다: {row['status']}")
+        reviews = {r["team"]: r["decision"] for r in row["reviews"]}
+        if team_id not in reviews:
+            raise RecordError(f"{candidate_id}: {team_id}은 이 후보의 검수 팀이 아니다")
+        if reviews[team_id] is not None:
+            raise RecordError(f"{candidate_id}: {team_id}은 이미 판단했다: {reviews[team_id]}")
+        tx.run("MATCH (c:Candidate {id: $id})-[rb:REVIEWED_BY]->(:Team {id: $team}) "
+               "SET rb.decision = $decision, rb.decided_at = $at", id=candidate_id, team=team_id,
+               decision=decision, at=now).consume()
+        reviews[team_id] = decision
+        status = ("rejected" if decision == "reject"
+                  else "approved" if all(v == "approve" for v in reviews.values()) else "pending")
+        if status != "pending":
+            tx.run("MATCH (c:Candidate {id: $id}) SET c.status = $status, c.reviewed_at = $at",
+                   id=candidate_id, status=status, at=now).consume()
+        return {"candidate_id": candidate_id, "status": status, "decisions": reviews}
+
+    with driver.session() as session:
+        return session.execute_write(write)
+
+
 def delete_run(driver: Driver, run_id: str) -> int:
     """한 실행의 후보를 지우고 지운 수를 돌려준다. 문서는 남긴다."""
     with driver.session() as session:
+        session.run("MATCH (r:ActionRun)-[:FOR]->(:Candidate {run_id: $run}) DETACH DELETE r", run=run_id).consume()
         return session.run("MATCH (c:Candidate {run_id: $run}) DETACH DELETE c", run=run_id
                            ).consume().counters.nodes_deleted
 

@@ -133,7 +133,7 @@ def create_action_run(
     driver: Driver,
     *,
     run_id: str,
-    incident_id: str,
+    incident_id: str | None = None,
     action_id: str,
     status: str,
     actor: str,
@@ -143,14 +143,24 @@ def create_action_run(
     required_approver_teams: list[str],
     executed_by_team: str | None,
     target_report_id: str | None = None,
+    candidate_ids: list[str] | None = None,
 ) -> None:
     """조치 실행 기록을 만든다 (ActionRun 노드, FOR와 OF 관계). 승인 게이트만 부른다.
 
     target_report_id가 있으면 그 접수를 대상으로 한 조치다 (예: 묶인 제보의 처리 중 회신). 사건에 속한 접수여야 한다.
+    지식 반영(A17)은 사건이 아니라 추출 후보에 붙는다(FOR Candidate, M4 PR 5 결정 1). incident_id와 candidate_ids 중
+    하나만 준다.
     """
     if status not in RUN_STATUSES or actor not in RUN_ACTORS:
         raise RecordError(f"ActionRun에 쓸 수 없는 값이다: status={status}, actor={actor}")
+    if (incident_id is None) == (not candidate_ids):
+        raise RecordError("ActionRun은 사건(incident_id)이나 후보(candidate_ids) 중 하나에만 붙는다")
     _require_aware(requested_at, "requested_at")
+    if candidate_ids:
+        _create_candidate_run(driver, run_id=run_id, candidate_ids=candidate_ids, action_id=action_id, status=status,
+                              actor=actor, requested_at=requested_at, requested_mode=requested_mode,
+                              gate_blocked=gate_blocked, required=required_approver_teams, team=executed_by_team)
+        return
 
     def write(tx) -> None:
         if target_report_id is not None and not tx.run(
@@ -177,12 +187,41 @@ def create_action_run(
         session.execute_write(write)
 
 
+def _create_candidate_run(driver: Driver, *, run_id: str, candidate_ids: list[str], action_id: str, status: str,
+                          actor: str, requested_at: datetime, requested_mode: str, gate_blocked: bool,
+                          required: list[str], team: str | None) -> None:
+    def write(tx) -> None:
+        found = tx.run("MATCH (c:Candidate) WHERE c.id IN $ids RETURN collect(c.id) AS ids", ids=candidate_ids).single()
+        missing = sorted(set(candidate_ids) - set(found["ids"]))
+        if missing:
+            raise RecordError(f"없는 Candidate다: {missing}")
+        created = tx.run(
+            "MATCH (a:Action {id: $action}) "
+            "CREATE (r:ActionRun {id: $id, action_id: $action, status: $status, actor: $actor, "
+            "requested_at: $at, requested_mode: $mode, gate_blocked: $blocked, "
+            "required_approver_teams: $required, approved_by_teams: []})-[:OF]->(a) "
+            "SET r.executed_by_team = $team "
+            "WITH r MATCH (c:Candidate) WHERE c.id IN $ids CREATE (r)-[:FOR]->(c) RETURN count(c) AS n",
+            action=action_id, id=run_id, status=status, actor=actor, at=requested_at, mode=requested_mode,
+            blocked=gate_blocked, required=required, team=team, ids=candidate_ids,
+        ).single()
+        if created is None or created["n"] != len(set(candidate_ids)):
+            raise RecordError(f"없는 Action이다: {action_id}")
+
+    with driver.session() as session:
+        session.execute_write(write)
+
+
+# 사건에 붙은 실행 기록과 후보에 붙은 실행 기록(A17)을 같은 모양으로 읽는다
+RUN_MATCH = ("MATCH (r:ActionRun {id: $id}) OPTIONAL MATCH (r)-[:FOR]->(i:Incident) "
+             "OPTIONAL MATCH (r)-[:FOR]->(c:Candidate) WITH r, i, collect(c.id) AS candidate_ids ")
+
 RUN_FIELDS = (
     "RETURN r.id AS run_id, r.action_id AS action_id, i.id AS incident_id, r.status AS status, "
     "r.actor AS actor, r.requested_mode AS requested_mode, r.gate_blocked AS gate_blocked, "
     "r.required_approver_teams AS required_approver_teams, r.approved_by_teams AS approved_by_teams, "
     "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team, "
-    "r.target_report_id AS target_report_id"
+    "r.target_report_id AS target_report_id, candidate_ids, r.commit AS commit"
 )
 
 
@@ -191,7 +230,7 @@ def read_action_run(driver: Driver, run_id: str) -> dict | None:
     with driver.session() as session:
         row = session.execute_read(
             lambda tx: tx.run(
-                "MATCH (r:ActionRun {id: $id})-[:FOR]->(i:Incident) " + RUN_FIELDS, id=run_id
+                RUN_MATCH + RUN_FIELDS, id=run_id
             ).single()
         )
     return dict(row) if row else None
@@ -216,14 +255,14 @@ def transition_action_run(driver: Driver, run_id: str, decide) -> dict:
     예를 들어 반려된 기록이 뒤늦게 도착한 승인으로 승인 상태가 될 수 있다.
     승인 게이트만 부른다.
     """
-    allowed = {"status", "approved_by_teams", "approved_at", "rejected_by_team", "rejected_at", "done_at"}
+    allowed = {"status", "approved_by_teams", "approved_at", "rejected_by_team", "rejected_at", "done_at", "commit"}
 
     def write(tx) -> dict:
         # 실행 기록 노드에 쓰기 잠금을 건다. 같은 기록을 바꾸려는 다른 트랜잭션은 여기서 기다린다
         if not tx.run(LOCK.format(label="ActionRun"), id=run_id).single():
             raise RecordError(f"없는 ActionRun이다: {run_id}")
         # 잠금을 얻은 뒤에 현재 값을 읽는다
-        read = "MATCH (r:ActionRun {id: $id})-[:FOR]->(i:Incident) " + RUN_FIELDS
+        read = RUN_MATCH + RUN_FIELDS
         changes = decide(dict(tx.run(read, id=run_id).single()))
         if not changes or set(changes) - allowed:
             raise RecordError(f"ActionRun에서 바꿀 수 없는 속성이다: {sorted(set(changes) - allowed)}")
@@ -247,7 +286,9 @@ def reset_event_layer(driver: Driver) -> int:
     deleted = 0
     with driver.session() as session:
         for label in EVENT_LABELS:
-            summary = session.run(f"MATCH (n:{label}) DETACH DELETE n").consume()
+            # 지식 반영(A17) 기록은 후보에 붙어 있어 사건 계층과 함께 지우지 않는다 (M4 PR 5 결정 1)
+            keep = " WHERE NOT (n)-[:FOR]->(:Candidate)" if label == "ActionRun" else ""
+            summary = session.run(f"MATCH (n:{label}){keep} DETACH DELETE n").consume()
             deleted += summary.counters.nodes_deleted
     return deleted
 

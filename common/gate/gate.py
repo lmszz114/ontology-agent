@@ -134,6 +134,52 @@ def _request_action(
     return _read_run(driver, run["run_id"])
 
 
+KNOWLEDGE_ACTION = "A17"
+
+
+def _request_knowledge_apply(driver: Driver, *, candidate_ids: list[str], now: datetime) -> dict:
+    """승인된 지식 후보의 온톨로지 반영(A17)을 요청한다. 실행하지 않고 승인 대기로 남긴다 (R8-7).
+
+    승인권자는 후보가 가리키는 시스템의 OWNS 팀이다 (approver_rule candidate_system_owner). 후보마다 검수 배정 규칙
+    (M4 결정 3)으로 정한 검수 팀이 그 팀이라 검수 팀 전체를 승인권자로 둔다. 전원이 승인해야 넘어간다.
+    검수에서 승인된 후보만, 다른 A17 요청에 들어가 있지 않은 후보만 받는다. 실행 팀은 Action의 실행 팀(개발PM팀, 가정)이다.
+    """
+    ids = sorted(set(candidate_ids))
+    if not ids:
+        raise GateError("반영할 후보가 없다")
+    policy = queries.get_action_policy(driver, KNOWLEDGE_ACTION)
+    if policy["approver_rule"] != "candidate_system_owner":
+        raise GateError(f"{KNOWLEDGE_ACTION}의 승인권자 규칙이 예상과 다르다: {policy['approver_rule']}")
+    with driver.session() as session:
+        rows = session.execute_read(lambda tx: tx.run(
+            "MATCH (c:Candidate) WHERE c.id IN $ids "
+            "OPTIONAL MATCH (c)-[:REVIEWED_BY]->(t:Team) "
+            "OPTIONAL MATCH (r:ActionRun)-[:FOR]->(c) WHERE r.status IN ['pending_approval', 'approved', 'done'] "
+            "RETURN c.id AS id, c.status AS status, collect(DISTINCT t.id) AS reviewers, "
+            "collect(DISTINCT r.id) AS runs", ids=ids).data())
+    found = {r["id"]: r for r in rows}
+    if set(ids) - set(found):
+        raise GateError(f"없는 후보다: {sorted(set(ids) - set(found))}")
+    not_approved = [i for i in ids if found[i]["status"] != "approved"]
+    if not_approved:
+        raise GateError(f"검수에서 승인된 후보만 반영한다: {not_approved}")
+    taken = {i: found[i]["runs"] for i in ids if found[i]["runs"]}
+    if taken:
+        raise GateError(f"이미 다른 반영 요청에 들어간 후보다: {taken}")
+    approvers = sorted({t for i in ids for t in found[i]["reviewers"]})
+    run = {
+        "run_id": f"AR-{uuid.uuid4().hex[:12]}", "candidate_ids": ids, "action_id": KNOWLEDGE_ACTION,
+        "status": "pending_approval", "actor": "human", "requested_at": now, "requested_mode": "approval",
+        "gate_blocked": False, "required_approver_teams": approvers,
+        "executed_by_team": (policy["executed_by"] or {}).get("team_id"),
+    }
+    try:
+        create_action_run(driver, **run)
+    except RecordError as exc:
+        raise GateError(str(exc)) from exc
+    return _read_run(driver, run["run_id"])
+
+
 def _approve(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict:
     """승인권자 한 팀의 승인을 기록한다. 전원이 승인하면 approved가 된다."""
     def decide(run: dict) -> dict:
@@ -156,12 +202,17 @@ def _reject(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict
     return _transition(driver, run_id, decide)
 
 
-def _mark_done(driver: Driver, *, run_id: str, now: datetime) -> dict:
-    """승인된 조치의 실행 완료를 기록한다 (시뮬레이션). 승인되지 않은 조치는 완료할 수 없다."""
+def _mark_done(driver: Driver, *, run_id: str, now: datetime, commit: str | None = None) -> dict:
+    """승인된 조치의 실행 완료를 기록한다. 승인되지 않은 조치는 완료할 수 없다.
+
+    대응 조치는 시뮬레이션이다. 지식 반영(A17)은 실제로 시드를 바꾸므로 그 커밋을 함께 남긴다 (R6, R8-7).
+    """
     def decide(run: dict) -> dict:
         if run["status"] != "approved":
             raise GateError(f"{run_id}: 승인된 조치만 실행할 수 있다: {run['status']}")
-        return {"status": "done", "done_at": now}
+        if (run["action_id"] == KNOWLEDGE_ACTION) != (commit is not None):
+            raise GateError(f"{run_id}: 커밋은 지식 반영(A17)에만, A17에는 반드시 남긴다")
+        return {"status": "done", "done_at": now} | ({"commit": commit} if commit else {})
 
     return _transition(driver, run_id, decide)
 
@@ -178,6 +229,11 @@ def _traced(tracer: Tracer, name: str, func, **kwargs) -> dict:
 def request_action(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
     """조치 요청 하나를 처리하고 실행 기록을 돌려준다. 인자는 _request_action과 같다."""
     return _traced(tracer, "gate.request_action", _request_action, driver=driver, **kwargs)
+
+
+def request_knowledge_apply(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
+    """승인된 지식 후보의 반영(A17)을 요청한다. 인자는 _request_knowledge_apply와 같다."""
+    return _traced(tracer, "gate.request_knowledge_apply", _request_knowledge_apply, driver=driver, **kwargs)
 
 
 def approve(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
