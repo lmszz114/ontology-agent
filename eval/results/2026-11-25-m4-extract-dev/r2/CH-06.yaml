@@ -1,0 +1,133 @@
+document_id: CH-06
+run_id: 2026-11-25-m4-extract-dev-r2
+candidates:
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: Procedure
+    name: 아이템·재화 회수와 제재 절차
+    id: P7
+  props:
+    condition: 과지급
+  evidence_spans:
+  - 과지급인데 원인이 이벤트 설정 오류일 때, 그때 아이템·재화 회수와 제재 절차를 엽니다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM01
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 이벤트 툴
+    id: SY15
+  object:
+    type: System
+    name: 우편함
+    id: SY13
+  props: {}
+  evidence_spans:
+  - 이벤트 툴이 우편함에 기대는 쪽이라, 우편함에 문제가 생기면 이벤트 툴에 영향이 가는 겁니다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM01
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: EvidenceCheck
+    name: 이벤트 툴 설정 이력 확인
+    id: E07
+  props:
+    required: true
+    expect: 설정 이력에서 이벤트 설정 오류가 확인되면 이 원인으로 본다
+  evidence_spans:
+  - 그럼 이벤트 툴 설정 이력이랑 우편함 상태를 둘 다 먼저 보면 되겠네요.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 이벤트 보상 과지급
+    id: S4
+  object:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  props: {}
+  evidence_spans:
+  - 과지급인데 원인이 이벤트 설정 오류일 때, 그때 아이템·재화 회수와 제재 절차를 엽니다.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+- relation: ALIAS
+  subject:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  object:
+    type: Name
+    name: 이벤트 툴
+    id: null
+  props: {}
+  evidence_spans:
+  - 이벤트 툴이 우편함에 기대는 쪽이라, 우편함에 문제가 생기면 이벤트 툴에 영향이 가는 겁니다.
+  confidence: 0.85
+  match: new
+  reviewers:
+  - TM01
+  - TM03
+- relation: ALIAS
+  subject:
+    type: SymptomType
+    name: 이벤트 보상 오지급, 과지급
+    id: S4
+  object:
+    type: Name
+    name: 이벤트 보상 과지급
+    id: null
+  props: {}
+  evidence_spans:
+  - '김OO(라이브운영팀): 이벤트 보상 과지급 건 올라온 거 다들 봤죠? 회수 절차를 열어야 하나 싶어서 채널 팝니다.'
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM05
+dropped: []
+stats:
+  raw: 4
+  names_by_code: 4
+  names_to_llm: 4
+  names_by_llm: 4
+  kept: 6
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1432
+    output: 3005
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.001671
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2431
+    output: 394
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0004401
+  stop_reason: end_turn
+cost_usd: 0.002111

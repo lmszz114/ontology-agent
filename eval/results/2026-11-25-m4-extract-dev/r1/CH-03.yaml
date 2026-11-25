@@ -1,0 +1,58 @@
+document_id: CH-03
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates:
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: EvidenceCheck
+    name: QA 재현 확인
+    id: E12
+  props:
+    required: true
+    expect: 재현 결과가 나오면 콘텐츠 테이블 값 오류 여부를 변경 이력 결과와 함께 판단한다
+  evidence_spans:
+  - 콘텐츠 테이블 값 오류인지는 QA 재현 확인으로 보고, 그 결과를 같이 봐야 합니다
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: EvidenceCheck
+    name: 게임 데이터 테이블 변경 이력 조회
+    id: E05
+  props:
+    required: false
+    expect: 이력에 변경이 있어도 이번 증상과 관계없을 수 있으므로 재현 결과와 맞춰 본다
+  evidence_spans:
+  - 게임 데이터 테이블 변경 이력 조회로도 콘텐츠 테이블 값 오류인지 확인할 수 있잖아요
+  - 이력에 뭐가 있어도 이번 증상과 관계없을 수 있으니, 재현 결과랑 맞춰서 봐야 합니다
+  confidence: 0.6
+  match: conflict
+  reviewers:
+  - TM01
+dropped: []
+stats:
+  raw: 2
+  names_by_code: 4
+  names_to_llm: 0
+  kept: 2
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1264
+    output: 1822
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0010627
+  stop_reason: end_turn
+cost_usd: 0.001063

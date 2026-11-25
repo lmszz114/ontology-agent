@@ -1,0 +1,139 @@
+document_id: CH-04
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 콘텐츠기획팀
+    id: TM01
+  object:
+    type: System
+    name: 확률 테이블
+    id: null
+  props:
+    scope: data
+  evidence_spans:
+  - 확률 테이블은 콘텐츠기획팀이 관리한다고 들었는데 맞죠?
+  - 저 여기 있습니다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM05
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 확률 페이지
+    id: SY21
+  object:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  props: {}
+  evidence_spans:
+  - 확률 페이지는 게임 데이터 테이블에 의존하니까, 테이블에 문제 생기면 페이지에도 바로 영향 갑니다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+  - TM06
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 페이지 숫자 이상
+    id: null
+  object:
+    type: System
+    name: 확률 페이지
+    id: SY21
+  props: {}
+  evidence_spans:
+  - 그럼 페이지 숫자가 이상하면 테이블부터 보면 되는 거네요?
+  - 네, 일단 그렇게 보시면 됩니다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM06
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 페이지 숫자 이상
+    id: null
+  object:
+    type: Cause
+    name: 게임 데이터 테이블 문제
+    id: C07
+  props:
+    prior: 높음
+  evidence_spans:
+  - 그럼 페이지 숫자가 이상하면 테이블부터 보면 되는 거네요?
+  - 네, 일단 그렇게 보시면 됩니다.
+  confidence: 0.5
+  match: new
+  reviewers:
+  - TM01
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 게임 데이터 테이블 문제
+    id: C07
+  object:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  props:
+    scope: data
+  evidence_spans:
+  - 확률 페이지는 게임 데이터 테이블에 의존하니까, 테이블에 문제 생기면 페이지에도 바로 영향 갑니다.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 확률 정보 공개, 모니터링 페이지
+    id: SY21
+  object:
+    type: Name
+    name: 확률 페이지
+    id: null
+  props: {}
+  evidence_spans:
+  - 확률 페이지는 게임 데이터 테이블에 의존하니까, 테이블에 문제 생기면 페이지에도 바로 영향 갑니다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM06
+dropped: []
+stats:
+  raw: 5
+  names_by_code: 3
+  names_to_llm: 4
+  names_by_llm: 2
+  kept: 6
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1309
+    output: 2450
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0013812
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2258
+    output: 603
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0005273000000000001
+  stop_reason: end_turn
+cost_usd: 0.001909

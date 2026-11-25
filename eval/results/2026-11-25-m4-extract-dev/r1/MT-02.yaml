@@ -1,0 +1,59 @@
+document_id: MT-02
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 서버개발팀
+    id: TM03
+  object:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  props:
+    scope: config
+  evidence_spans:
+  - 이벤트 시스템의 설정은 서버개발팀이 맡고 있다.
+  - 이벤트를 열거나 조정할 때 설정 값을 서버개발팀이 직접 넣는 방식이며, 이번 회의에서도 이 방식을 그대로 두기로 했다.
+  confidence: 0.9
+  match: conflict
+  reviewers:
+  - TM01
+  - TM03
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 이벤트 시스템
+    id: SY15
+  object:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  props: {}
+  evidence_spans:
+  - 이벤트 시스템이 게임 데이터 테이블에 의존한다는 점이 짚였다.
+  - 테이블에 문제가 생기면 이벤트 시스템에도 영향이 간다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+dropped: []
+stats:
+  raw: 2
+  names_by_code: 4
+  names_to_llm: 0
+  kept: 2
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 786
+    output: 871
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0005394
+  stop_reason: end_turn
+cost_usd: 0.000539

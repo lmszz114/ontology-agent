@@ -1,0 +1,210 @@
+document_id: PM-04
+run_id: 2026-11-25-m4-extract-dev-r3
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 콘텐츠 기획
+    id: TM01
+  object:
+    type: System
+    name: 데이터 테이블
+    id: SY17
+  props:
+    scope: data
+    area: content
+  evidence_spans:
+  - 데이터 테이블의 콘텐츠 영역 데이터는 콘텐츠 기획이 맡는다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM01
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 업데이트 후 콘텐츠 오류
+    id: S3
+  object:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  props:
+    prior: 높음
+  evidence_spans:
+  - 그중 콘텐츠 테이블 값 오류가 가장 먼저 의심되는 편이다.
+  - 이런 증상에서는 이쪽일 가능성이 높은 편이기 때문이다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM01
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: System
+    name: 데이터 테이블
+    id: SY17
+  props:
+    scope: data
+    area: content
+  evidence_spans:
+  - 이 값은 데이터 테이블 가운데서도 콘텐츠 영역의 데이터에 속한다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM01
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: EvidenceCheck
+    name: 데이터 테이블 변경 이력 조회
+    id: E05
+  props:
+    required: true
+    expect: 증상이 시작되기 전에 해당 콘텐츠 테이블 변경 이력이 남아 있다
+  evidence_spans:
+  - 첫째, 데이터 테이블 변경 이력을 조회했다.
+  - 증상보다 변경이 앞섰다는 점이 이 원인일 때 기대되는 결과와 일치했다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM01
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: EvidenceCheck
+    name: QA 재현 확인
+    id: E12
+  props:
+    required: true
+    expect: 같은 조건에서 증상이 재현된다
+  evidence_spans:
+  - 둘째, QA 재현 확인을 했다.
+  - QA가 같은 조건에서 증상을 재현했다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM01
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: Procedure
+    name: 롤백
+    id: P5
+  props: {}
+  evidence_spans:
+  - 문제가 된 변경을 되돌리는 롤백을 먼저 진행해 증상이 더 퍼지지 않게 했다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM01
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 콘텐츠 테이블 값 오류
+    id: C07
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 그 뒤 원인 수정과 반영 절차로 넘어가 체력 값을 바로잡아 다시 반영했다.
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM01
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 데이터 테이블
+    id: SY17
+  object:
+    type: System
+    name: 로그 수집
+    id: SY03
+  props: {}
+  evidence_spans:
+  - 데이터 테이블은 로그 수집에 의존한다.
+  - 로그 수집에 문제가 생기면 데이터 테이블에도 영향이 가므로
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+  - TM10
+- relation: ALIAS
+  subject:
+    type: Team
+    name: 콘텐츠기획팀
+    id: TM01
+  object:
+    type: Name
+    name: 콘텐츠 기획
+    id: null
+  props: {}
+  evidence_spans:
+  - 데이터 테이블의 콘텐츠 영역 데이터는 콘텐츠 기획이 맡는다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM01
+- relation: ALIAS
+  subject:
+    type: System
+    name: 게임 데이터 테이블
+    id: SY17
+  object:
+    type: Name
+    name: 데이터 테이블
+    id: null
+  props: {}
+  evidence_spans:
+  - 데이터 테이블의 콘텐츠 영역 데이터는 콘텐츠 기획이 맡는다.
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM01
+  - TM02
+  - TM03
+dropped: []
+stats:
+  raw: 8
+  names_by_code: 11
+  names_to_llm: 3
+  names_by_llm: 3
+  kept: 10
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1350
+    output: 3143
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0017318
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 1746
+    output: 60
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0002046
+  stop_reason: end_turn
+cost_usd: 0.001936

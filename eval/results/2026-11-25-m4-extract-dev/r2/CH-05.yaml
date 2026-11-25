@@ -1,0 +1,148 @@
+document_id: CH-05
+run_id: 2026-11-25-m4-extract-dev-r2
+candidates:
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 경매장
+    id: SY14
+  object:
+    type: System
+    name: DB
+    id: SY11
+  props: {}
+  evidence_spans:
+  - 의존하는 쪽이 경매장이고요. DB에 문제가 생기면 경매장이 영향을 받는 구조입니다
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM10
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 경매장 응답 지연
+    id: S7
+  object:
+    type: System
+    name: 경매장
+    id: SY14
+  props: {}
+  evidence_spans:
+  - 방금 경매장 응답 느리다는 제보 또 올라왔던데 봤어요?
+  confidence: 0.75
+  match: existing
+  reviewers:
+  - TM03
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 경매장 응답 지연
+    id: S7
+  object:
+    type: Cause
+    name: DB 부하
+    id: C19
+  props: {}
+  evidence_spans:
+  - 경매장 지연이라고 해서 무조건 DB라는 건 아니에요.
+  confidence: 0.5
+  match: existing
+  reviewers:
+  - TM10
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: EvidenceCheck
+    name: 자원, 네트워크 지표 조회
+    id: E09
+  props:
+    required: true
+    expect: 자원, 네트워크 지표에 이상 징후가 보인다
+  evidence_spans:
+  - DB 부하인지는 자원, 네트워크 지표 조회로 확인해요. 거기서 이상 징후 있는지 보면 됩니다
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM10
+- relation: ALIAS
+  subject:
+    type: System
+    name: 거래소
+    id: SY14
+  object:
+    type: Name
+    name: 경매장
+    id: null
+  props: {}
+  evidence_spans:
+  - 의존하는 쪽이 경매장이고요. DB에 문제가 생기면 경매장이 영향을 받는 구조입니다
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 게임 DB
+    id: SY11
+  object:
+    type: Name
+    name: DB
+    id: null
+  props: {}
+  evidence_spans:
+  - 의존하는 쪽이 경매장이고요. DB에 문제가 생기면 경매장이 영향을 받는 구조입니다
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+  - TM10
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 게임 DB 부하
+    id: C19
+  object:
+    type: Name
+    name: DB 부하
+    id: null
+  props: {}
+  evidence_spans:
+  - '이OO(인프라팀): 그래서 DB 부하인지는 어떻게 확인해요? 대시보드 따로 있었나'
+  confidence: 0.5
+  match: new
+  reviewers:
+  - TM10
+dropped: []
+stats:
+  raw: 4
+  names_by_code: 1
+  names_to_llm: 4
+  names_by_llm: 4
+  kept: 7
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1333
+    output: 2484
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0014006000000000001
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2240
+    output: 389
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.00041850000000000004
+  stop_reason: end_turn
+cost_usd: 0.001819

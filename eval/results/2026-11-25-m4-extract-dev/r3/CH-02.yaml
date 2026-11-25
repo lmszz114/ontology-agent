@@ -1,0 +1,151 @@
+document_id: CH-02
+run_id: 2026-11-25-m4-extract-dev-r3
+candidates:
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 게이트웨이
+    id: SY09
+  object:
+    type: System
+    name: 통합 계정 인증
+    id: SY01
+  props: {}
+  evidence_spans:
+  - 게이트웨이는 통합 계정 인증에 의존하잖아요.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+  - TM09
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 로그인 실패
+    id: S2
+  object:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  props:
+    prior: 높음
+  evidence_spans:
+  - 그럼 공통 계정 인증 쪽일 가능성이 커졌네요.
+  confidence: 0.6
+  match: conflict
+  reviewers:
+  - TM09
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 공통 계정 인증 장애
+    id: C04
+  object:
+    type: EvidenceCheck
+    name: 다른 타이틀 로그인 상태 확인
+    id: E03
+  props:
+    required: true
+    expect: 다른 타이틀 로그인도 같이 안 된다
+  evidence_spans:
+  - 다른 타이틀 로그인 상태 확인하면 돼요. 거기도 같이 안 되면 공통 계정 인증 장애일 가능성이 높고, 거기만 멀쩡하면 게이트웨이 쪽을 봐야죠.
+  - 다른 타이틀 로그인 결과 나왔어요. 저는 지금 두 번 시도했는데 둘 다 실패입니다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM09
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 게이트웨이 쪽 문제
+    id: C05
+  object:
+    type: EvidenceCheck
+    name: 다른 타이틀 로그인 상태 확인
+    id: E03
+  props:
+    required: true
+    expect: 다른 타이틀 로그인은 정상으로 된다
+  evidence_spans:
+  - 거기만 멀쩡하면 게이트웨이 쪽을 봐야죠.
+  confidence: 0.5
+  match: existing
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 로그인 서버(게이트웨이)
+    id: SY09
+  object:
+    type: Name
+    name: 게이트웨이
+    id: null
+  props: {}
+  evidence_spans:
+  - 게이트웨이는 통합 계정 인증에 의존하잖아요.
+  confidence: 0.8
+  match: new
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: SymptomType
+    name: 로그인 불가, 접속 장애
+    id: S2
+  object:
+    type: Name
+    name: 로그인 실패
+    id: null
+  props: {}
+  evidence_spans:
+  - '김OO(운영팀): 방금부터 로그인 실패 문의가 올라오고 있어요. 게이트웨이 쪽 문제 같은데 누가 보고 계세요?'
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM05
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 게임 로그인 서버 장애
+    id: C05
+  object:
+    type: Name
+    name: 게이트웨이 쪽 문제
+    id: null
+  props: {}
+  evidence_spans:
+  - '김OO(운영팀): 방금부터 로그인 실패 문의가 올라오고 있어요. 게이트웨이 쪽 문제 같은데 누가 보고 계세요?'
+  confidence: 0.5
+  match: new
+  reviewers:
+  - TM03
+dropped: []
+stats:
+  raw: 4
+  names_by_code: 5
+  names_to_llm: 3
+  names_by_llm: 3
+  kept: 7
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1425
+    output: 3055
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0016953
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2241
+    output: 384
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.00041610000000000003
+  stop_reason: end_turn
+cost_usd: 0.002111

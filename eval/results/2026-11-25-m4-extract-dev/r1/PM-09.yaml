@@ -1,0 +1,253 @@
+document_id: PM-09
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates:
+- relation: OWNS
+  subject:
+    type: Team
+    name: 인프라팀
+    id: TM10
+  object:
+    type: System
+    name: DB
+    id: SY11
+  props:
+    scope: operation
+  evidence_spans:
+  - DB의 운영은 인프라팀이 맡고 있다.
+  confidence: 0.95
+  match: existing
+  reviewers:
+  - TM10
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: DB
+    id: SY11
+  object:
+    type: System
+    name: 서버 인프라
+    id: SY05
+  props: {}
+  evidence_spans:
+  - 참고로 DB는 서버 인프라에 의존한다.
+  - 서버 인프라에 문제가 생기면 DB에도 영향이 가는 구조이므로, DB 지표가 나빠졌을 때는 이 의존 관계도 함께 염두에 두어야 한다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM10
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 거래소 응답 지연
+    id: S7
+  object:
+    type: System
+    name: 거래소
+    id: SY14
+  props: {}
+  evidence_spans:
+  - 거래소 응답이 느려지거나 끊기는 장애가 발생했다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM03
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 거래소 응답 지연
+    id: S7
+  object:
+    type: Cause
+    name: DB 부하
+    id: C19
+  props:
+    prior: 중간
+  evidence_spans:
+  - DB 부하는 그중 가능성이 중간쯤 되는 후보다.
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM10
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: System
+    name: DB
+    id: SY11
+  props:
+    scope: operation
+  evidence_spans:
+  - DB 부하는 DB의 운영 쪽 문제로 분류된다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM10
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: EvidenceCheck
+    name: 자원·네트워크 지표 조회
+    id: E09
+  props:
+    required: true
+    expect: 원인이 DB 부하라면 DB의 자원(부하) 지표가 한계에 가깝거나 한계를 넘은 상태로 나타난다.
+  evidence_spans:
+  - DB 부하 여부는 자원·네트워크 지표를 조회해서 확인한다.
+  - 원인이 DB 부하라면 DB의 자원(부하) 지표가 한계에 가깝거나 한계를 넘은 상태로 나타난다.
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM10
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: Procedure
+    name: 긴급 공지
+    id: P3
+  props: {}
+  evidence_spans:
+  - 원인이 DB 부하로 확인된 뒤 세 가지 절차를 열었다.
+  - '긴급 공지: 거래소 지연 사실을 이용자에게 알리는 절차다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM10
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: Procedure
+    name: 긴급 점검
+    id: P4
+  props: {}
+  evidence_spans:
+  - 원인이 DB 부하로 확인된 뒤 세 가지 절차를 열었다.
+  - '긴급 점검: DB 상태를 직접 살펴보고 필요한 작업을 하는 절차다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM10
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: Procedure
+    name: 원인 수정과 반영
+    id: P10
+  props: {}
+  evidence_spans:
+  - 원인이 DB 부하로 확인된 뒤 세 가지 절차를 열었다.
+  - '원인 수정과 반영: 부하를 만든 원인을 고쳐 서비스에 적용하는 절차다.'
+  confidence: 0.85
+  match: existing
+  reviewers:
+  - TM10
+- relation: ALIAS
+  subject:
+    type: Team
+    name: 인프라운영팀
+    id: TM10
+  object:
+    type: Name
+    name: 인프라팀
+    id: null
+  props: {}
+  evidence_spans:
+  - DB의 운영은 인프라팀이 맡고 있다.
+  confidence: 0.95
+  match: new
+  reviewers:
+  - TM10
+- relation: ALIAS
+  subject:
+    type: System
+    name: 게임 DB
+    id: SY11
+  object:
+    type: Name
+    name: DB
+    id: null
+  props: {}
+  evidence_spans:
+  - DB의 운영은 인프라팀이 맡고 있다.
+  confidence: 0.95
+  match: new
+  reviewers:
+  - TM03
+  - TM10
+- relation: ALIAS
+  subject:
+    type: SymptomType
+    name: 거래소 장애
+    id: S7
+  object:
+    type: Name
+    name: 거래소 응답 지연
+    id: null
+  props: {}
+  evidence_spans:
+  - 먼저 거래소 응답 지연이 보고되었다. 인프라팀은 원인 후보를 정리하면서 DB 부하를 그중 하나로 두고, 해당 여부를 가리기 위해 지표를 조회했다.
+    조회 결과가 DB 부하 쪽을 가리키자 이를 원인으로 판단했다. 이어서 긴급 공지, 긴급 점검, 원인 수정과 반영 절차를 차례로 열었다.
+  confidence: 0.85
+  match: new
+  reviewers:
+  - TM05
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 게임 DB 부하
+    id: C19
+  object:
+    type: Name
+    name: DB 부하
+    id: null
+  props: {}
+  evidence_spans:
+  - DB 부하는 그중 가능성이 중간쯤 되는 후보다.
+  confidence: 0.85
+  match: new
+  reviewers:
+  - TM10
+dropped: []
+stats:
+  raw: 9
+  names_by_code: 5
+  names_to_llm: 5
+  names_by_llm: 5
+  kept: 13
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1181
+    output: 3075
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0016809
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2953
+    output: 386
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0004883
+  stop_reason: end_turn
+cost_usd: 0.002169

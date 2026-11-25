@@ -1,0 +1,132 @@
+document_id: CH-05
+run_id: 2026-11-25-m4-extract-dev-r1
+candidates:
+- relation: DEPENDS_ON
+  subject:
+    type: System
+    name: 경매장
+    id: SY14
+  object:
+    type: System
+    name: DB
+    id: SY11
+  props: {}
+  evidence_spans:
+  - 반대예요. 의존하는 쪽이 경매장이고요. DB에 문제가 생기면 경매장이 영향을 받는 구조입니다
+  confidence: 0.9
+  match: existing
+  reviewers:
+  - TM03
+  - TM10
+- relation: OBSERVED_IN
+  subject:
+    type: SymptomType
+    name: 경매장 응답 느림
+    id: S7
+  object:
+    type: System
+    name: 경매장
+    id: SY14
+  props: {}
+  evidence_spans:
+  - 방금 경매장 응답 느리다는 제보 또 올라왔던데 봤어요?
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM03
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: DB 부하
+    id: C19
+  object:
+    type: EvidenceCheck
+    name: 자원, 네트워크 지표 조회
+    id: E09
+  props:
+    required: true
+    expect: 이상 징후가 보이면 DB 부하로 본다
+  evidence_spans:
+  - DB 부하인지는 자원, 네트워크 지표 조회로 확인해요. 거기서 이상 징후 있는지 보면 됩니다
+  confidence: 0.7
+  match: existing
+  reviewers:
+  - TM10
+- relation: ALIAS
+  subject:
+    type: System
+    name: 거래소
+    id: SY14
+  object:
+    type: Name
+    name: 경매장
+    id: null
+  props: {}
+  evidence_spans:
+  - 반대예요. 의존하는 쪽이 경매장이고요. DB에 문제가 생기면 경매장이 영향을 받는 구조입니다
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+- relation: ALIAS
+  subject:
+    type: System
+    name: 게임 DB
+    id: SY11
+  object:
+    type: Name
+    name: DB
+    id: null
+  props: {}
+  evidence_spans:
+  - 반대예요. 의존하는 쪽이 경매장이고요. DB에 문제가 생기면 경매장이 영향을 받는 구조입니다
+  confidence: 0.9
+  match: new
+  reviewers:
+  - TM03
+  - TM10
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 게임 DB 부하
+    id: C19
+  object:
+    type: Name
+    name: DB 부하
+    id: null
+  props: {}
+  evidence_spans:
+  - DB 부하인지는 자원, 네트워크 지표 조회로 확인해요. 거기서 이상 징후 있는지 보면 됩니다
+  confidence: 0.7
+  match: new
+  reviewers:
+  - TM10
+dropped: []
+stats:
+  raw: 3
+  names_by_code: 1
+  names_to_llm: 4
+  names_by_llm: 4
+  kept: 6
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1333
+    output: 2174
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0012456000000000001
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2240
+    output: 76
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.00026199999999999997
+  stop_reason: end_turn
+cost_usd: 0.001508

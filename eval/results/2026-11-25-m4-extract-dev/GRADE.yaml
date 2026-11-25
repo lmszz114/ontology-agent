@@ -1,0 +1,354 @@
+run:
+  prompt_version: extraction-v1
+  git_commit: 263ec77a49ac6cf3ef4a731d4231a97e59228951
+  git_dirty: false
+  models:
+    extraction: claude-haiku-5-5
+    normalization: claude-haiku-5-5
+  started_at: '2026-11-25T14:26:34+09:00'
+reps: 3
+summary:
+  overall:
+    precision:
+      mean: 0.7956
+      stdev: 0.0167
+    recall:
+      mean: 0.9485
+      stdev: 0.0139
+    f1:
+      mean: 0.8653
+      stdev: 0.0157
+  relations:
+    OWNS:
+      precision:
+        mean: 0.9111
+        stdev: 0.0385
+      recall:
+        mean: 0.9111
+        stdev: 0.0385
+      f1:
+        mean: 0.9111
+        stdev: 0.0385
+    DEPENDS_ON:
+      precision:
+        mean: 1.0
+        stdev: 0.0
+      recall:
+        mean: 1.0
+        stdev: 0.0
+      f1:
+        mean: 1.0
+        stdev: 0.0
+    OBSERVED_IN:
+      precision:
+        mean: 0.5737
+        stdev: 0.1085
+      recall:
+        mean: 0.9444
+        stdev: 0.0962
+      f1:
+        mean: 0.7127
+        stdev: 0.1107
+    MAY_BE_CAUSED_BY:
+      precision:
+        mean: 0.5519
+        stdev: 0.0501
+      recall:
+        mean: 0.9333
+        stdev: 0.0577
+      f1:
+        mean: 0.6924
+        stdev: 0.043
+    LOCATED_IN:
+      precision:
+        mean: 0.7673
+        stdev: 0.1339
+      recall:
+        mean: 0.9333
+        stdev: 0.0577
+      f1:
+        mean: 0.8402
+        stdev: 0.103
+    CHECKED_BY:
+      precision:
+        mean: 0.8129
+        stdev: 0.0342
+      recall:
+        mean: 0.9848
+        stdev: 0.0263
+      f1:
+        mean: 0.8906
+        stdev: 0.0305
+    RESOLVED_BY:
+      precision:
+        mean: 0.9704
+        stdev: 0.0513
+      recall:
+        mean: 0.9704
+        stdev: 0.0513
+      f1:
+        mean: 0.9704
+        stdev: 0.0513
+    ALIAS:
+      precision:
+        mean: 0.6175
+        stdev: 0.0258
+      recall:
+        mean: 0.88
+        stdev: 0.04
+      f1:
+        mean: 0.7253
+        stdev: 0.0233
+  props_accuracy:
+    mean: 0.9788
+    stdev: 0.0248
+  normalization_accuracy:
+    mean: 0.9932
+    stdev: 0.0118
+  evidence_match_rate:
+    mean: 1.0
+    stdev: 0.0
+  conflict_detection_rate:
+    mean: 0.5
+    stdev: 0.0
+  distractor_candidates:
+    mean: 0
+    stdev: 0.0
+  false_positive_in_k:
+    mean: 9.3333
+    stdev: 1.1547
+  cost_usd:
+    mean: 0.0397
+    stdev: 0.0009
+per_rep:
+  r1:
+    documents: 30
+    overall:
+      tp: 143
+      fp: 34
+      fn: 6
+      precision: 0.8079
+      recall: 0.9597
+      f1: 0.8773
+    relations:
+      OWNS:
+        tp: 14
+        fp: 1
+        fn: 1
+        precision: 0.9333
+        recall: 0.9333
+        f1: 0.9333
+      DEPENDS_ON:
+        tp: 16
+        fp: 0
+        fn: 0
+        precision: 1.0
+        recall: 1.0
+        f1: 1.0
+      OBSERVED_IN:
+        tp: 6
+        fp: 4
+        fn: 0
+        precision: 0.6
+        recall: 1.0
+        f1: 0.75
+      MAY_BE_CAUSED_BY:
+        tp: 10
+        fp: 8
+        fn: 0
+        precision: 0.5556
+        recall: 1.0
+        f1: 0.7143
+      LOCATED_IN:
+        tp: 9
+        fp: 3
+        fn: 1
+        precision: 0.75
+        recall: 0.9
+        f1: 0.8182
+      CHECKED_BY:
+        tp: 22
+        fp: 4
+        fn: 0
+        precision: 0.8462
+        recall: 1.0
+        f1: 0.9167
+      RESOLVED_BY:
+        tp: 45
+        fp: 0
+        fn: 0
+        precision: 1.0
+        recall: 1.0
+        f1: 1.0
+      ALIAS:
+        tp: 21
+        fp: 14
+        fn: 4
+        precision: 0.6
+        recall: 0.84
+        f1: 0.7
+    props_accuracy: 0.9848
+    props_compared: 66
+    normalization_accuracy: 1.0
+    normalization_names: 46
+    evidence_match_rate: 1.0
+    conflict_detection_rate: 0.5
+    stale_extracted: 1
+    stale_total: 2
+    distractor_candidates: 0
+    false_positive_in_k: 8
+    cost_usd: 0.038866
+  r2:
+    documents: 30
+    overall:
+      tp: 139
+      fp: 40
+      fn: 10
+      precision: 0.7765
+      recall: 0.9329
+      f1: 0.8475
+    relations:
+      OWNS:
+        tp: 14
+        fp: 1
+        fn: 1
+        precision: 0.9333
+        recall: 0.9333
+        f1: 0.9333
+      DEPENDS_ON:
+        tp: 16
+        fp: 0
+        fn: 0
+        precision: 1.0
+        recall: 1.0
+        f1: 1.0
+      OBSERVED_IN:
+        tp: 6
+        fp: 3
+        fn: 0
+        precision: 0.6667
+        recall: 1.0
+        f1: 0.8
+      MAY_BE_CAUSED_BY:
+        tp: 9
+        fp: 6
+        fn: 1
+        precision: 0.6
+        recall: 0.9
+        f1: 0.72
+      LOCATED_IN:
+        tp: 9
+        fp: 5
+        fn: 1
+        precision: 0.6429
+        recall: 0.9
+        f1: 0.75
+      CHECKED_BY:
+        tp: 21
+        fp: 6
+        fn: 1
+        precision: 0.7778
+        recall: 0.9545
+        f1: 0.8571
+      RESOLVED_BY:
+        tp: 41
+        fp: 4
+        fn: 4
+        precision: 0.9111
+        recall: 0.9111
+        f1: 0.9111
+      ALIAS:
+        tp: 23
+        fp: 15
+        fn: 2
+        precision: 0.6053
+        recall: 0.92
+        f1: 0.7302
+    props_accuracy: 0.9516
+    props_compared: 62
+    normalization_accuracy: 1.0
+    normalization_names: 48
+    evidence_match_rate: 1.0
+    conflict_detection_rate: 0.5
+    stale_extracted: 1
+    stale_total: 2
+    distractor_candidates: 0
+    false_positive_in_k: 10
+    cost_usd: 0.040692
+  r3:
+    documents: 30
+    overall:
+      tp: 142
+      fp: 35
+      fn: 7
+      precision: 0.8023
+      recall: 0.953
+      f1: 0.8712
+    relations:
+      OWNS:
+        tp: 13
+        fp: 2
+        fn: 2
+        precision: 0.8667
+        recall: 0.8667
+        f1: 0.8667
+      DEPENDS_ON:
+        tp: 16
+        fp: 0
+        fn: 0
+        precision: 1.0
+        recall: 1.0
+        f1: 1.0
+      OBSERVED_IN:
+        tp: 5
+        fp: 6
+        fn: 1
+        precision: 0.4545
+        recall: 0.8333
+        f1: 0.5882
+      MAY_BE_CAUSED_BY:
+        tp: 9
+        fp: 9
+        fn: 1
+        precision: 0.5
+        recall: 0.9
+        f1: 0.6429
+      LOCATED_IN:
+        tp: 10
+        fp: 1
+        fn: 0
+        precision: 0.9091
+        recall: 1.0
+        f1: 0.9524
+      CHECKED_BY:
+        tp: 22
+        fp: 5
+        fn: 0
+        precision: 0.8148
+        recall: 1.0
+        f1: 0.898
+      RESOLVED_BY:
+        tp: 45
+        fp: 0
+        fn: 0
+        precision: 1.0
+        recall: 1.0
+        f1: 1.0
+      ALIAS:
+        tp: 22
+        fp: 12
+        fn: 3
+        precision: 0.6471
+        recall: 0.88
+        f1: 0.7458
+    props_accuracy: 1.0
+    props_compared: 65
+    normalization_accuracy: 0.9796
+    normalization_names: 49
+    evidence_match_rate: 1.0
+    conflict_detection_rate: 0.5
+    stale_extracted: 1
+    stale_total: 2
+    distractor_candidates: 0
+    false_positive_in_k: 10
+    cost_usd: 0.039522

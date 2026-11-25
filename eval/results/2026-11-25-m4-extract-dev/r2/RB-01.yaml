@@ -1,0 +1,272 @@
+document_id: RB-01
+run_id: 2026-11-25-m4-extract-dev-r2
+candidates:
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 결제 승인 후 상품 미지급
+    id: S1
+  object:
+    type: Cause
+    name: 결제 승인·기록 오류
+    id: C01
+  props: {}
+  evidence_spans:
+  - 결제가 승인되었더라도 지급까지 이어지지 않았다면 여기에 해당한다.
+  - 결제 승인이나 기록에 오류가 있었고 그 결과 상품이 미지급 상태인 경우다.
+  confidence: 0.5
+  match: existing
+  reviewers:
+  - TM09
+- relation: MAY_BE_CAUSED_BY
+  subject:
+    type: SymptomType
+    name: 보상 미지급
+    id: S4
+  object:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  props: {}
+  evidence_spans:
+  - 넷째, 이벤트 설정 오류로 보상이 미지급된 경우다.
+  confidence: 0.6
+  match: existing
+  reviewers:
+  - TM01
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 상품 설정 오류
+    id: C03
+  object:
+    type: System
+    name: 상품 설정
+    id: null
+  props:
+    scope: config
+  evidence_spans:
+  - 원인이 상품 설정이나 이벤트 설정에 있을 때는 보상 지급과 별개로 설정 자체가 바로잡혔는지도 확인한다.
+  - 셋째, 상품 설정 오류가 확인된 경우다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM05
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: System
+    name: 이벤트 설정
+    id: null
+  props:
+    scope: config
+  evidence_spans:
+  - 원인이 상품 설정이나 이벤트 설정에 있을 때는 보상 지급과 별개로 설정 자체가 바로잡혔는지도 확인한다.
+  - 넷째, 이벤트 설정 오류로 보상이 미지급된 경우다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM05
+- relation: LOCATED_IN
+  subject:
+    type: Cause
+    name: 우편함 지급 누락
+    id: C02
+  object:
+    type: System
+    name: 우편함
+    id: SY13
+  props: {}
+  evidence_spans:
+  - 둘째, 우편함 지급 누락이 확인된 경우다.
+  confidence: 0.5
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 결제 승인·기록 오류
+    id: C01
+  object:
+    type: Procedure
+    name: 보상 지급
+    id: P6
+  props:
+    condition: 미지급
+  evidence_spans:
+  - 결제 승인·기록 오류와 이벤트 설정 오류는 미지급이 확인되어야 절차를 연다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM09
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: Procedure
+    name: 보상 지급
+    id: P6
+  props:
+    condition: 미지급
+  evidence_spans:
+  - 결제 승인·기록 오류와 이벤트 설정 오류는 미지급이 확인되어야 절차를 연다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM01
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 우편함 지급 누락
+    id: C02
+  object:
+    type: Procedure
+    name: 보상 지급
+    id: P6
+  props: {}
+  evidence_spans:
+  - 반면 우편함 지급 누락과 상품 설정 오류는 원인이 확인되면 이 절차를 연다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM03
+- relation: RESOLVED_BY
+  subject:
+    type: Cause
+    name: 상품 설정 오류
+    id: C03
+  object:
+    type: Procedure
+    name: 보상 지급
+    id: P6
+  props: {}
+  evidence_spans:
+  - 반면 우편함 지급 누락과 상품 설정 오류는 원인이 확인되면 이 절차를 연다.
+  confidence: 0.8
+  match: existing
+  reviewers:
+  - TM06
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 결제 승인·기록 오류
+    id: C01
+  object:
+    type: EvidenceCheck
+    name: 미지급 상태 확인
+    id: null
+  props:
+    required: true
+    expect: 상품이 실제로 미지급 상태로 확인된다
+  evidence_spans:
+  - 결제 승인·기록 오류와 이벤트 설정 오류라면 실제로 미지급 상태인지 먼저 확인한다.
+  confidence: 0.7
+  match: new
+  reviewers:
+  - TM09
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: EvidenceCheck
+    name: 미지급 상태 확인
+    id: null
+  props:
+    required: true
+    expect: 보상이 실제로 미지급 상태로 확인된다
+  evidence_spans:
+  - 결제 승인·기록 오류와 이벤트 설정 오류라면 실제로 미지급 상태인지 먼저 확인한다.
+  confidence: 0.7
+  match: new
+  reviewers:
+  - TM01
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 상품 설정 오류
+    id: C03
+  object:
+    type: EvidenceCheck
+    name: 설정 정정 확인
+    id: null
+  props:
+    required: false
+    expect: 설정이 바로잡혀 있어야 같은 문제가 되풀이되지 않는다
+  evidence_spans:
+  - 원인이 상품 설정이나 이벤트 설정에 있을 때는 보상 지급과 별개로 설정 자체가 바로잡혔는지도 확인한다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM06
+- relation: CHECKED_BY
+  subject:
+    type: Cause
+    name: 이벤트 설정 오류
+    id: C11
+  object:
+    type: EvidenceCheck
+    name: 설정 정정 확인
+    id: null
+  props:
+    required: false
+    expect: 설정이 바로잡혀 있어야 같은 문제가 되풀이되지 않는다
+  evidence_spans:
+  - 원인이 상품 설정이나 이벤트 설정에 있을 때는 보상 지급과 별개로 설정 자체가 바로잡혔는지도 확인한다.
+  confidence: 0.6
+  match: new
+  reviewers:
+  - TM01
+- relation: ALIAS
+  subject:
+    type: Cause
+    name: 결제 승인, 기록 오류
+    id: C01
+  object:
+    type: Name
+    name: 결제 승인·기록 오류
+    id: null
+  props: {}
+  evidence_spans:
+  - 결제 승인·기록 오류와 이벤트 설정 오류는 미지급이 확인되어야 절차를 연다. 반면 우편함 지급 누락과 상품 설정 오류는 원인이 확인되면 이
+    절차를 연다. 위에 적힌 사유는 현재까지 정리된 것이므로, 목록에 없는 사례가 나오면 PM팀 담당자와 상의해 개시 여부를 정한다.
+  confidence: 0.5
+  match: new
+  reviewers:
+  - TM09
+dropped: []
+stats:
+  raw: 13
+  names_by_code: 15
+  names_to_llm: 7
+  names_by_llm: 3
+  kept: 14
+calls:
+- task: extraction
+  model: claude-haiku-5-5
+  usage:
+    input: 1020
+    output: 6295
+    cache_read: 2530
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0032748
+  stop_reason: end_turn
+- task: normalization
+  model: claude-haiku-5-5
+  usage:
+    input: 2754
+    output: 628
+    cache_read: 0
+    cache_write_5m: 0
+    cache_write_1h: 0
+  cost: 0.0005894
+  stop_reason: end_turn
+cost_usd: 0.003864
