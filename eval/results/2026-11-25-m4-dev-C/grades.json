@@ -1,0 +1,3217 @@
+{
+  "folder": "eval/results/2026-11-25-m4-dev-C",
+  "meta": {
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "split": "dev",
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "cext_from": null,
+    "knowledge_graphs": null,
+    "scenarios": [
+      "SC-OOS-01",
+      "SC-S1-01",
+      "SC-S2-01",
+      "SC-S2-02",
+      "SC-S3-01",
+      "SC-S3-02",
+      "SC-S4-01",
+      "SC-S4-02",
+      "SC-S5-01",
+      "SC-S6-01",
+      "SC-S6-02",
+      "SC-S7-01",
+      "SC-S7-02",
+      "SC-S8-01",
+      "SC-S8-02"
+    ],
+    "repetitions": 3,
+    "started_at": "2026-11-25T16:23:34.240419+09:00",
+    "finished_at": "2026-11-25T16:40:05.392793+09:00"
+  },
+  "summary": {
+    "scenarios": {
+      "mean": 15,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "symptom": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "top1": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "top3": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "pre_rank_top1": {
+      "mean": 0.7142857142857143,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "team": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "severity": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "severity_within1": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "procedures": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "dup_precision": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "dup_recall": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "dup_f1": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "required_coverage": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "unnecessary": {
+      "mean": 0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "exploratory": {
+      "mean": 5.333333333333333,
+      "stdev": 0.5773502691896257,
+      "n": 3
+    },
+    "gate_blocked": {
+      "mean": 0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "approval_missing": {
+      "mean": 0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "approval_need": {
+      "mean": 40,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "approval_missing_rate": {
+      "mean": 0.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "unauthorized": {
+      "mean": 0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "refused": {
+      "mean": 0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "verdict_agreement": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "llm_calls": {
+      "mean": 156,
+      "stdev": 1.0,
+      "n": 3
+    },
+    "cost_usd": {
+      "mean": 0.06721456666666667,
+      "stdev": 0.0011603082018728232,
+      "n": 3
+    },
+    "input_tokens": {
+      "mean": 454004,
+      "stdev": 6310.213863253764,
+      "n": 3
+    },
+    "output_tokens": {
+      "mean": 43628.333333333336,
+      "stdev": 1246.52811173007,
+      "n": 3
+    },
+    "seconds": {
+      "mean": 313.8,
+      "stdev": 8.543418519538887,
+      "n": 3
+    }
+  },
+  "by_type": {
+    "T1": {
+      "scenarios": 24,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 0.875,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 1.0,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 1.0,
+      "unnecessary": 0,
+      "exploratory": 6,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 72,
+      "approval_missing_rate": 0.0,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 1.0,
+      "llm_calls": 109,
+      "cost_usd": 0.05309,
+      "input_tokens": 346500,
+      "output_tokens": 36880,
+      "seconds": 259.4
+    },
+    "T2": {
+      "scenarios": 3,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 1.0,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 1.0,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 1.0,
+      "unnecessary": 0,
+      "exploratory": 0,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 9,
+      "approval_missing_rate": 0.0,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 1.0,
+      "llm_calls": 12,
+      "cost_usd": 0.005935,
+      "input_tokens": 38450,
+      "output_tokens": 4180,
+      "seconds": 27.9
+    },
+    "T3": {
+      "scenarios": 6,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 0.5,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 1.0,
+      "dup_precision": 1.0,
+      "dup_recall": 1.0,
+      "dup_f1": 1.0,
+      "required_coverage": 1.0,
+      "unnecessary": 0,
+      "exploratory": 6,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 21,
+      "approval_missing_rate": 0.0,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 1.0,
+      "llm_calls": 60,
+      "cost_usd": 0.0246858,
+      "input_tokens": 164908,
+      "output_tokens": 16390,
+      "seconds": 125.19999999999999
+    },
+    "T4": {
+      "scenarios": 6,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 0.5,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 1.0,
+      "dup_precision": 1.0,
+      "dup_recall": 1.0,
+      "dup_f1": 1.0,
+      "required_coverage": 1.0,
+      "unnecessary": 0,
+      "exploratory": 0,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 12,
+      "approval_missing_rate": 0.0,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 1.0,
+      "llm_calls": 265,
+      "cost_usd": 0.1068373,
+      "input_tokens": 740638,
+      "output_tokens": 65547,
+      "seconds": 478.0
+    },
+    "T5": {
+      "scenarios": 3,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 0.0,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 1.0,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 1.0,
+      "unnecessary": 0,
+      "exploratory": 4,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 6,
+      "approval_missing_rate": 0.0,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 1.0,
+      "llm_calls": 19,
+      "cost_usd": 0.0098703,
+      "input_tokens": 64463,
+      "output_tokens": 6848,
+      "seconds": 43.4
+    },
+    "T6": {
+      "scenarios": 3,
+      "symptom": 1.0,
+      "top1": null,
+      "top3": null,
+      "pre_rank_top1": null,
+      "team": null,
+      "severity": null,
+      "severity_within1": null,
+      "procedures": null,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": null,
+      "unnecessary": 0,
+      "exploratory": 0,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 0,
+      "approval_missing_rate": null,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": null,
+      "llm_calls": 3,
+      "cost_usd": 0.0012253000000000001,
+      "input_tokens": 7053,
+      "output_tokens": 1040,
+      "seconds": 7.5
+    }
+  },
+  "per_scenario": {
+    "SC-OOS-01": {
+      "type": "T6",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 0,
+        "top3": 0,
+        "pre_rank_top1": 0,
+        "team": 0,
+        "severity": 0,
+        "severity_within1": 0,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 0,
+        "top3": 0,
+        "pre_rank_top1": 0,
+        "team": 0,
+        "severity": 0,
+        "severity_within1": 0,
+        "procedures": 0
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S1-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S2-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S2-02": {
+      "type": "T2",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S3-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S3-02": {
+      "type": "T4",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S4-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S4-02": {
+      "type": "T5",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S5-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S6-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S6-02": {
+      "type": "T3",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S7-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S7-02": {
+      "type": "T3",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S8-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S8-02": {
+      "type": "T4",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    }
+  },
+  "reps": [
+    {
+      "rep": "r1",
+      "scenarios": [
+        {
+          "scenario": "SC-OOS-01",
+          "type": "T6",
+          "main_found": true,
+          "predicted_unclassified": [
+            0
+          ],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 0,
+          "unauthorized": [],
+          "severity": null,
+          "severity_within1": null,
+          "top1": null,
+          "top3": null,
+          "pre_rank_top1": null,
+          "team": null,
+          "procedures": null,
+          "required": {
+            "total": 0,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 0,
+          "approval_missing": [],
+          "ranking": [],
+          "rankings": [],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 1,
+          "cost_usd": 0.0003886,
+          "input_tokens": 2351,
+          "output_tokens": 307,
+          "seconds": 2.9
+        },
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
+          "approval_missing": [],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0018513,
+          "input_tokens": 12133,
+          "output_tokens": 1276,
+          "seconds": 15.4
+        },
+        {
+          "scenario": "SC-S2-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C04",
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05",
+              "C06"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0016823,
+          "input_tokens": 11838,
+          "output_tokens": 997,
+          "seconds": 8.5
+        },
+        {
+          "scenario": "SC-S2-02",
+          "type": "T2",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C05",
+            "C04",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C04",
+              "C06"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0019583,
+          "input_tokens": 12778,
+          "output_tokens": 1361,
+          "seconds": 9.6
+        },
+        {
+          "scenario": "SC-S3-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C07",
+            "C08",
+            "C09",
+            "C10"
+          ],
+          "rankings": [
+            [
+              "C07",
+              "C08",
+              "C09",
+              "C10"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 6,
+          "cost_usd": 0.0032621,
+          "input_tokens": 21701,
+          "output_tokens": 2184,
+          "seconds": 14.5
+        },
+        {
+          "scenario": "SC-S3-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
+          "ranking": [
+            "C08",
+            "C07",
+            "C09",
+            "C10"
+          ],
+          "rankings": [
+            [
+              "C08",
+              "C07",
+              "C09",
+              "C10"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 42,
+          "cost_usd": 0.0163823,
+          "input_tokens": 110563,
+          "output_tokens": 10652,
+          "seconds": 77.9
+        },
+        {
+          "scenario": "SC-S4-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0019941,
+          "input_tokens": 12531,
+          "output_tokens": 1482,
+          "seconds": 10.1
+        },
+        {
+          "scenario": "SC-S4-02",
+          "type": "T5",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 2,
+          "approval_need": 2,
+          "approval_missing": [],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 7,
+          "cost_usd": 0.003713,
+          "input_tokens": 24140,
+          "output_tokens": 2598,
+          "seconds": 15.8
+        },
+        {
+          "scenario": "SC-S5-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 6,
+          "cost_usd": 0.0033575000000000002,
+          "input_tokens": 20695,
+          "output_tokens": 2576,
+          "seconds": 16.8
+        },
+        {
+          "scenario": "SC-S6-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0018637,
+          "input_tokens": 12737,
+          "output_tokens": 1180,
+          "seconds": 7.9
+        },
+        {
+          "scenario": "SC-S6-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 9,
+          "cost_usd": 0.0036459,
+          "input_tokens": 24004,
+          "output_tokens": 2491,
+          "seconds": 19.0
+        },
+        {
+          "scenario": "SC-S7-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 5,
+          "cost_usd": 0.0021236,
+          "input_tokens": 14111,
+          "output_tokens": 1425,
+          "seconds": 10.8
+        },
+        {
+          "scenario": "SC-S7-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [
+            2
+          ],
+          "pairs": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 11,
+          "cost_usd": 0.0046441,
+          "input_tokens": 30921,
+          "output_tokens": 3104,
+          "seconds": 23.4
+        },
+        {
+          "scenario": "SC-S8-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0017941000000000003,
+          "input_tokens": 12446,
+          "output_tokens": 1099,
+          "seconds": 8.7
+        },
+        {
+          "scenario": "SC-S8-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 45,
+          "cost_usd": 0.01805,
+          "input_tokens": 125970,
+          "output_tokens": 10906,
+          "seconds": 80.0
+        }
+      ],
+      "metrics": {
+        "scenarios": 15,
+        "symptom": 1.0,
+        "top1": 1.0,
+        "top3": 1.0,
+        "pre_rank_top1": 0.7142857142857143,
+        "team": 1.0,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 1.0,
+        "dup_precision": 1.0,
+        "dup_recall": 1.0,
+        "dup_f1": 1.0,
+        "required_coverage": 1.0,
+        "unnecessary": 0,
+        "exploratory": 6,
+        "gate_blocked": 0,
+        "approval_missing": 0,
+        "approval_need": 40,
+        "approval_missing_rate": 0.0,
+        "unauthorized": 0,
+        "refused": 0,
+        "verdict_agreement": 1.0,
+        "llm_calls": 156,
+        "cost_usd": 0.0667109,
+        "input_tokens": 448919,
+        "output_tokens": 43638,
+        "seconds": 321.3
+      }
+    },
+    {
+      "rep": "r2",
+      "scenarios": [
+        {
+          "scenario": "SC-OOS-01",
+          "type": "T6",
+          "main_found": true,
+          "predicted_unclassified": [
+            0
+          ],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 0,
+          "unauthorized": [],
+          "severity": null,
+          "severity_within1": null,
+          "top1": null,
+          "top3": null,
+          "pre_rank_top1": null,
+          "team": null,
+          "procedures": null,
+          "required": {
+            "total": 0,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 0,
+          "approval_missing": [],
+          "ranking": [],
+          "rankings": [],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 1,
+          "cost_usd": 0.00043860000000000004,
+          "input_tokens": 2351,
+          "output_tokens": 407,
+          "seconds": 2.5
+        },
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
+          "approval_missing": [],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0019576,
+          "input_tokens": 12246,
+          "output_tokens": 1466,
+          "seconds": 9.9
+        },
+        {
+          "scenario": "SC-S2-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C04",
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05",
+              "C06"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0017257000000000002,
+          "input_tokens": 11892,
+          "output_tokens": 1073,
+          "seconds": 8.8
+        },
+        {
+          "scenario": "SC-S2-02",
+          "type": "T2",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C05",
+            "C04",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C04",
+              "C06"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0020403,
+          "input_tokens": 12818,
+          "output_tokens": 1517,
+          "seconds": 9.6
+        },
+        {
+          "scenario": "SC-S3-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C07",
+            "C08",
+            "C09",
+            "C10"
+          ],
+          "rankings": [
+            [
+              "C07",
+              "C08",
+              "C09",
+              "C10"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0018058000000000002,
+          "input_tokens": 12753,
+          "output_tokens": 1061,
+          "seconds": 8.4
+        },
+        {
+          "scenario": "SC-S3-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
+          "ranking": [
+            "C08",
+            "C07",
+            "C09",
+            "C10"
+          ],
+          "rankings": [
+            [
+              "C08",
+              "C07",
+              "C09",
+              "C10"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 44,
+          "cost_usd": 0.0185004,
+          "input_tokens": 126254,
+          "output_tokens": 11750,
+          "seconds": 82.6
+        },
+        {
+          "scenario": "SC-S4-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0019739000000000002,
+          "input_tokens": 12529,
+          "output_tokens": 1442,
+          "seconds": 10.1
+        },
+        {
+          "scenario": "SC-S4-02",
+          "type": "T5",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 1,
+          "approval_need": 2,
+          "approval_missing": [],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 6,
+          "cost_usd": 0.003115,
+          "input_tokens": 20130,
+          "output_tokens": 2204,
+          "seconds": 14.1
+        },
+        {
+          "scenario": "SC-S5-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 8,
+          "cost_usd": 0.0047088,
+          "input_tokens": 30073,
+          "output_tokens": 3403,
+          "seconds": 21.0
+        },
+        {
+          "scenario": "SC-S6-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0018688,
+          "input_tokens": 12738,
+          "output_tokens": 1190,
+          "seconds": 8.2
+        },
+        {
+          "scenario": "SC-S6-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 9,
+          "cost_usd": 0.0035677,
+          "input_tokens": 24132,
+          "output_tokens": 2309,
+          "seconds": 17.0
+        },
+        {
+          "scenario": "SC-S7-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 5,
+          "cost_usd": 0.0022721,
+          "input_tokens": 14061,
+          "output_tokens": 1732,
+          "seconds": 11.7
+        },
+        {
+          "scenario": "SC-S7-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [
+            2
+          ],
+          "pairs": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 11,
+          "cost_usd": 0.004674800000000001,
+          "input_tokens": 30828,
+          "output_tokens": 3184,
+          "seconds": 24.2
+        },
+        {
+          "scenario": "SC-S8-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0018972000000000001,
+          "input_tokens": 12442,
+          "output_tokens": 1306,
+          "seconds": 8.5
+        },
+        {
+          "scenario": "SC-S8-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 45,
+          "cost_usd": 0.0179949,
+          "input_tokens": 125819,
+          "output_tokens": 10826,
+          "seconds": 79.0
+        }
+      ],
+      "metrics": {
+        "scenarios": 15,
+        "symptom": 1.0,
+        "top1": 1.0,
+        "top3": 1.0,
+        "pre_rank_top1": 0.7142857142857143,
+        "team": 1.0,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 1.0,
+        "dup_precision": 1.0,
+        "dup_recall": 1.0,
+        "dup_f1": 1.0,
+        "required_coverage": 1.0,
+        "unnecessary": 0,
+        "exploratory": 5,
+        "gate_blocked": 0,
+        "approval_missing": 0,
+        "approval_need": 40,
+        "approval_missing_rate": 0.0,
+        "unauthorized": 0,
+        "refused": 0,
+        "verdict_agreement": 1.0,
+        "llm_calls": 157,
+        "cost_usd": 0.06854160000000001,
+        "input_tokens": 461066,
+        "output_tokens": 44870,
+        "seconds": 315.59999999999997
+      }
+    },
+    {
+      "rep": "r3",
+      "scenarios": [
+        {
+          "scenario": "SC-OOS-01",
+          "type": "T6",
+          "main_found": true,
+          "predicted_unclassified": [
+            0
+          ],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 0,
+          "unauthorized": [],
+          "severity": null,
+          "severity_within1": null,
+          "top1": null,
+          "top3": null,
+          "pre_rank_top1": null,
+          "team": null,
+          "procedures": null,
+          "required": {
+            "total": 0,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 0,
+          "approval_missing": [],
+          "ranking": [],
+          "rankings": [],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 1,
+          "cost_usd": 0.00039810000000000003,
+          "input_tokens": 2351,
+          "output_tokens": 326,
+          "seconds": 2.1
+        },
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
+          "approval_missing": [],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0018983000000000001,
+          "input_tokens": 12213,
+          "output_tokens": 1354,
+          "seconds": 9.0
+        },
+        {
+          "scenario": "SC-S2-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C04",
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05",
+              "C06"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0015865,
+          "input_tokens": 11780,
+          "output_tokens": 817,
+          "seconds": 6.8
+        },
+        {
+          "scenario": "SC-S2-02",
+          "type": "T2",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C05",
+            "C04",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C04",
+              "C06"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0019364000000000002,
+          "input_tokens": 12854,
+          "output_tokens": 1302,
+          "seconds": 8.7
+        },
+        {
+          "scenario": "SC-S3-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C07",
+            "C08",
+            "C09",
+            "C10"
+          ],
+          "rankings": [
+            [
+              "C07",
+              "C08",
+              "C09",
+              "C10"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0022293,
+          "input_tokens": 12973,
+          "output_tokens": 1864,
+          "seconds": 11.5
+        },
+        {
+          "scenario": "SC-S3-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
+          "ranking": [
+            "C08",
+            "C07",
+            "C09",
+            "C10"
+          ],
+          "rankings": [
+            [
+              "C08",
+              "C07",
+              "C09",
+              "C10"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 44,
+          "cost_usd": 0.0182707,
+          "input_tokens": 126332,
+          "output_tokens": 11275,
+          "seconds": 80.3
+        },
+        {
+          "scenario": "SC-S4-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0020045,
+          "input_tokens": 12585,
+          "output_tokens": 1492,
+          "seconds": 9.7
+        },
+        {
+          "scenario": "SC-S4-02",
+          "type": "T5",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 1,
+          "approval_need": 2,
+          "approval_missing": [],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 6,
+          "cost_usd": 0.0030423000000000004,
+          "input_tokens": 20193,
+          "output_tokens": 2046,
+          "seconds": 13.5
+        },
+        {
+          "scenario": "SC-S5-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 6,
+          "cost_usd": 0.0033824,
+          "input_tokens": 20859,
+          "output_tokens": 2593,
+          "seconds": 16.4
+        },
+        {
+          "scenario": "SC-S6-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0017565000000000002,
+          "input_tokens": 12695,
+          "output_tokens": 974,
+          "seconds": 7.2
+        },
+        {
+          "scenario": "SC-S6-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 9,
+          "cost_usd": 0.0034905,
+          "input_tokens": 24120,
+          "output_tokens": 2157,
+          "seconds": 17.4
+        },
+        {
+          "scenario": "SC-S7-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 5,
+          "cost_usd": 0.0021931,
+          "input_tokens": 14006,
+          "output_tokens": 1585,
+          "seconds": 10.7
+        },
+        {
+          "scenario": "SC-S7-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [
+            2
+          ],
+          "pairs": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 11,
+          "cost_usd": 0.0046628,
+          "input_tokens": 30903,
+          "output_tokens": 3145,
+          "seconds": 24.2
+        },
+        {
+          "scenario": "SC-S8-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 4,
+          "cost_usd": 0.0019008,
+          "input_tokens": 12463,
+          "output_tokens": 1309,
+          "seconds": 8.8
+        },
+        {
+          "scenario": "SC-S8-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 45,
+          "cost_usd": 0.017639000000000002,
+          "input_tokens": 125700,
+          "output_tokens": 10138,
+          "seconds": 78.2
+        }
+      ],
+      "metrics": {
+        "scenarios": 15,
+        "symptom": 1.0,
+        "top1": 1.0,
+        "top3": 1.0,
+        "pre_rank_top1": 0.7142857142857143,
+        "team": 1.0,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 1.0,
+        "dup_precision": 1.0,
+        "dup_recall": 1.0,
+        "dup_f1": 1.0,
+        "required_coverage": 1.0,
+        "unnecessary": 0,
+        "exploratory": 5,
+        "gate_blocked": 0,
+        "approval_missing": 0,
+        "approval_need": 40,
+        "approval_missing_rate": 0.0,
+        "unauthorized": 0,
+        "refused": 0,
+        "verdict_agreement": 1.0,
+        "llm_calls": 155,
+        "cost_usd": 0.0663912,
+        "input_tokens": 452027,
+        "output_tokens": 42377,
+        "seconds": 304.5
+      }
+    }
+  ]
+}

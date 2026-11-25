@@ -53,7 +53,11 @@ KNOWLEDGE: dict[str, Callable[[KnowledgeContext], KnowledgeProvider]] = {
     "A": lambda ctx: TextKnowledge(llm=ctx.llm, seed=load_seed(ctx.org), results=ctx.results,
                                    changes=lambda: events.list_changes(ctx.driver), name="A"),
     "C": lambda ctx: GraphKnowledge(ctx.onto, ctx.tracer, name="C"),
+    # C와 같은 공급자다. 실행기가 추출 후보로 만든 그래프 DB(7689)에 연결해 준다 (ontology/cext, M4 PR 6)
+    "C-ext": lambda ctx: GraphKnowledge(ctx.onto, ctx.tracer, name="C-ext"),
 }
+# 개발용 그래프가 아니라 추출 그래프 DB에서 진단하는 구성
+EXT_CONFIGS = {"C-ext"}
 
 
 def _server(module: str, extra: dict[str, str]) -> StdioServerParameters:
@@ -73,11 +77,13 @@ def prepare_event_layer(driver, scenario: dict) -> None:
 
 
 async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org: str, tracer: Tracer, llm: LLM,
-                       driver) -> dict:
+                       driver, neo4j_uri: str | None = None) -> dict:
+    """neo4j_uri를 주면 온톨로지 조회 서버가 그 DB를 읽는다. driver도 같은 DB에 연결돼 있어야 한다 (C-ext)."""
     if config not in KNOWLEDGE:
         raise ValueError(f"등록되지 않은 구성이다: {config} (구성: {sorted(KNOWLEDGE)})")
     prepare_event_layer(driver, scenario)
-    onto_params = _server("mcp_servers.ontology_query.server", {"ORG": org})
+    onto_params = _server("mcp_servers.ontology_query.server",
+                          {"ORG": org} | ({"NEO4J_URI": neo4j_uri} if neo4j_uri else {}))
     mock_params = _server("mcp_servers.mock_tools.server", {"ORG": org, "MOCK_ENV_FILE": str(scenario_path.resolve())})
     async with Client(onto_params) as onto, Client(mock_params) as mock:
         listed = await mock.list_tools()

@@ -31,5 +31,21 @@ services:
       timeout: 10s
       retries: 30
 
+  # 구성 C-ext 전용 (M4 PR 6). 실행기가 반복마다 추출 그래프를 다시 적재하므로 데이터를 남기지 않는다.
+  # 개발용 DB와 나눠야 C-ext 그래프가 사람이 만든 K 그래프를 덮어쓰지 않는다
+  neo4j-ext:
+    image: neo4j:2026.10.2-community
+    ports:
+      - "127.0.0.1:7689:7687"
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-localdev-password}
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$${NEO4J_AUTH#neo4j/}\" 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
 volumes:
   neo4j_data:

@@ -1,0 +1,250 @@
+{
+  "run": {
+    "scenario": "SC-S1-01",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T16:23:40.645801+09:00",
+    "finished_at": "2026-11-25T16:23:54.348266+09:00",
+    "seconds": 13.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "5cd3373a270cf3fed39fc5d664dec150",
+    "llm_calls": 4,
+    "usage": {
+      "input": 12300,
+      "output": 1013,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0017365000000000002,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "f16a2d60be47ccf0059a27f3e6d2e16169e85f830e694af4708b0500995760b5",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r1",
+        "run_id": "2026-11-25-m4-extract-dev-r1",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "063d2a68d22d08cb0023c83502175ea595a38689b4a37c7e6f0107e58ef38d43"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 7,
+        "aliases_added": 26,
+        "args_from_location": 6,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 13,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 18,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "e42fe1b83c3b26807dbfee1901bee67ae9c0d3a7",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "a74bb3f6c325958bf46bba26ae12cf6472e7820637f323ea62d34a00c20b125c"
+  },
+  "outputs": [
+    {
+      "symptom": "S1",
+      "incident_id": "INC-69267ba75f2b",
+      "report_ids": [
+        "RP-ffd81389bebb"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C02",
+          "rank": 1,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "confirm",
+              "detail": "해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "confirm",
+              "detail": "해당 결제 건에 대한 우편함 지급 기록이 없다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C02",
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P6",
+        "P10"
+      ],
+      "resolved_conditions": [
+        "미지급"
+      ],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-18fb476988bb"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-aa690ac67f37"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-97386dc6bad1"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-241f1c5e943f"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-b98e38d2dca2"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-c2613ebd6d36"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "refused",
+          "error": "A15: 1차 담당 팀이 정해지지 않은 사건이다: INC-69267ba75f2b"
+        },
+        {
+          "action_id": "A10",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-9a342addbe0c"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_payment_record",
+          "check_id": "E01",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "9.condition",
+          "cause_id": "C02",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S1 결제 후 아이템 미지급 (영향 범위 some_users, 심각도 SEV3)\n-> 원인 C02 우편함 지급 누락 (점수 2): confirm, 근거 ['E01', 'E02']. E01 결제 기록 조회에서 19:44 결제 승인이 정상으로 남아 있어 expect(결제 승인 정상)와 일치한다. E02 우편함 지급 기록 조회에서 해당 결제 건의 지급 기록이 없어 expect(메일함에 지급 기록 없음)와 일치한다. 필수 근거 2개가 모두 expect대로 나와 C02 우편함 지급 누락을 확정한다.",
+      "needs_human": [
+        "1차 담당 팀이 하나로 정해지지 않는다: []"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

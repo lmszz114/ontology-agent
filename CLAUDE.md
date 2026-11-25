@@ -127,6 +127,7 @@ Claude Code가 이 저장소에서 작업할 때 따르는 규칙이다.
 - Neo4j가 필요한 작업 직전에 Docker와 그 작업이 쓰는 DB가 떠 있는지 확인하고, 내려가 있으면 띄운 뒤 진행한다
   - 통합 테스트는 테스트용 DB `neo4j-test`(7688 포트)를 쓴다
   - 스키마 적용, 시드 적재, 에이전트 실행은 개발용 DB `neo4j`(7687 포트, `NEO4J_URI` 기본값)를 쓴다
+  - 구성 C-ext 실행은 C-ext 그래프 DB `neo4j-ext`(7689 포트, `NEO4J_EXT_URI`)를 쓴다. 실행기가 반복마다 추출 그래프를 다시 적재한다. 띄우기: `scripts/dev_up.sh neo4j-ext`
   - 클라우드 컨테이너는 Docker를 자동으로 띄우지 않는다. 작업 머신이 다시 시작되면(대기 중에 자주 일어난다) Docker도 같이 내려간다
   - 띄우기: `scripts/dev_up.sh`(두 DB) 또는 `scripts/dev_up.sh neo4j-test`. 이미 떠 있으면 상태만 확인하므로 Neo4j가 필요한 작업 전에 매번 부른다
   - 스크립트는 dockerd 없이 남은 `/var/run/docker.pid`를 지운 뒤 dockerd를 띄운다. 머신 재시작 뒤 이 파일이 남아 있으면 dockerd가 시작을 거부한다
