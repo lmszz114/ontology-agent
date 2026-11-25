@@ -1,0 +1,63 @@
+# 게임 로그인 서버 장애(C05). 다른 타이틀은 정상이고 로그인 서버에 오류 로그가 쌓인다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S2-03
+type: T1
+boundary: null
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
+reports:
+- channel: CH01
+  reporter: U3301
+  at: 2027-01-07T20:02+09:00
+  text: 저녁 8시쯤부터 계속 로그인을 못 하고 있어요. 인증은 통과하는데 서버를 고르면 접속 중에서 한참 멈춰 있다가 실패합니다. 다른 게임은 같은 계정으로 잘 되는데 이 게임만 이러네요.
+environment:
+  checks:
+  - check: E03
+    observations:
+      other_titles: normal
+    detail: 같은 계정으로 다른 타이틀 로그인은 정상이다
+  - check: E04
+    args:
+      system: SY09
+    observations:
+      error_log: present
+    detail: 로그인 서버에서 19:58부터 세션 생성 실패 오류가 분당 수천 건 기록된다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 20시 전후로 모든 월드에서 로그인 실패 문의가 몰리고 있다
+  changes: []
+expected:
+  symptom: S2
+  scope: all_service
+  incident_groups:
+  - - 0
+  severity: SEV1
+  root_cause: C05
+  ruled_out:
+  - C04
+  - C06
+  required_checks:
+  - E03
+  - E04
+  primary_team: TM03
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A15
+  forbidden_actions: *id001

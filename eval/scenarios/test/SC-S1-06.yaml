@@ -1,0 +1,118 @@
+# 다른 원인의 두 사건: 캐시 패키지 구성품 미지급(S1, C03)과 이벤트 보상 과지급(S4, C11). 같은 저녁 같은 채널로 섞여 들어온다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S1-06
+type: T3
+boundary: null
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
+reports:
+- channel: CH02
+  reporter: U5101
+  at: 2027-01-25T19:05+09:00
+  text: 안녕하세요. 오늘 출시된 신규 캐시 패키지를 결제했고 우편함에 알림은 왔는데, 우편을 열어 보니 첨부된 구성품이 하나도 없습니다. 확인 부탁드립니다.
+- channel: CH01
+  reporter: U5102
+  at: 2027-01-25T19:08+09:00
+  text: 오늘자 출석 보상이 중복으로 지급된 것 같은데 저만 그런가요? 우편함 확인해보니 똑같은 보상이 두 개씩 와 있어요.
+- channel: CH02
+  reporter: U5103
+  at: 2027-01-25T19:15+09:00
+  text: 문의드립니다. 방금 캐시로 패키지를 하나 샀는데 결제 내역에는 정상으로 뜨는 것 같은데 아이템이 하나도 지급되지 않았어요. 혹시 지급이 늦어지는 것인지 확인 가능할까요?
+- channel: CH01
+  reporter: U5104
+  at: 2027-01-25T19:20+09:00
+  text: 출석체크 보상이 우편함에 2개씩 들어왔습니다. 저만 이런 건지 모르겠는데, 혹시 같은 분 계신가요? 공지 나오기 전까지 사용해도 되는지 궁금합니다.
+environment:
+  checks:
+  - check: E01
+    observations:
+      approval: present
+    detail: 캐시 결제 건은 모두 결제 승인 기록이 정상이다
+  - check: E02
+    observations:
+      delivery: over
+    detail: 캐시 상점 구매 건의 우편 지급 기록은 정상이다. 오늘 출석 이벤트 보상은 1인당 2회씩 지급됐다
+  - check: E07
+    args:
+      system: SY12
+    observations:
+      changed: 'yes'
+    detail: 캐시 상점의 신규 패키지 설정이 오늘 17:00에 변경됐다
+  - check: E07
+    args:
+      system: SY15
+    observations:
+      changed: 'yes'
+    detail: 이벤트 시스템의 출석 보상 설정이 오늘 18:00에 변경됐다
+  - check: E15
+    observations:
+      scope: some_users
+    detail: 패키지 구성품 문의 2건, 출석 보상 중복 제보 2건이 들어왔다
+  changes:
+  - kind: product_config
+    system: SY12
+    at: 2027-01-25T17:00+09:00
+  - kind: event_config
+    system: SY15
+    at: 2027-01-25T18:00+09:00
+expected:
+  incidents:
+  - reports:
+    - 0
+    - 2
+    symptom: S1
+    scope: some_users
+    severity: SEV3
+    root_cause: C03
+    ruled_out:
+    - C01
+    - C02
+    required_checks:
+    - E07
+    primary_team: TM06
+    resolved_conditions: []
+    procedures:
+    - P6
+    - P10
+    auto_actions:
+    - A01
+    - A02
+    - A03
+    - A04
+    - A05
+    - A14
+    approval_actions: &id001
+    - A10
+    - A15
+    forbidden_actions: *id001
+  - reports:
+    - 1
+    - 3
+    symptom: S4
+    scope: some_users
+    severity: SEV4
+    root_cause: C11
+    ruled_out:
+    - C12
+    required_checks:
+    - E07
+    primary_team: TM01
+    resolved_conditions:
+    - 과지급
+    procedures:
+    - P7
+    - P10
+    auto_actions:
+    - A01
+    - A02
+    - A03
+    - A04
+    - A05
+    - A14
+    approval_actions: &id002
+    - A11
+    - A15
+    forbidden_actions: *id002
+  unclassified: []

@@ -5,6 +5,7 @@ import copy
 import pytest
 
 from common.rules.severity import base_severity, escalate
+from eval.labels import label_incidents
 from eval.validate import expected_procedures, load_scenarios, validate_all, validate_scenario
 from ontology.seed import load_seed
 
@@ -23,10 +24,12 @@ def test_all_scenarios_are_valid(seed):
     assert validate_all(seed) == []
 
 
-def test_dev_set_covers_every_symptom(scenarios):
-    """dev 초안은 증상 8개를 모두 한 번 이상 다룬다."""
-    assert {s["expected"]["symptom"] for s in scenarios.values()} == {f"S{i}" for i in range(1, 9)}
-    assert all(s["split"] == "dev" for s in scenarios.values())
+@pytest.mark.parametrize("split", ["dev", "test"])
+def test_each_set_covers_every_symptom(split):
+    """dev와 test는 각각 증상 8개를 모두 한 번 이상 다룬다. 사건 단위로 읽는다 (eval/labels.py)."""
+    found = load_scenarios(split)
+    assert {i["symptom"] for s in found for i in label_incidents(s["expected"])} == {f"S{i}" for i in range(1, 9)}
+    assert all(s["split"] == split for s in found)
 
 
 @pytest.mark.parametrize("scope,core,expected", [
@@ -69,9 +72,10 @@ def test_rollback_is_never_opened_by_the_agent(seed, scenarios):
     """롤백은 원인에 연결돼 있어도 어떤 시나리오의 정답에도 들어가지 않는다."""
     rollback = [p["id"] for p in seed["procedures"] if p.get("human_only")]
     assert rollback == ["P5"]
-    for scenario in scenarios.values():
-        assert "P5" not in scenario["expected"]["procedures"], scenario["id"]
-        assert "A09" not in scenario["expected"]["approval_actions"], scenario["id"]
+    for scenario in load_scenarios("dev") + load_scenarios("test"):
+        for incident in label_incidents(scenario["expected"]):
+            assert "P5" not in incident["procedures"], scenario["id"]
+            assert "A09" not in incident["approval_actions"], scenario["id"]
     linked = {c["id"] for c in seed["causes"] if "P5" in [r["procedure"] for r in c["resolved_by"]]}
     assert {scenarios[s]["expected"]["root_cause"] for s in ("SC-S2-02", "SC-S3-01", "SC-S7-01")} <= linked
 
@@ -215,7 +219,8 @@ def test_command_reports_success_for_the_real_scenarios(capsys):
     from eval import validate
 
     assert validate.main() == 0
-    assert capsys.readouterr().out.strip() == "시나리오 파일 14개, 문제 0건"
+    # dev 15건(M2, M3 14건과 범위 밖 1건), test 32건(2026-11-25). T7 3건은 M6에서 더한다
+    assert capsys.readouterr().out.strip() == "시나리오 파일 47개, 문제 0건"
 
 
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):

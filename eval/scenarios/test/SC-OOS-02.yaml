@@ -1,0 +1,21 @@
+# 범위 밖: 길드 가입 방법 문의. 증상 8개에 해당하지 않아 사건을 열지 않고 사람에게 넘겨야 한다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-OOS-02
+type: T6
+boundary: null
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
+reports:
+- channel: CH02
+  reporter: U6021
+  at: 2027-02-03T14:00+09:00
+  text: 문의드립니다. 길드 가입은 어떤 메뉴에서 신청하는 건가요? 메뉴를 한참 둘러봤는데 잘 못 찾겠습니다. 가입 가능한 레벨 조건이 따로 있다면 그것도 함께 안내해 주시면 감사하겠습니다.
+environment:
+  checks: []
+  changes: []
+expected:
+  incidents: []
+  unclassified:
+  - 0

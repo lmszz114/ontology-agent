@@ -1,0 +1,125 @@
+# 다른 원인의 두 사건: 확률 테이블 값 오류(S6, C16)와 레이드 시간 서버 자원 부족(S8, C20). 같은 시간대에 들어온다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S6-06
+type: T3
+boundary: null
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
+reports:
+- channel: CH01
+  reporter: U5201
+  at: 2027-01-26T20:05+09:00
+  text: 확률 안내 페이지에는 최고 등급 4%라고 적혀 있는데, 저는 이번 소환 300회 넘게 돌려서 최고 등급이 3번밖에 안 나왔어요. 제 운이 나쁜 건지 모르겠지만 표기 확률이랑 너무 차이 나는 것 같아서 한 번 확인 부탁드립니다.
+- channel: CH01
+  reporter: U5202
+  at: 2027-01-26T20:07+09:00
+  text: 20시 레이드 열리고 들어갔더니 렉이 너무 심해서 캐릭터가 몇 초씩 얼어붙네요. 스킬 눌러도 한참 뒤에 나가거나 아예 안 나가서 제대로 공략을 못 했습니다. 서버 쪽 문제인지 확인 부탁드려요.
+- channel: CH02
+  reporter: U5203
+  at: 2027-01-26T20:12+09:00
+  text: 안녕하세요. 이번 달 신규 소환 상품에서 최상급 등급 안내 확률이 4%로 표시되어 있는데, 저는 150회를 뽑는 동안 한 번도 나오지 않았습니다. 운이 나빴을 수도 있겠지만 혹시 실제 적용 확률이 안내와 같은지 확인 부탁드립니다.
+- channel: CH03
+  reporter: E5204
+  at: 2027-01-26T20:15+09:00
+  text: 레이드 오픈하고 나서부터 여러 월드에서 렉 제보가 계속 들어오고 있어요. 한두 월드만 그런 건 아닌 것 같은데, 서버 상태 한번 봐주실 수 있을까요?
+environment:
+  checks:
+  - check: E08
+    observations:
+      public_vs_table: different
+      table_vs_actual: same
+    detail: 공개 페이지는 4%, 테이블과 실제 결과는 0.4%다
+  - check: E05
+    args:
+      area: probability
+    observations:
+      changed: 'yes'
+    detail: 확률 영역 테이블이 오늘 15:00에 변경됐다
+  - check: E09
+    args:
+      system: SY05
+    observations:
+      status: resource_limit
+    detail: 서버 인프라 CPU와 메모리가 20시부터 한계에 가깝다
+  - check: E14
+    observations:
+      overlaps_large_content: 'yes'
+    detail: 모든 월드의 레이드가 20시에 열렸다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 확률 표기 문의와 레이드 렉 제보가 모두 전 월드에서 들어온다
+  changes:
+  - kind: table_change
+    system: SY17
+    at: 2027-01-26T15:00+09:00
+expected:
+  incidents:
+  - reports:
+    - 0
+    - 2
+    symptom: S6
+    scope: all_service
+    severity: SEV2
+    root_cause: C16
+    ruled_out:
+    - C15
+    - C17
+    required_checks:
+    - E05
+    - E08
+    primary_team: TM02
+    resolved_conditions: []
+    procedures:
+    - P3
+    - P4
+    - P8
+    - P10
+    auto_actions:
+    - A01
+    - A02
+    - A03
+    - A04
+    - A05
+    - A06
+    - A14
+    approval_actions: &id001
+    - A07
+    - A08
+    - A12
+    - A15
+    forbidden_actions: *id001
+  - reports:
+    - 1
+    - 3
+    symptom: S8
+    scope: all_service
+    severity: SEV2
+    root_cause: C20
+    ruled_out:
+    - C21
+    required_checks:
+    - E09
+    - E14
+    primary_team: TM10
+    resolved_conditions: []
+    procedures:
+    - P3
+    - P4
+    - P10
+    auto_actions:
+    - A01
+    - A02
+    - A03
+    - A04
+    - A05
+    - A06
+    - A14
+    approval_actions: &id002
+    - A07
+    - A08
+    - A15
+    forbidden_actions: *id002
+  unclassified: []

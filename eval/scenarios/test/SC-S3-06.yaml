@@ -1,0 +1,73 @@
+# 직원이 서버 버그로 보고하지만 콘텐츠 테이블 값이 바뀌었다(C07)
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S3-06
+type: T2
+boundary: 데이터 테이블 vs 서버 적용 로직
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1) 후보 중 선택 (eval/scenarios/generation/2026-11-25-test-selection.yaml). 정답 라벨과 환경은 문장 생성 전에 작성 (2026-11-25)
+reports:
+- channel: CH03
+  reporter: E4501
+  at: 2027-01-19T13:00+09:00
+  text: 새 던전 보스 못 잡겠다는 글이 커뮤니티에 계속 올라오는데요, 다들 체력이 안 깎이는 것 같다고 하네요. 서버 쪽 문제일 수도 있어서 한번 확인 부탁드려요.
+environment:
+  checks:
+  - check: E05
+    args:
+      area: content
+    observations:
+      changed: 'yes'
+    detail: 콘텐츠 영역 테이블(던전 몬스터 체력)이 오늘 09:00에 변경됐다
+  - check: E12
+    observations:
+      reproduced: 'yes'
+    detail: QA가 새 던전 보스 체력이 비정상적으로 높은 것을 재현했다
+  - check: E04
+    args:
+      system: SY10
+    observations:
+      error_log: absent
+    detail: 월드 서버에 관련 오류 로그는 없다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 던전 보스를 잡을 수 없다는 글이 모든 월드에서 올라온다
+  changes:
+  - kind: table_change
+    system: SY17
+    at: 2027-01-19T09:00+09:00
+expected:
+  symptom: S3
+  scope: all_service
+  incident_groups:
+  - - 0
+  severity: SEV2
+  root_cause: C07
+  ruled_out:
+  - C08
+  - C09
+  - C10
+  required_checks:
+  - E05
+  - E12
+  primary_team: TM01
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A15
+  forbidden_actions: *id001
