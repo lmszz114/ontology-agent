@@ -116,7 +116,7 @@ def main(argv=None) -> int:
             run_file = out / "run.yaml"
             if not run_file.exists():
                 record = meta | {"started_at": datetime.now(KST).isoformat(timespec="seconds"), "reps": args.reps,
-                                 "prices": llm.config.price_record}
+                                 "prices": llm.config.price_record(sorted(set(meta["models"].values())))}
                 write_text_atomic(run_file, yaml.safe_dump(record, allow_unicode=True, sort_keys=False))
             total = 0.0
             try:
