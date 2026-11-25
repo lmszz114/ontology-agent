@@ -2,6 +2,8 @@
 
 실행: python -m eval.grader.evidence_sample eval/results/<추출 결과 폴더> r1 --n 30 --out eval/results/<점검 폴더>/evidence
       python -m eval.grader.evidence_sample ... --dry-run    # 표본과 예상 입력 크기만 본다 (LLM을 부르지 않는다)
+      python -m eval.grader.evidence_sample --human <점검 폴더>/evidence/HUMAN.yaml <점검 폴더>/evidence/EVIDENCE.yaml
+          # 사람 재확인 판정을 EVIDENCE.yaml의 human 칸에 넣고 일치 표를 계산한다 (LLM을 부르지 않는다)
 
 추출 채점기는 근거 문장이 원문에 글자 그대로 있는지만 본다. 문장이 그 관계를 말하는지는 표본을 뽑아 Sonnet(채점 작업)이
 판정하고 사람이 다시 확인한다. 판정은 셋이다: 뒷받침함, 일부만(관계는 맞지만 속성이나 한쪽 끝이 문장에 없음), 아님.
@@ -98,7 +100,42 @@ def prompt(c: dict, docs: dict) -> str:
     return f"주장: {claim(c)}\n\n근거 문장:\n{spans}\n\n근거 문장이 든 단락:\n{context(c, docs)}"
 
 
+def merge_human(evidence: dict, human: dict) -> dict:
+    """사람 판정을 표본에 넣고 Sonnet 판정과의 일치를 센다. 사람이 보지 않은 표본은 human을 비워 둔다."""
+    judged = human["judgments"]
+    by_id = {s["candidate"]: s for s in evidence["samples"]}
+    unknown = sorted(set(judged) - set(by_id))
+    if unknown:
+        raise ValueError(f"표본에 없는 후보: {unknown}")
+    for cid, h in judged.items():
+        if h["verdict"] not in VERDICTS:
+            raise ValueError(f"{cid}: 판정은 {VERDICTS} 중 하나다 ({h['verdict']})")
+    for s in evidence["samples"]:
+        s["human"] = judged.get(s["candidate"])
+    reviewed = [s for s in evidence["samples"] if s["human"]]
+    matrix = {m: {h: 0 for h in VERDICTS} for m in VERDICTS}
+    for s in reviewed:
+        matrix[s["verdict"]][s["human"]["verdict"]] += 1
+    evidence["human_review"] = {
+        "reviewer": human["reviewer"], "date": human["date"], "how_picked": human["how_picked"],
+        "reviewed": len(reviewed), "agree": sum(1 for s in reviewed if s["verdict"] == s["human"]["verdict"]),
+        "human_summary": {v: sum(1 for s in reviewed if s["human"]["verdict"] == v) for v in VERDICTS},
+        "model_by_human": matrix, "model_by_human_note": "바깥 키는 Sonnet 판정, 안쪽 키는 사람 판정이다",
+    }
+    return evidence
+
+
 def main(argv=None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and argv[0] == "--human":
+        human_path, evidence_path = Path(argv[1]), Path(argv[2])
+        evidence = yaml.safe_load(evidence_path.read_text(encoding="utf-8"))
+        merged = merge_human(evidence, yaml.safe_load(human_path.read_text(encoding="utf-8")))
+        write_text_atomic(evidence_path, yaml.safe_dump(merged, allow_unicode=True, sort_keys=False))
+        r = merged["human_review"]
+        print(f"사람 재확인 {r['reviewed']}개, Sonnet과 일치 {r['agree']}개, 사람 판정 {r['human_summary']}")
+        return 0
     parser = argparse.ArgumentParser(description="근거 문장 표본 확인 (Sonnet 판정, 사람 재확인)")
     parser.add_argument("folder")
     parser.add_argument("rep")

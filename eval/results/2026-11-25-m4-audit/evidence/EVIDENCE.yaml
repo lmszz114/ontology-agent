@@ -52,7 +52,8 @@ samples:
   reason: 근거 문장은 경매장에서 등록 실패가 이어지는 장애가 발생했다고만 말한다. 등록 실패는 장애 속에서 나타난 증상이고, 단락은 그 원인
     후보로 경매장 서버 오류를 든다. 등록 실패를 '거래소 장애'의 다른 이름이라고 하는 동의 관계는 어디에도 없고, 거래소라는 표현도 나오지
     않는다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.003234
 - candidate: PM-03:004
@@ -65,7 +66,9 @@ samples:
   verdict: supported
   reason: 근거 문장과 같은 단락이 다른 타이틀의 로그인 상태를 확인했고 그 결과 정상이었다고 밝히며, 이로써 문제가 이 타이틀에 한정되고
     이 타이틀 쪽 게이트웨이 문제로 좁혀졌다고 말한다. 따라서 확인 수단과 확정 조건(다른 타이틀 로그인 정상)이 모두 근거에 있다.
-  human: null
+  human:
+    verdict: partial
+    note: 다른 타이틀 로그인이 정상이라는 것만으로 게임 로그인 서버 장애로 확정할 수 있는지는 문장에 없다. 일부 맞다
   model: claude-sonnet-5-5
   cost_usd: 0.003528
 - candidate: CH-01:000
@@ -89,7 +92,8 @@ samples:
   verdict: unsupported
   reason: 근거 문장은 확률 페이지가 게임 데이터 테이블에 의존하며 테이블 문제가 페이지에 영향을 준다는 내용이다. 게임 데이터 테이블 문제의
     원인이 게임 데이터 테이블 시스템에 있다는 관계나 data 담당 범위는 말하지 않는다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.002922
 - candidate: PM-04:000
@@ -102,7 +106,8 @@ samples:
   reason: 단락은 업데이트 후 콘텐츠 오류의 원인 후보로 콘텐츠 테이블 값 오류가 가장 먼저 의심되며 가능성이 높다고 말하므로 관계와 가능성
     속성은 뒷받침된다. 하지만 '던전 몬스터 체력 값이 잘못 입력된' 데이터라는 구체적 내용은 근거 문장과 단락 어디에도 없고 일반적인 테이블
     값 오류만 언급된다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.003754
 - candidate: CH-01:001
@@ -141,7 +146,8 @@ samples:
   reason: 근거 문장은 어뷰징으로 아이템과 재화가 부당하게 늘어난 경우에도 해당 절차를 연다고 말해 관계 자체는 맞다. 그러나 주장에 있는
     '원인이 확정되면'이라는 조건은 이 문장에 없고, 같은 단락도 확정 조건을 복사 버그에만 쓴다("확인되면"). 어뷰징에도 같은 조건이 적용되는지는
     근거에서 알 수 없다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.003534
 - candidate: CH-02:004
@@ -153,7 +159,8 @@ samples:
   verdict: unsupported
   reason: 근거 문장은 로그인 실패 문의가 올라오고 있다는 상황을 전할 뿐, '로그인 실패'가 로그인 불가나 접속 장애의 다른 이름(동의어)이라고
     말하지 않는다. 단락의 '로그인 안 되는 거', '접속 안 된다'는 표현은 각자 증상을 말한 것이지 용어 간 동의 관계를 정의한 것이 아니다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.005866
 - candidate: PM-07:003
@@ -193,7 +200,8 @@ samples:
   reason: 근거 문장은 문제가 어뷰징 탐지의 설정 쪽에 있었다고 해서 탐지 시스템과 config 범위는 뒷받침한다. 그러나 주장의 '어뷰징
     원인'은 단락에서 문제의 직접 원인이 어뷰징이라는 뜻이고, 탐지 시스템이 어뷰징의 원인이라고는 말하지 않는다. 단락은 탐지 설정 문제로 어뷰징을
     제때 걸러 내지 못했다고 설명하므로 관계 방향이 주장과 다르다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.00383
 - candidate: PM-05:002
@@ -206,7 +214,8 @@ samples:
   verdict: partial
   reason: 근거 문장은 이벤트 설정 오류를 가장 먼저 의심하는 원인 후보이고 가능성이 높다고 말해 관계와 가능성 속성은 뒷받침한다. 다만 '이런
     증상', '이 증상'이 문장에 구체적으로 나오지 않아, 이벤트 보상 오지급·과지급 증상이라는 한쪽 대상은 근거 문장만으로 확인되지 않는다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.003606
 - candidate: PM-02:001
@@ -230,7 +239,8 @@ samples:
   verdict: supported
   reason: 근거 문장이 서버 인프라의 운영을 인프라 운영이 맡고 있다고 직접 밝히고 있어, 담당 관계와 범위(운영)가 모두 주장과 일치한다.
     다만 '인프라 운영'이 팀이라는 표현은 없지만 담당 주체로 쓰여 주장의 의미를 벗어나지 않는다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.002906
 - candidate: PM-07:007
@@ -242,7 +252,8 @@ samples:
   verdict: partial
   reason: 근거 문장은 '원인 수정과 반영'이 잘못된 테이블 값을 고쳐 게임에 반영하는 단계라는 내용만 말한다. 원인이 확정된 뒤에 이 절차를
     연다는 선행 조건이나 순서는 근거 문장과 단락에 나오지 않는다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.002796
 - candidate: PM-03:012
@@ -280,7 +291,8 @@ samples:
   verdict: supported
   reason: 근거 문장과 단락에서 캐시샵이 결제 플랫폼과 우편함 두 곳에 기대고 있으며, 우편함은 구매한 상품을 받는 단계에서 연결되고 우편함
     문제 시 캐시샵이 영향을 받는다고 하여 의존 관계를 충분히 뒷받침한다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.003138
 - candidate: PM-01:004
@@ -329,7 +341,8 @@ samples:
   verdict: supported
   reason: 근거 문장이 이벤트 툴의 설정(config)을 콘텐츠기획이 맡고 있다고 직접 밝혀, 담당 팀과 대상 시스템, 담당 범위(config)가
     모두 주장과 일치한다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.002474
 - candidate: RB-01:003
@@ -342,7 +355,9 @@ samples:
   verdict: partial
   reason: 근거 문장은 상품 설정 오류가 원인으로 확인되면 '이 절차'를 연다고 말해 조건과 관계는 맞다. 다만 '이 절차'가 보상 지급 절차라고
     단락에 명시되어 있지 않아 절차의 이름과 범위는 근거 문장에 직접 나오지 않는다.
-  human: null
+  human:
+    verdict: partial
+    note: 상품 설정 오류가 보상 지급 절차와 이어지는지 문장만으로는 분명하지 않다. 보상 지급이 미지급 상품을 지급한다는 뜻이면 일부 맞다
   model: claude-sonnet-5-5
   cost_usd: 0.00337
 - candidate: PM-10:009
@@ -354,7 +369,8 @@ samples:
   verdict: unsupported
   reason: 근거 문장은 서버 인프라 운영을 '인프라 운영'이 맡는다고만 말할 뿐, '인프라 운영'이 '인프라운영팀'의 다른 이름(별칭)이라는
     동치 관계는 언급하지 않는다. 단락 어디에도 '인프라운영팀'이라는 명칭이 나오지 않는다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.00287
 - candidate: CH-03:000
@@ -393,7 +409,8 @@ samples:
   reason: 근거 문장은 장애 원인이 공통 로그인의 운영 쪽 문제라고 하여 대상과 운영(operation) 범위는 뒷받침하지만, 주장이 말하는
     '공통 계정 인증 시스템' 자체가 원인이라는 점은 직접 나오지 않고 '공통 로그인'으로만 표현되어 있다. 같은 단락에서 통합 계정 인증이 로그인을
     받친다고 연결해 주긴 하나, 원인이 시스템 자체인지 운영 문제인지의 구분이 주장과 약간 다르다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.003712
 - candidate: PM-07:001
@@ -417,6 +434,31 @@ samples:
   verdict: supported
   reason: 근거 문장이 경매장에서 등록 실패가 이어지는 장애가 발생했다고 직접 말하므로, 등록 실패 증상이 경매장에서 나타난다는 주장과 일치한다.
     '경매장 시스템'은 '경매장'을 풀어 쓴 표현으로 볼 수 있어 추가 속성 누락은 없다.
-  human: null
+  human:
+    verdict: supported
   model: claude-sonnet-5-5
   cost_usd: 0.002916
+human_review:
+  reviewer: 프로젝트 작성자
+  date: '2026-11-25'
+  how_picked: Sonnet이 partial이나 unsupported로 판정한 11개 전부와 supported 19개 중 무작위 5개
+  reviewed: 16
+  agree: 5
+  human_summary:
+    supported: 14
+    partial: 2
+    unsupported: 0
+  model_by_human:
+    supported:
+      supported: 4
+      partial: 1
+      unsupported: 0
+    partial:
+      supported: 6
+      partial: 1
+      unsupported: 0
+    unsupported:
+      supported: 4
+      partial: 0
+      unsupported: 0
+  model_by_human_note: 바깥 키는 Sonnet 판정, 안쪽 키는 사람 판정이다

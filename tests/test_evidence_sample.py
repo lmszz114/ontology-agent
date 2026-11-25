@@ -23,3 +23,22 @@ def test_prompt_has_claim_spans_and_paragraph_but_no_gold():
     text = prompt(c, docs)
     assert claim(c) in text and all(s in text for s in c["evidence_spans"])
     assert "facts" not in text and "match" not in text
+
+
+def test_merge_human_counts_agreement_and_rejects_unknown():
+    import pytest
+
+    from eval.grader.evidence_sample import merge_human
+
+    ev = {"samples": [{"candidate": "A", "verdict": "partial"}, {"candidate": "B", "verdict": "supported"},
+                      {"candidate": "C", "verdict": "unsupported"}]}
+    human = {"reviewer": "r", "date": "d", "how_picked": "h",
+             "judgments": {"A": {"verdict": "supported"}, "B": {"verdict": "supported"}}}
+    out = merge_human(ev, human)["human_review"]
+    assert out["reviewed"] == 2 and out["agree"] == 1
+    assert out["model_by_human"]["partial"]["supported"] == 1
+    assert ev["samples"][2]["human"] is None
+    with pytest.raises(ValueError):
+        merge_human(ev, human | {"judgments": {"Z": {"verdict": "supported"}}})
+    with pytest.raises(ValueError):
+        merge_human(ev, human | {"judgments": {"A": {"verdict": "맞음"}}})
