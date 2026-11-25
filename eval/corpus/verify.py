@@ -1,12 +1,15 @@
 """생성한 문서에 설계표의 사실이 실제로 들어갔는지 확인한다 (M4 PR 2).
 
-실행: python -m eval.corpus.verify [--only PM-01,CH-04]
+실행: python -m eval.corpus.verify [--only PM-01,CH-04] [--manual-only]
 
 문서마다 Sonnet 5.5(작업 이름 grading)에게 원문과 사실 목록을 주고, 사실마다 원문에 있는지와 근거 문장을 받는다.
 근거 문장이 원문에 글자 그대로 없으면 코드가 '없음'으로 바꾼다. 방해 문서는 담당, 의존, 원인에 대한 사실을
 담고 있지 않은지 본다. 결과는 eval/corpus/verify.yaml에 문서마다 남긴다.
 
 없는 사실이 있는 문서는 다시 생성한다 (eval.corpus.generate --only --force). 설계표의 정답을 원문에 맞춰 고치지 않는다.
+Sonnet이 '없음'으로 판정했지만 사람이 원문에서 찾은 사실은 eval/corpus/manual_checks.yaml에 근거 문장과 함께 적는다.
+근거 문장이 지금 원문에 글자 그대로 있을 때만 인정하고, 결과에는 manual_confirmed로 따로 남긴다.
+--manual-only는 LLM을 부르지 않고 이 기록만 verify.yaml에 다시 반영한다.
 """
 
 import argparse
@@ -24,6 +27,7 @@ from ontology.seed import load_seed
 
 PROMPT_VERSION = "doc-verify-v2"
 RESULT_PATH = Path(__file__).parent / "verify.yaml"
+MANUAL_PATH = Path(__file__).parent / "manual_checks.yaml"
 
 SYSTEM = """너는 사내 문서 검수자다. 문서 원문과 사실 목록을 받는다.
 사실마다 원문이 그 사실을 말하고 있는지 판단한다. 다른 이름이나 돌려 말하기로 쓰였어도 같은 뜻이면 있다고 본다.
@@ -64,7 +68,41 @@ def missing_aliases(doc: dict, text: str) -> list[dict]:
             for f in doc.get("facts") or [] if f["rel"] == "ALIAS" and f["object"] not in text]
 
 
-def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str]) -> tuple[dict, float]:
+def load_manual(path: Path = MANUAL_PATH) -> list[dict]:
+    if not path.exists():
+        return []
+    return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("confirmations") or []
+
+
+def _same_fact(a: dict, b: dict) -> bool:
+    return all(a.get(k) == b.get(k) for k in ("rel", "subject", "object")) and (a.get("props") or {}) == (b.get("props") or {})
+
+
+def apply_manual(outcome: dict, doc: dict, text: str, confirmations: list[dict]) -> dict:
+    """사람 확인 기록으로 '없음' 판정을 되돌린다. 근거 문장이 지금 원문에 있는 기록만 인정한다.
+
+    방해 문서는 대상이 아니다. 되돌린 항목은 Sonnet의 판정 이유와 함께 manual_confirmed에 남겨 숨기지 않는다.
+    """
+    if "missing" not in outcome:
+        return outcome
+    mine = [c for c in confirmations if c["doc"] == doc["id"] and c.get("quote") and c["quote"] in text]
+    # 전에 되돌린 항목도 다시 본다. 문서가 바뀌어 근거 문장이 없어졌으면 '없음'으로 돌아간다
+    previous = [{k: v for k, v in m.items() if k not in ("quote", "checked_at")} for m in outcome.get("manual_confirmed") or []]
+    kept, confirmed = [], []
+    for m in outcome["missing"] + previous:
+        hit = next((c for c in mine if c["kind"] == m["kind"] and _same_fact(c["fact"], m["fact"])), None)
+        if hit is None:
+            kept.append(m)
+        else:
+            confirmed.append(m | {"quote": hit["quote"], "checked_at": hit["checked_at"]})
+    out = {k: v for k, v in outcome.items() if k != "manual_confirmed"} | {"ok": not kept, "missing": kept}
+    if confirmed:
+        out["manual_confirmed"] = confirmed
+    return out
+
+
+def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str],
+               confirmations: list[dict] | None = None) -> tuple[dict, float]:
     if doc["kind"] == "distractor":
         result = llm.call(task="grading", name=f"corpus.verify.{doc['id']}", system=NOISE_SYSTEM,
                           messages=[{"role": "user", "content": f"원문:\n{text}"}], output_schema=NOISE_SCHEMA,
@@ -96,15 +134,19 @@ def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str]) -> tuple[dict,
         if not a or not a["present"] or not a["quote"].strip() or a["quote"].strip() not in text:
             missing.append({"kind": kind, "fact": fact, "said": describe(fact, n),
                             "reason": "답 없음" if not a else ("없다고 판단" if not a["present"] else "근거 문장이 원문에 없다")})
-    return {"ok": not missing, "missing": missing}, result.cost["total"]
+    outcome = apply_manual({"ok": not missing, "missing": missing}, doc, text, confirmations or [])
+    return outcome, result.cost["total"]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="생성 문서의 사실 포함 확인 (Sonnet 5.5)")
     parser.add_argument("--only", help="쉼표로 나눈 문서 id. 주지 않으면 전부")
+    parser.add_argument("--manual-only", action="store_true",
+                        help="LLM을 부르지 않고 manual_checks.yaml의 사람 확인만 verify.yaml에 반영한다")
     parser.add_argument("--org", default="org-a")
     args = parser.parse_args()
     seed, plan = load_seed(args.org), load_plan()
+    confirmations = load_manual()
     n = names(seed)
     wanted = set(args.only.split(",")) if args.only else None
     unknown = sorted(wanted - {d["id"] for d in plan}) if wanted else []
@@ -116,6 +158,15 @@ def main() -> int:
         print(f"원문이 없는 문서가 있다: {absent}", file=sys.stderr)
         return 1
     record = yaml.safe_load(RESULT_PATH.read_text(encoding="utf-8")) if RESULT_PATH.exists() else {"documents": {}}
+    if args.manual_only:
+        for doc in todo:
+            if doc["id"] in record["documents"]:
+                text = doc_path(doc).read_text(encoding="utf-8")
+                record["documents"][doc["id"]] = apply_manual(record["documents"][doc["id"]], doc, text, confirmations)
+        write_text_atomic(RESULT_PATH, yaml.safe_dump(record, allow_unicode=True, sort_keys=True))
+        failed = sorted(i for i, r in record["documents"].items() if not r["ok"])
+        print(f"사람 확인 반영, 부족 {len(failed)}개 {failed}")
+        return 1 if failed else 0
     tracer = Tracer.from_env()
     llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
     try:
@@ -123,7 +174,7 @@ def main() -> int:
                         input={"documents": len(todo)}):
             for doc in todo:
                 text = doc_path(doc).read_text(encoding="utf-8")
-                outcome, cost = verify_doc(llm, doc, text, n)
+                outcome, cost = verify_doc(llm, doc, text, n, confirmations)
                 previous = record["documents"].get(doc["id"], {})
                 record["documents"][doc["id"]] = outcome | {
                     "prompt_version": PROMPT_VERSION, "cost_usd": round(previous.get("cost_usd", 0) + cost, 5)}

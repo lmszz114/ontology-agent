@@ -161,3 +161,34 @@ class _NullTracer:
 
     def flush(self):
         pass
+
+
+def test_manual_check_counts_only_while_its_quote_is_in_the_text():
+    """사람 확인 기록은 근거 문장이 지금 원문에 있을 때만 '없음'을 되돌린다 (PR #28, RB-08)."""
+    from eval.corpus.verify import apply_manual
+
+    doc = {"id": "RB-08"}
+    fact = {"rel": "OWNS", "subject": "TM04", "object": "SY08", "props": {"scope": "execution"}}
+    other = {"rel": "OWNS", "subject": "TM04", "object": "SY08", "props": {"scope": "logic"}}
+    outcome = {"ok": False, "missing": [{"kind": "stale", "fact": fact, "reason": "없다고 판단"},
+                                        {"kind": "stale", "fact": other, "reason": "없다고 판단"}]}
+    check = {"doc": "RB-08", "kind": "stale", "fact": fact, "quote": "배포 실행은 우리 팀이 맡는다.", "checked_at": "x"}
+    # 속성이 다른 사실은 되돌리지 않는다
+    partial = apply_manual(outcome, doc, "배포 실행은 우리 팀이 맡는다.", [check])
+    assert not partial["ok"] and [m["fact"] for m in partial["missing"]] == [other]
+    assert partial["manual_confirmed"][0]["reason"] == "없다고 판단"
+    # 문서를 다시 써서 문장이 바뀌면 기록은 무효다
+    assert apply_manual(outcome, doc, "다른 문장", [check]) == outcome
+    done = apply_manual({"ok": False, "missing": [outcome["missing"][0]]}, doc, "배포 실행은 우리 팀이 맡는다.", [check])
+    assert done["ok"] and apply_manual(done, doc, "배포 실행은 우리 팀이 맡는다.", [check]) == done
+    # 이미 되돌린 기록도 원문에서 문장이 사라지면 '없음'으로 돌아간다
+    back = apply_manual(done, doc, "다른 문장", [check])
+    assert not back["ok"] and "manual_confirmed" not in back and back["missing"][0]["reason"] == "없다고 판단"
+
+
+def test_manual_checks_point_at_real_quotes():
+    from eval.corpus.generate import doc_path
+    from eval.corpus.verify import load_manual
+
+    for check in load_manual():
+        assert check["quote"] in doc_path(_doc(check["doc"])).read_text(encoding="utf-8"), check["doc"]
