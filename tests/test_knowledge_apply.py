@@ -108,6 +108,80 @@ def test_commit_only_on_a_clean_non_main_branch(repo):
         A.check_branch(root)
 
 
+def _new_cause_link():
+    """K에 없는 증상과 원인 쌍 하나."""
+    causes = [c["id"] for c in SEED["causes"]]
+    return next((s["id"], c) for s in SEED["symptoms"] for c in causes if not K.rels("MAY_BE_CAUSED_BY", s["id"], c))
+
+
+def _free_owner_slot():
+    """아무 팀도 맡지 않은 (시스템, scope) 자리 하나."""
+    for system in SEED["systems"]:
+        taken = {sc for o in system["owners"] if o.get("area") is None for sc in o["scopes"]}
+        free = sorted({"logic", "data", "config", "operation", "execution"} - taken)
+        if free:
+            return system["id"], free[0]
+    raise AssertionError("빈 담당 자리가 없다")
+
+
+def test_same_link_with_another_prior_in_one_batch_goes_to_a_person(repo):
+    """prior는 출처 키에 들어가지 않는다. 같은 증상과 원인에 다른 prior가 오면 앞 값만 남고 뒤 후보가 성공으로 보고되던 문제."""
+    _, seed_dir = repo
+    s, c = _new_cause_link()
+    batch = [cand("p1", "MAY_BE_CAUSED_BY", s, c, {"prior": "높음"}),
+             cand("p2", "MAY_BE_CAUSED_BY", s, c, {"prior": "높음"}, doc="CH-01"),
+             cand("p3", "MAY_BE_CAUSED_BY", s, c, {"prior": "낮음"}, doc="CH-02")]
+    result = A.apply_to_seed(seed_dir, batch)
+    assert result.applied == ["p1", "p2"] and [m["candidate_id"] for m in result.manual] == ["p3"]
+    refs = [r for r in next(x for x in load_seed("org-a", seed_dir=seed_dir)["symptoms"] if x["id"] == s)["causes"]
+            if r["cause"] == c]
+    assert refs == [{"cause": c, "prior": "높음"}]
+
+
+def test_two_teams_for_one_owner_slot_in_one_batch_goes_to_a_person(repo):
+    _, seed_dir = repo
+    system, scope = _free_owner_slot()
+    batch = [cand("o1", "OWNS", "TM03", system, {"scope": scope}), cand("o2", "OWNS", "TM05", system, {"scope": scope})]
+    assert all(c["match"] == "new" for c in batch)  # K와만 비교하면 둘 다 새 사실이다
+    result = A.apply_to_seed(seed_dir, batch)
+    assert result.applied == ["o1"] and [m["candidate_id"] for m in result.manual] == ["o2"]
+
+
+def test_seed_check_rejects_two_owners_for_one_slot():
+    import copy
+
+    from ontology.seed import validate_seed
+
+    seed = copy.deepcopy(SEED)
+    system = next(s for s in seed["systems"] if s["owners"])
+    owner = system["owners"][0]
+    other = next(t["id"] for t in seed["teams"] if t["id"] != owner["team"])
+    system["owners"].append({"team": other, "scopes": [owner["scopes"][0]], **({"area": owner["area"]} if owner.get("area") else {})})
+    with pytest.raises(ValueError, match="담당이 둘"):
+        validate_seed(seed)
+
+
+def test_repo_lock_is_exclusive(repo):
+    import fcntl
+
+    root, _ = repo
+    with A.repo_lock(root):
+        path = root / ".git" / "kb-apply.lock"
+        with open(path) as f, pytest.raises(BlockingIOError):
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+def test_find_commit_reads_back_the_manual_list(repo):
+    root, seed_dir = repo
+    subprocess.run(["git", "switch", "-qc", "kb-demo"], cwd=root, check=True)
+    a, b = _new_dependency()
+    result = A.apply_to_seed(seed_dir, [cand("x1", "DEPENDS_ON", a, b), cand("x4", "CHECKED_BY", "C02", "E09")])
+    run = {"run_id": "AR-abc", "approved_by_teams": ["TM03"], "executed_by_team": "TM05"}
+    sha = A.commit_apply(run, result, root, seed_dir)
+    assert A.find_commit("AR-abc", root) == (sha, result.manual)
+    assert A.find_commit("AR-zzz", root) is None
+
+
 def test_empty_provenance_keeps_the_seed_hash():
     """출처 파일이 비어 있으면 시드 해시가 그대로라 이전 결과를 다시 채점할 수 있다."""
     assert "provenance" not in SEED
@@ -198,3 +272,79 @@ def test_review_then_a17_gate_then_apply(db, repo):
         row = s.run("MATCH (:System {id: $a})-[r:DEPENDS_ON]->(:System {id: $b}) RETURN r.source AS source",
                     a=a, b=b).single()
     assert row["source"] == "extracted"  # 다시 적재한 그래프에 반영됐다
+
+
+@pytest.mark.integration
+def test_gate_refuses_candidates_a_person_must_apply(db):
+    from common.gate import gate
+    from common.writers.extraction import list_candidates, review_candidate
+    from tests.memory_tracer import MemoryTracer
+
+    (cid,) = _write(db, [cand("_", "CHECKED_BY", "C02", "E09")])
+    for team in next(c for c in list_candidates(db) if c["id"] == cid)["reviewers"]:
+        review_candidate(db, candidate_id=cid, team_id=team, decision="approve", now=NOW)
+    with pytest.raises(gate.GateError, match="사람이 직접"):
+        gate.request_knowledge_apply(db, tracer=MemoryTracer(), candidate_ids=[cid], now=NOW)
+
+
+def _approved_run(db, cands):
+    from common.gate import gate
+    from common.writers.extraction import list_candidates, review_candidate
+    from tests.memory_tracer import MemoryTracer
+
+    ids = _write(db, cands)
+    for c in list_candidates(db):
+        for team in c["reviewers"]:
+            review_candidate(db, candidate_id=c["id"], team_id=team, decision="approve", now=NOW)
+    tracer = MemoryTracer()
+    run = gate.request_knowledge_apply(db, tracer=tracer, candidate_ids=ids, now=NOW)
+    for team in run["required_approver_teams"]:
+        run = gate.approve(db, tracer=tracer, run_id=run["run_id"], team_id=team, now=NOW)
+    return run, tracer, ids
+
+
+@pytest.mark.integration
+def test_execute_resumes_after_a_failure_past_the_commit(db, repo, monkeypatch):
+    """커밋 뒤에 다시 적재가 실패해도 같은 실행을 다시 누르면 새 커밋 없이 적재와 완료 기록만 한다."""
+    import ontology.load
+
+    root, seed_dir = repo
+    subprocess.run(["git", "switch", "-qc", "kb-demo"], cwd=root, check=True)
+    a, b = _new_dependency()
+    run, tracer, (dep_id,) = _approved_run(db, [cand("_", "DEPENDS_ON", a, b)])
+    real = ontology.load.load_static
+
+    def down(driver, seed):
+        raise ConnectionError("DB 연결 끊김")
+
+    monkeypatch.setattr(ontology.load, "load_static", down)
+    with pytest.raises(ConnectionError):
+        A.execute(db, run_id=run["run_id"], tracer=tracer, now=NOW, root=root, seed_dir=seed_dir)
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
+    monkeypatch.setattr(ontology.load, "load_static", real)
+    out = A.execute(db, run_id=run["run_id"], tracer=tracer, now=NOW, root=root, seed_dir=seed_dir)
+    assert out["resumed"] and out["commit"] == head and out["applied"] == [dep_id]
+    assert out["run"]["status"] == "done" and out["run"]["commit"] == head
+    assert subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True).stdout.strip() == head
+
+
+@pytest.mark.integration
+def test_execute_without_seed_change_completes_without_commit(db, repo):
+    """반영할 때 모든 후보가 시드와 어긋나 사람에게 돌아가면 커밋 없이 완료하고 목록을 실행 기록에 남긴다."""
+    root, seed_dir = repo
+    subprocess.run(["git", "switch", "-qc", "kb-demo"], cwd=root, check=True)
+    s, c = _new_cause_link()
+    run, tracer, (cid,) = _approved_run(db, [cand("_", "MAY_BE_CAUSED_BY", s, c, {"prior": "낮음"})])
+    # 요청 뒤에 시드에 같은 관계가 다른 prior로 들어갔다
+    path = seed_dir / "symptoms.yaml"
+    from ruamel.yaml.comments import CommentedMap
+
+    y = A._yaml()
+    data = y.load(path.read_text(encoding="utf-8"))
+    next(x for x in data["symptoms"] if x["id"] == s)["causes"].append(CommentedMap({"cause": c, "prior": "높음"}))
+    with path.open("w", encoding="utf-8") as f:
+        y.dump(data, f)
+    subprocess.run(["git", "commit", "-qam", "다른 반영"], cwd=root, check=True)
+    out = A.execute(db, run_id=run["run_id"], tracer=tracer, now=NOW, root=root, seed_dir=seed_dir)
+    assert out["commit"] is None and [m["candidate_id"] for m in out["manual"]] == [cid]
+    assert out["run"]["status"] == "done" and out["run"]["manual_candidate_ids"] == [cid]

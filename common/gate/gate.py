@@ -19,6 +19,7 @@ from neo4j import Driver
 
 from common.tracing import Tracer
 from common.writers.events import RecordError, create_action_run, read_action_run, transition_action_run
+from common.writers.extraction import classify, list_candidates
 from mcp_servers.ontology_query import queries
 
 REQUESTED_MODES = {"auto", "approval"}
@@ -142,7 +143,10 @@ def _request_knowledge_apply(driver: Driver, *, candidate_ids: list[str], now: d
 
     승인권자는 후보가 가리키는 시스템의 OWNS 팀이다 (approver_rule candidate_system_owner). 후보마다 검수 배정 규칙
     (M4 결정 3)으로 정한 검수 팀이 그 팀이라 검수 팀 전체를 승인권자로 둔다. 전원이 승인해야 넘어간다.
-    검수에서 승인된 후보만, 다른 A17 요청에 들어가 있지 않은 후보만 받는다. 실행 팀은 Action의 실행 팀(개발PM팀, 가정)이다.
+    받는 후보: 검수에서 승인됐고, 다른 A17 요청에 들어가 있지 않고, 자동 반영 대상인 후보(classify). 사람이 직접 반영할
+    후보는 받지 않는다. 받으면 완료할 수 없는 실행이 승인 상태로 남거나 그 후보가 화면에서 사라진다.
+    승인 상태와 다른 요청 여부는 실행 기록을 만드는 쓰기 트랜잭션 안에서 후보를 잠근 뒤 다시 본다.
+    실행 팀은 Action의 실행 팀(개발PM팀, 가정)이다.
     """
     ids = sorted(set(candidate_ids))
     if not ids:
@@ -150,22 +154,12 @@ def _request_knowledge_apply(driver: Driver, *, candidate_ids: list[str], now: d
     policy = queries.get_action_policy(driver, KNOWLEDGE_ACTION)
     if policy["approver_rule"] != "candidate_system_owner":
         raise GateError(f"{KNOWLEDGE_ACTION}의 승인권자 규칙이 예상과 다르다: {policy['approver_rule']}")
-    with driver.session() as session:
-        rows = session.execute_read(lambda tx: tx.run(
-            "MATCH (c:Candidate) WHERE c.id IN $ids "
-            "OPTIONAL MATCH (c)-[:REVIEWED_BY]->(t:Team) "
-            "OPTIONAL MATCH (r:ActionRun)-[:FOR]->(c) WHERE r.status IN ['pending_approval', 'approved', 'done'] "
-            "RETURN c.id AS id, c.status AS status, collect(DISTINCT t.id) AS reviewers, "
-            "collect(DISTINCT r.id) AS runs", ids=ids).data())
-    found = {r["id"]: r for r in rows}
+    found = {c["id"]: c for c in list_candidates(driver) if c["id"] in ids}
     if set(ids) - set(found):
         raise GateError(f"없는 후보다: {sorted(set(ids) - set(found))}")
-    not_approved = [i for i in ids if found[i]["status"] != "approved"]
-    if not_approved:
-        raise GateError(f"검수에서 승인된 후보만 반영한다: {not_approved}")
-    taken = {i: found[i]["runs"] for i in ids if found[i]["runs"]}
-    if taken:
-        raise GateError(f"이미 다른 반영 요청에 들어간 후보다: {taken}")
+    manual = {i: reason for i in ids for auto, reason in [classify(found[i])] if not auto}
+    if manual:
+        raise GateError(f"사람이 직접 반영할 후보는 A17로 요청하지 않는다: {manual}")
     approvers = sorted({t for i in ids for t in found[i]["reviewers"]})
     run = {
         "run_id": f"AR-{uuid.uuid4().hex[:12]}", "candidate_ids": ids, "action_id": KNOWLEDGE_ACTION,
@@ -174,7 +168,7 @@ def _request_knowledge_apply(driver: Driver, *, candidate_ids: list[str], now: d
         "executed_by_team": (policy["executed_by"] or {}).get("team_id"),
     }
     try:
-        create_action_run(driver, **run)
+        create_action_run(driver, **run)  # 승인 상태, 다른 요청 여부는 여기서 후보를 잠그고 다시 본다
     except RecordError as exc:
         raise GateError(str(exc)) from exc
     return _read_run(driver, run["run_id"])
@@ -202,17 +196,35 @@ def _reject(driver: Driver, *, run_id: str, team_id: str, now: datetime) -> dict
     return _transition(driver, run_id, decide)
 
 
-def _mark_done(driver: Driver, *, run_id: str, now: datetime, commit: str | None = None) -> dict:
+def _mark_done(driver: Driver, *, run_id: str, now: datetime, commit: str | None = None,
+               manual: list[dict] | None = None) -> dict:
     """승인된 조치의 실행 완료를 기록한다. 승인되지 않은 조치는 완료할 수 없다.
 
     대응 조치는 시뮬레이션이다. 지식 반영(A17)은 실제로 시드를 바꾸므로 그 커밋을 함께 남긴다 (R6, R8-7).
+    A17에서 반영할 때 사람이 직접 반영하기로 돌린 후보(manual: candidate_id, reason)도 함께 남겨 화면에서 계속 보이게 한다.
+    모든 후보가 사람에게 돌아가 바뀐 시드가 없을 때만 커밋 없이 완료한다.
     """
+    manual = manual or []
+
     def decide(run: dict) -> dict:
         if run["status"] != "approved":
             raise GateError(f"{run_id}: 승인된 조치만 실행할 수 있다: {run['status']}")
-        if (run["action_id"] == KNOWLEDGE_ACTION) != (commit is not None):
-            raise GateError(f"{run_id}: 커밋은 지식 반영(A17)에만, A17에는 반드시 남긴다")
-        return {"status": "done", "done_at": now} | ({"commit": commit} if commit else {})
+        is_a17 = run["action_id"] == KNOWLEDGE_ACTION
+        if not is_a17 and (commit is not None or manual):
+            raise GateError(f"{run_id}: 커밋과 수동 반영 목록은 지식 반영(A17)에만 남긴다")
+        if is_a17:
+            all_manual = {m["candidate_id"] for m in manual} == set(run["candidate_ids"])
+            if (commit is None) != all_manual:
+                raise GateError(f"{run_id}: A17은 커밋을 남긴다. 모든 후보가 사람에게 돌아갔을 때만 커밋이 없다")
+            if {m["candidate_id"] for m in manual} - set(run["candidate_ids"]):
+                raise GateError(f"{run_id}: 이 실행에 없는 후보를 수동 반영 목록에 남길 수 없다")
+        changes = {"status": "done", "done_at": now}
+        if commit:
+            changes["commit"] = commit
+        if is_a17:
+            changes |= {"manual_candidate_ids": [m["candidate_id"] for m in manual],
+                        "manual_reasons": [m["reason"] for m in manual]}
+        return changes
 
     return _transition(driver, run_id, decide)
 

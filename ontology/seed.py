@@ -96,6 +96,14 @@ def validate_seed(seed: dict) -> None:
         for ref in symptom["causes"]:
             if ref.get("prior") not in {"높음", "중간", "낮음"}:
                 raise ValueError(f"{symptom['id']}의 {ref['cause']} prior: 정의되지 않은 값이다: {ref.get('prior')}")
+    # 같은 시스템의 같은 scope, area 담당 자리는 한 팀만 맡는다. 둘이면 1차 담당 조회(R5)가 두 팀을 돌려준다
+    for system in seed["systems"]:
+        holders: dict[tuple, str] = {}
+        for owner in system["owners"]:
+            for scope in owner["scopes"]:
+                slot = (scope, owner.get("area"))
+                if holders.setdefault(slot, owner["team"]) != owner["team"]:
+                    raise ValueError(f"{system['id']}의 {slot} 담당이 둘이다: {holders[slot]}, {owner['team']}")
     validate_cause_conditions(seed)
 
 

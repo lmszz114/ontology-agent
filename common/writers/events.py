@@ -191,10 +191,22 @@ def _create_candidate_run(driver: Driver, *, run_id: str, candidate_ids: list[st
                           actor: str, requested_at: datetime, requested_mode: str, gate_blocked: bool,
                           required: list[str], team: str | None) -> None:
     def write(tx) -> None:
-        found = tx.run("MATCH (c:Candidate) WHERE c.id IN $ids RETURN collect(c.id) AS ids", ids=candidate_ids).single()
-        missing = sorted(set(candidate_ids) - set(found["ids"]))
+        # 후보 노드에 쓰기 잠금을 걸고 나서 검사한다. 같은 후보로 동시에 들어온 요청은 여기서 기다리고,
+        # 앞 요청이 만든 실행 기록을 보고 거부된다. 따로 읽고 따로 만들면 한 후보에 활성 A17이 둘 생긴다
+        rows = tx.run(
+            "MATCH (c:Candidate) WHERE c.id IN $ids SET c._lock = true WITH c "
+            "OPTIONAL MATCH (r:ActionRun)-[:FOR]->(c) WHERE r.status IN ['pending_approval', 'approved', 'done'] "
+            "RETURN c.id AS id, c.status AS status, collect(r.id) AS runs", ids=candidate_ids).data()
+        found = {r["id"]: r for r in rows}
+        missing = sorted(set(candidate_ids) - set(found))
         if missing:
             raise RecordError(f"없는 Candidate다: {missing}")
+        not_approved = sorted(i for i, r in found.items() if r["status"] != "approved")
+        if not_approved:
+            raise RecordError(f"검수에서 승인된 후보만 반영한다: {not_approved}")
+        taken = {i: r["runs"] for i, r in sorted(found.items()) if r["runs"]}
+        if taken:
+            raise RecordError(f"이미 다른 반영 요청에 들어간 후보다: {taken}")
         created = tx.run(
             "MATCH (a:Action {id: $action}) "
             "CREATE (r:ActionRun {id: $id, action_id: $action, status: $status, actor: $actor, "
@@ -221,7 +233,8 @@ RUN_FIELDS = (
     "r.actor AS actor, r.requested_mode AS requested_mode, r.gate_blocked AS gate_blocked, "
     "r.required_approver_teams AS required_approver_teams, r.approved_by_teams AS approved_by_teams, "
     "r.rejected_by_team AS rejected_by_team, r.executed_by_team AS executed_by_team, "
-    "r.target_report_id AS target_report_id, candidate_ids, r.commit AS commit"
+    "r.target_report_id AS target_report_id, candidate_ids, r.commit AS commit, "
+    "coalesce(r.manual_candidate_ids, []) AS manual_candidate_ids, coalesce(r.manual_reasons, []) AS manual_reasons"
 )
 
 
@@ -263,7 +276,8 @@ def transition_action_run(driver: Driver, run_id: str, decide) -> dict:
     예를 들어 반려된 기록이 뒤늦게 도착한 승인으로 승인 상태가 될 수 있다.
     승인 게이트만 부른다.
     """
-    allowed = {"status", "approved_by_teams", "approved_at", "rejected_by_team", "rejected_at", "done_at", "commit"}
+    allowed = {"status", "approved_by_teams", "approved_at", "rejected_by_team", "rejected_at", "done_at", "commit",
+               "manual_candidate_ids", "manual_reasons"}
 
     def write(tx) -> dict:
         # 실행 기록 노드에 쓰기 잠금을 건다. 같은 기록을 바꾸려는 다른 트랜잭션은 여기서 기다린다

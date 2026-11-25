@@ -41,6 +41,34 @@ PROPS: dict[str, dict[str, set | None]] = {
 MATCHES = ("existing", "new", "conflict")
 MAX_SPANS = 3
 
+# 지식 반영(A17)에서 시드에 자동으로 넣는 새 관계 (M4 PR 5 결정 2)
+AUTO_NEW = {"OWNS", "DEPENDS_ON", "OBSERVED_IN", "MAY_BE_CAUSED_BY", "ALIAS"}
+
+
+def classify(c: dict) -> tuple[bool, str]:
+    """후보를 A17로 자동 반영할 수 있는지와 그 이유 (M4 PR 5 결정 2).
+
+    승인 게이트는 자동 반영할 수 없는 후보를 A17 요청에 받지 않는다. 시드 반영도 같은 규칙으로 다시 거른다.
+    - 자동: existing(출처만 더한다), new 중 OWNS(scope가 있을 때), DEPENDS_ON, OBSERVED_IN, MAY_BE_CAUSED_BY(prior가 있을 때), 별칭
+    - 사람이 직접: CHECKED_BY, RESOLVED_BY, LOCATED_IN의 new(판정 값 when 같은 문서에서 뽑을 수 없는 값이 필요하다),
+      모든 conflict(기존 사실을 바꿔야 한다), 새 엔티티 후보(노드 id와 필수 속성이 없다)
+    """
+    rel, s, o = c["relation"], c["subject"], c["object"]
+    props = c.get("props") or {}
+    if s.get("id") is None or (rel != "ALIAS" and o.get("id") is None):
+        return False, "새 엔티티 후보다. 노드 id와 필수 속성을 사람이 정해 시드에 넣는다"
+    if c["match"] == "conflict":
+        return False, "conflict다. 기존 사실을 바꿔야 해서 사람이 직접 반영한다"
+    if c["match"] == "existing":
+        return True, "이미 있는 사실이라 출처만 더한다"
+    if rel not in AUTO_NEW:
+        return False, f"{rel}은 판정 값(when) 같은 문서에서 뽑을 수 없는 값이 필요해 사람이 직접 반영한다"
+    if rel == "MAY_BE_CAUSED_BY" and not props.get("prior"):
+        return False, "prior가 없어 원인 후보로 넣을 수 없다"
+    if rel == "OWNS" and not props.get("scope"):
+        return False, "scope가 없어 담당으로 넣을 수 없다"
+    return True, "새 사실로 넣는다"
+
 
 class CandidateError(RecordError):
     """정의되지 않은 관계, 타입, 속성 값을 가진 후보."""
