@@ -16,7 +16,7 @@ test 세트는 돌릴 수 없다 (4단계 4-2). 실행 전에 비용 승인 지�
 
 import argparse
 import asyncio
-import os
+import json
 import sys
 from pathlib import Path
 
@@ -83,23 +83,42 @@ def prepare(args: argparse.Namespace):
     expected = {"config": args.config, "org": args.org, "split": "dev", "prompt_version": PROMPT_VERSION,
                 "git_commit": git.commit, "git_dirty": git.dirty, "seed_hash": seed}
     if args.cext_from:
-        check_cext(args)
+        check_cext(args, out)
         expected["cext_from"] = Path(args.cext_from).as_posix()
     todo = plan(paths, out=out, reps=args.reps, resume=args.resume, expected=expected)
     return out, git, todo, seed
 
 
-def check_cext(args: argparse.Namespace) -> None:
-    """C-ext 실행 전 확인: 추출 반복이 진단 반복 수만큼 있고 모두 온전한지, C-ext DB가 개발용 DB와 다른지."""
-    if cext.ext_uri().rstrip("/") == os.environ.get("NEO4J_URI", "bolt://localhost:7687").rstrip("/"):
-        raise RunnerError("C-ext DB(NEO4J_EXT_URI)가 개발용 DB(NEO4J_URI)와 같다. 개발용 그래프를 덮어쓰게 된다")
+def check_cext(args: argparse.Namespace, out: Path | None = None) -> None:
+    """C-ext 실행 전 확인 (LLM 호출 전).
+
+    - C-ext DB가 개발용 DB와 다른 서버인지
+    - 추출 반복이 진단 반복 수만큼 있고 모두 온전한지
+    - 이어서 돌릴 때 결과 폴더의 반복 rN에 이미 있는 결과가 지금 추출 결과로 만든 그래프와 같은지. 다르면 한 반복에
+      두 그래프의 결과가 섞인다 (PR #32 리뷰). 섞지 않고 멈춘다. 새 폴더에 다시 돌린다
+    """
+    try:
+        cext.check_ext_uri()
+    except cext.CextError as exc:
+        raise RunnerError(str(exc)) from exc
+    seed = load_seed(args.org)
     for rep in range(1, args.reps + 1):
         try:
             _, source = cext.load_candidates(Path(args.cext_from), f"r{rep}")
         except (cext.CextError, OSError) as exc:
             raise RunnerError(f"C-ext 추출 결과를 쓸 수 없다: {exc}") from exc
-        if source["extraction_seed_hash"] != seed_hash(load_seed(args.org)):
+        if source["extraction_seed_hash"] != seed_hash(seed):
             raise RunnerError(f"{args.cext_from}: 추출 때의 시드와 지금 시드가 다르다")
+        if out is None or not (out / f"r{rep}").is_dir():
+            continue
+        now = cext.cext_hash(seed, source)
+        for path in sorted((out / f"r{rep}").glob("*.json")):
+            if path.name == "grades.json":
+                continue
+            graph = (json.loads(path.read_text(encoding="utf-8"))["run"].get("knowledge_graph") or {})
+            if graph.get("hash") != now:
+                raise RunnerError(f"{path}: 앞 결과의 C-ext 그래프({str(graph.get('hash'))[:12]})와 지금 추출 결과로 만든 "
+                                  f"그래프({now[:12]})가 다르다. 한 반복에 섞지 않는다. 새 결과 폴더에 다시 돌린다")
 
 
 def check_loaded_seed(driver, org: str, expected_hash: str) -> None:

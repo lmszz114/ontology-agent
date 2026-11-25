@@ -84,6 +84,11 @@ def check_basis(result: dict, seed: dict) -> None:
     if run.get("seed_hash") and run["seed_hash"] != seed_hash(seed):
         raise GradeError(f"{run['scenario']}: 실행 때의 시드와 지금 시드가 다르다. 실행 커밋({run['git_commit'][:7]})에서 채점한다")
     graph = run.get("knowledge_graph")
+    if run.get("config") == "C-ext":
+        # C-ext 결과는 그래프 기록이 꼭 있어야 한다. 없으면 어떤 그래프로 돌았는지 확인할 수 없다 (PR #32 리뷰)
+        missing = [k for k in ("hash", "builder", "source") if not (graph or {}).get(k)]
+        if not run.get("cext_from") or missing or not (graph["source"] or {}).get("rep"):
+            raise GradeError(f"{run['scenario']}: C-ext 결과에 추출 결과 폴더나 그래프 기록이 없다 {missing}")
     if graph:
         # C-ext: 실행 때의 그래프를 지금 추출 결과 파일로 다시 만들 수 있어야 한다 (M4 PR 6)
         from ontology import cext

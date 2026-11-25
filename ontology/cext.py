@@ -32,9 +32,11 @@ K의 같은 관계는 하나도 넣지 않는다.
 import hashlib
 import json
 import os
+import socket
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -61,6 +63,31 @@ class CextError(RuntimeError):
 
 def ext_uri() -> str:
     return os.environ.get("NEO4J_EXT_URI", EXT_URI_DEFAULT)
+
+
+def dev_uri() -> str:
+    return os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+
+
+def _endpoints(uri: str) -> set[tuple[str, int]]:
+    """URI가 가리키는 (IP, 포트). 이름을 풀지 못하면 소문자 호스트 이름 그대로 쓴다."""
+    parsed = urlsplit(uri)
+    host, port = (parsed.hostname or "localhost").lower(), parsed.port or 7687
+    try:
+        return {(info[4][0], port) for info in socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)}
+    except OSError:
+        return {(host, port)}
+
+
+def check_ext_uri(ext: str | None = None, dev: str | None = None) -> None:
+    """C-ext DB가 개발용 DB와 같은 서버면 멈춘다. 같으면 C-ext 적재가 사람이 만든 K 그래프를 덮어쓴다.
+
+    문자열이 아니라 호스트를 주소로 풀어 비교한다. localhost와 127.0.0.1은 같은 서버다 (PR #32 리뷰).
+    실행기와 직접 적재(python -m ontology.cext)가 함께 쓴다.
+    """
+    ext, dev = ext or ext_uri(), dev or dev_uri()
+    if _endpoints(ext) & _endpoints(dev):
+        raise CextError(f"C-ext DB({ext})가 개발용 DB({dev})와 같은 서버다. 개발용 그래프를 덮어쓰게 된다")
 
 
 def load_candidates(folder: Path, rep: str) -> tuple[list[dict], dict]:
@@ -233,6 +260,10 @@ def loaded_meta(driver) -> dict | None:
 if __name__ == "__main__":
     folder, rep = Path(sys.argv[1]), sys.argv[2]
     org = sys.argv[3] if len(sys.argv) > 3 else "org-a"
+    try:
+        check_ext_uri()
+    except CextError as exc:
+        sys.exit(f"적재할 수 없다: {exc}")
     with get_driver(ext_uri()) as drv:
         out = load_cext(drv, load_seed(org), folder, rep)
     print(json.dumps({k: out[k] for k in ("hash", "stats", "counts")}, ensure_ascii=False, indent=2))

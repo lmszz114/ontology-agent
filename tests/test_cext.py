@@ -152,7 +152,7 @@ def test_runner_refuses_ext_db_same_as_dev_db(monkeypatch):
     monkeypatch.setenv("NEO4J_URI", "bolt://localhost:7687")
     monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7687/")
     args = parse_args(["--config", "C-ext", "--split", "dev", "--out", "eval/results/x", "--cext-from", str(EXTRACT_DEV)])
-    with pytest.raises(RunnerError, match="같다"):
+    with pytest.raises(RunnerError, match="같은 서버"):
         check_cext(args)
     monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7689")
     args.reps = 4  # 추출은 3회뿐이다
@@ -196,5 +196,63 @@ def test_load_cext_and_query_it(driver):
         ranked = queries.rank_causes(driver, "S1", "2026-11-25T10:00:00+09:00")
         assert ranked and all(r["prior"] in queries.PRIOR_SCORE for r in ranked)
         assert queries.get_action_policy(driver, "A10")["risk"] == "high"  # 위험도는 K에서
+    finally:
+        load_static(driver, SEED)
+
+
+def test_same_server_written_differently_is_refused():
+    with pytest.raises(cext.CextError, match="같은 서버"):
+        cext.check_ext_uri("bolt://127.0.0.1:7687", "bolt://localhost:7687")
+    with pytest.raises(cext.CextError):
+        cext.check_ext_uri("neo4j://LOCALHOST:7687/", "bolt://localhost")  # 포트가 없으면 7687
+    cext.check_ext_uri("bolt://localhost:7689", "bolt://127.0.0.1:7687")  # 기본 7689는 통과
+
+
+def test_resume_refuses_results_from_another_graph(tmp_path, monkeypatch):
+    """같은 추출 폴더라도 후보가 바뀌었으면 앞 결과와 한 반복에 섞지 않는다 (LLM 호출 전에 멈춘다)."""
+    from eval.runner.__main__ import check_cext, parse_args
+    from eval.runner.runner import RunnerError
+
+    monkeypatch.setenv("NEO4J_URI", "bolt://localhost:7687")
+    monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7689")
+    src = _copy_extract(tmp_path)
+    _, source = cext.load_candidates(src, "r1")
+    out = tmp_path / "out"
+    (out / "r1").mkdir(parents=True)
+    result = out / "r1" / "SC-S1-01.json"
+    result.write_text(json.dumps({"run": {"knowledge_graph": {"hash": cext.cext_hash(SEED, source)}}}), encoding="utf-8")
+    args = parse_args(["--config", "C-ext", "--split", "dev", "--out", "eval/results/x", "--cext-from", str(src)])
+    check_cext(args, out)  # 같은 그래프면 이어 돌린다
+    target = min((src / "r1").glob("*.yaml"))
+    target.write_text(target.read_text(encoding="utf-8") + "\n# 바뀜\n", encoding="utf-8")
+    with pytest.raises(RunnerError, match="섞지 않는다"):
+        check_cext(args, out)
+
+
+def test_grader_requires_graph_record_for_cext():
+    from eval.grader.grade import GradeError, check_basis
+
+    run = {"split": "dev", "scenario": "SC-S1-01", "config": "C-ext", "git_commit": "0" * 40}
+    with pytest.raises(GradeError, match="그래프 기록"):
+        check_basis({"run": run}, SEED)
+    with pytest.raises(GradeError, match="그래프 기록"):
+        check_basis({"run": run | {"cext_from": "x", "knowledge_graph": {}}}, SEED)
+
+
+@pytest.mark.integration
+def test_owner_query_with_owners_missing_scope(driver):
+    """C-ext에는 scope 없는 담당이 들어올 수 있다. 같은 팀의 다른 담당과 함께 있어도 조회가 멈추지 않는다."""
+    from mcp_servers.ontology_query import queries
+    from ontology.load import load_static, write_graph
+
+    batch = [cand("LOCATED_IN", "C02", "SY13", {"scope": "execution", "area": "content"}),
+             cand("OWNS", "TM03", "SY13", {"area": "probability"}),
+             cand("OWNS", "TM03", "SY13", {"scope": "logic", "area": "probability"})]
+    g, _ = cext.build_cext_graph(SEED, batch)
+    try:
+        write_graph(driver, g, {"hash": "test", "org": "org-a", "kind": "C-ext"})
+        owner = queries.get_owner_team(driver, "C02")
+        assert owner["primary"] == [] and owner["other_owners"][0]["team_id"] == "TM03"
+        assert {o["scope"] for o in owner["other_owners"][0]["owns"]} == {None, "logic"}
     finally:
         load_static(driver, SEED)

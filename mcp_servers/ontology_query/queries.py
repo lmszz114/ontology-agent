@@ -154,7 +154,8 @@ def get_owner_team(driver: Driver, cause_id: str) -> dict:
     primary_ids = {t["team_id"] for t in row["primary"]}
     # 같은 시스템의 다른 부분을 맡은 팀. 1차 담당 팀 자신은 뺀다
     others: dict[str, dict] = {}
-    for o in sorted(row.pop("other_owners"), key=lambda o: (o["team_id"], o["scope"])):
+    # C-ext에는 scope 없는 담당이 들어올 수 있다. 정렬 키에서만 없는 값을 빈 문자열로 본다 (PR #32 리뷰)
+    for o in sorted(row.pop("other_owners"), key=lambda o: (o["team_id"], o["scope"] or "", o["area"] or "")):
         if o["team_id"] in primary_ids:
             continue
         entry = others.setdefault(o["team_id"], {"team_id": o["team_id"], "name": o["name"], "owns": []})
