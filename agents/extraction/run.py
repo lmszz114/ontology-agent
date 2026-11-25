@@ -118,6 +118,12 @@ def main(argv=None) -> int:
                 record = meta | {"started_at": datetime.now(KST).isoformat(timespec="seconds"), "reps": args.reps,
                                  "prices": llm.config.price_record(sorted(set(meta["models"].values())))}
                 write_text_atomic(run_file, yaml.safe_dump(record, allow_unicode=True, sort_keys=False))
+            else:
+                # 이어 돌리며 반복을 늘리면 기록한 반복 수도 늘린다. 채점기는 rN 폴더를 센다
+                record = yaml.safe_load(run_file.read_text(encoding="utf-8"))
+                if args.reps > record.get("reps", 0):
+                    record["reps"] = args.reps
+                    write_text_atomic(run_file, yaml.safe_dump(record, allow_unicode=True, sort_keys=False))
             total = 0.0
             try:
                 for rep in range(1, args.reps + 1):
