@@ -41,6 +41,34 @@ PROPS: dict[str, dict[str, set | None]] = {
 MATCHES = ("existing", "new", "conflict")
 MAX_SPANS = 3
 
+# 지식 반영(A17)에서 시드에 자동으로 넣는 새 관계 (M4 PR 5 결정 2)
+AUTO_NEW = {"OWNS", "DEPENDS_ON", "OBSERVED_IN", "MAY_BE_CAUSED_BY", "ALIAS"}
+
+
+def classify(c: dict) -> tuple[bool, str]:
+    """후보를 A17로 자동 반영할 수 있는지와 그 이유 (M4 PR 5 결정 2).
+
+    승인 게이트는 자동 반영할 수 없는 후보를 A17 요청에 받지 않는다. 시드 반영도 같은 규칙으로 다시 거른다.
+    - 자동: existing(출처만 더한다), new 중 OWNS(scope가 있을 때), DEPENDS_ON, OBSERVED_IN, MAY_BE_CAUSED_BY(prior가 있을 때), 별칭
+    - 사람이 직접: CHECKED_BY, RESOLVED_BY, LOCATED_IN의 new(판정 값 when 같은 문서에서 뽑을 수 없는 값이 필요하다),
+      모든 conflict(기존 사실을 바꿔야 한다), 새 엔티티 후보(노드 id와 필수 속성이 없다)
+    """
+    rel, s, o = c["relation"], c["subject"], c["object"]
+    props = c.get("props") or {}
+    if s.get("id") is None or (rel != "ALIAS" and o.get("id") is None):
+        return False, "새 엔티티 후보다. 노드 id와 필수 속성을 사람이 정해 시드에 넣는다"
+    if c["match"] == "conflict":
+        return False, "conflict다. 기존 사실을 바꿔야 해서 사람이 직접 반영한다"
+    if c["match"] == "existing":
+        return True, "이미 있는 사실이라 출처만 더한다"
+    if rel not in AUTO_NEW:
+        return False, f"{rel}은 판정 값(when) 같은 문서에서 뽑을 수 없는 값이 필요해 사람이 직접 반영한다"
+    if rel == "MAY_BE_CAUSED_BY" and not props.get("prior"):
+        return False, "prior가 없어 원인 후보로 넣을 수 없다"
+    if rel == "OWNS" and not props.get("scope"):
+        return False, "scope가 없어 담당으로 넣을 수 없다"
+    return True, "새 사실로 넣는다"
+
 
 class CandidateError(RecordError):
     """정의되지 않은 관계, 타입, 속성 값을 가진 후보."""
@@ -105,7 +133,9 @@ def _check_document(doc: dict) -> None:
         raise RecordError(f"{doc['document_id']}: 제목과 원문이 있어야 한다")
 
 
-_RESET = "MATCH (n) WHERE n:Candidate OR n:Document DETACH DELETE n"
+# 후보에 붙은 지식 반영(A17) 실행 기록도 함께 지운다. 사건 계층 초기화는 이 기록을 남긴다 (M4 PR 5 결정 1)
+_RESET = ("MATCH (n) WHERE n:Candidate OR n:Document OR (n:ActionRun AND (n)-[:FOR]->(:Candidate)) "
+          "DETACH DELETE n")
 
 
 def record_documents(driver: Driver, documents: list[dict], *, replace: bool = False) -> int:
@@ -219,9 +249,10 @@ def list_candidates(driver: Driver, *, run_id: str | None = None, status: str | 
         "WHERE ($run IS NULL OR c.run_id = $run) AND ($status IS NULL OR c.status = $status) "
         "AND ($doc IS NULL OR d.id = $doc) "
         "AND ($team IS NULL OR EXISTS { (c)-[:REVIEWED_BY]->(:Team {id: $team}) }) "
-        "OPTIONAL MATCH (c)-[:REVIEWED_BY]->(t:Team) "
-        "WITH c, d, collect(t.id) AS reviewers "
-        "RETURN c {.*, document_id: d.id, reviewers: reviewers} AS c ORDER BY c.id"
+        "OPTIONAL MATCH (c)-[rb:REVIEWED_BY]->(t:Team) "
+        "WITH c, d, collect(t.id) AS reviewers, collect(CASE WHEN rb.decision IS NULL THEN null "
+        "ELSE {team: t.id, decision: rb.decision} END) AS decisions "
+        "RETURN c {.*, document_id: d.id, reviewers: reviewers, decisions: decisions} AS c ORDER BY c.id"
     )
     with driver.session() as session:
         rows = session.run(query, run=run_id, status=status, team=team_id, doc=document_id).data()
@@ -230,14 +261,61 @@ def list_candidates(driver: Driver, *, run_id: str | None = None, status: str | 
         c = row["c"]
         c["props"] = json.loads(c["props"])
         c["reviewers"] = sorted(c["reviewers"])
+        c["decisions"] = {d["team"]: d["decision"] for d in c["decisions"]}
+        # 기록할 때와 같은 모양(subject, object)으로도 돌려준다. 대조, 반영 코드가 이 모양을 받는다
+        for side in ("subject", "object"):
+            c[side] = {"type": c[f"{side}_type"], "name": c[f"{side}_name"], "id": c.get(f"{side}_id")}
         c.pop("_lock", None)
         out.append(c)
     return out
 
 
+DECISIONS = {"approve": "approved", "reject": "rejected"}
+
+
+def review_candidate(driver: Driver, *, candidate_id: str, team_id: str, decision: str, now) -> dict:
+    """검수 팀 하나의 판단을 기록하고 후보의 상태를 돌려준다 (R8-6, M4 PR 5 결정 6).
+
+    배정된 팀이 모두 승인하면 approved, 한 팀이라도 반려하면 rejected다. 반려도 지우지 않고 남긴다 (R8-8).
+    배정되지 않은 팀, 이미 판단한 팀, 이미 결정된 후보는 거부한다. 판단과 상태 변경은 잠금을 건 한 트랜잭션이다.
+    """
+    if decision not in DECISIONS:
+        raise RecordError(f"decision은 approve 또는 reject다: {decision}")
+    if getattr(now, "utcoffset", lambda: None)() is None:
+        raise RecordError("now는 시간대가 붙은 datetime이어야 한다")
+
+    def write(tx) -> dict:
+        if not tx.run("MATCH (c:Candidate {id: $id}) SET c._lock = true RETURN c.id", id=candidate_id).single():
+            raise RecordError(f"없는 Candidate다: {candidate_id}")
+        row = tx.run("MATCH (c:Candidate {id: $id}) OPTIONAL MATCH (c)-[rb:REVIEWED_BY]->(t:Team) "
+                     "RETURN c.status AS status, collect({team: t.id, decision: rb.decision}) AS reviews",
+                     id=candidate_id).single()
+        if row["status"] != "pending":
+            raise RecordError(f"{candidate_id}: 이미 검수가 끝난 후보다: {row['status']}")
+        reviews = {r["team"]: r["decision"] for r in row["reviews"]}
+        if team_id not in reviews:
+            raise RecordError(f"{candidate_id}: {team_id}은 이 후보의 검수 팀이 아니다")
+        if reviews[team_id] is not None:
+            raise RecordError(f"{candidate_id}: {team_id}은 이미 판단했다: {reviews[team_id]}")
+        tx.run("MATCH (c:Candidate {id: $id})-[rb:REVIEWED_BY]->(:Team {id: $team}) "
+               "SET rb.decision = $decision, rb.decided_at = $at", id=candidate_id, team=team_id,
+               decision=decision, at=now).consume()
+        reviews[team_id] = decision
+        status = ("rejected" if decision == "reject"
+                  else "approved" if all(v == "approve" for v in reviews.values()) else "pending")
+        if status != "pending":
+            tx.run("MATCH (c:Candidate {id: $id}) SET c.status = $status, c.reviewed_at = $at",
+                   id=candidate_id, status=status, at=now).consume()
+        return {"candidate_id": candidate_id, "status": status, "decisions": reviews}
+
+    with driver.session() as session:
+        return session.execute_write(write)
+
+
 def delete_run(driver: Driver, run_id: str) -> int:
     """한 실행의 후보를 지우고 지운 수를 돌려준다. 문서는 남긴다."""
     with driver.session() as session:
+        session.run("MATCH (r:ActionRun)-[:FOR]->(:Candidate {run_id: $run}) DETACH DELETE r", run=run_id).consume()
         return session.run("MATCH (c:Candidate {run_id: $run}) DETACH DELETE c", run=run_id
                            ).consume().counters.nodes_deleted
 

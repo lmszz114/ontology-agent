@@ -1,0 +1,9 @@
+# 문서에서 추출해 검수와 승인(A17)을 거쳐 반영된 관계의 출처 (설계 3단계 3-1, R8-7, M4 PR 5).
+#
+# 시드의 관계 칸에는 출처를 적을 자리가 없는 것이 있어(depends_on, observed_in은 id 목록, aliases는 이름 목록)
+# 출처는 이 파일에 따로 모은다. 사람이 직접 넣은 관계는 여기에 없고 적재기가 source=manual로 둔다.
+# 항목: rel, start, end, props(OWNS와 LOCATED_IN의 scope, area), source(새로 들어온 관계는 extracted,
+# 이미 있던 관계에 출처만 더한 것은 manual), docs(근거 문서 id), candidates(반영한 후보 id).
+# 별칭(ALIAS)은 노드 속성이라 그래프의 관계 출처에는 들어가지 않고 이 파일에만 남는다.
+# 비어 있으면 시드 해시에 들어가지 않는다. 그래서 이 파일을 더해도 이전 실행 결과를 그대로 채점할 수 있다.
+provenance: []

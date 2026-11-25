@@ -152,7 +152,28 @@ def build_graph(seed: dict) -> Graph:
         for procedure_id in severity["triggers"]:
             g.add_rel("TRIGGERS", severity["id"], procedure_id)
 
+    _apply_provenance(g, seed.get("provenance") or [])
     return g
+
+
+def _apply_provenance(g: Graph, provenance: list[dict]) -> None:
+    """반영된 지식의 출처를 관계 속성에 넣는다 (3단계 3-1 source, source_doc_ids, R8-7).
+
+    새로 들어온 관계는 source=extracted, 이미 있던 관계에 출처만 더한 것은 manual 그대로 둔다. 출처가 가리키는 관계가
+    그래프에 없으면 시드를 고친 쪽과 출처가 어긋난 것이라 적재를 멈춘다. 별칭은 노드 속성이라 여기서 다루지 않는다.
+    """
+    for entry in provenance:
+        if entry["rel"] == "ALIAS":
+            continue
+        props = entry.get("props") or {}
+        rows = [r for r in g.rels.get(entry["rel"], []) if r["start"] == entry["start"] and r["end"] == entry["end"]
+                and all(r["props"].get(k) == v for k, v in props.items())]
+        if not rows:
+            raise ValueError(f"출처가 가리키는 관계가 시드에 없다: {entry['rel']} {entry['start']} -> {entry['end']} {props}")
+        for r in rows:
+            if entry["source"] == "extracted":
+                r["props"]["source"] = "extracted"
+            r["props"]["source_doc_ids"] = sorted(set(r["props"]["source_doc_ids"]) | set(entry["docs"]))
 
 
 def _write(tx: ManagedTransaction, graph: Graph) -> dict:
