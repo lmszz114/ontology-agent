@@ -65,6 +65,8 @@ def check_plan(seed: dict, docs: list[dict]) -> list[str]:
     ids = [d["id"] for d in docs]
     errors += [f"{i}: 같은 id가 두 번 있다" for i in sorted({i for i in ids if ids.count(i) > 1})]
     causes = {c["id"] for c in seed["causes"]}
+    # aliases 속성이 있는 노드 (3단계 2-1): 팀, 시스템, 증상, 원인
+    alias_targets = {item["id"] for key in ("teams", "systems", "symptoms", "causes") for item in seed[key]}
     for d in docs:
         where = d["id"]
         if d.get("kind") not in KINDS or not where.startswith(KINDS[d["kind"]] + "-"):
@@ -82,6 +84,8 @@ def check_plan(seed: dict, docs: list[dict]) -> list[str]:
             if fact["rel"] not in RELATIONS:
                 errors.append(f"{where}: 추출 대상이 아닌 관계다: {fact['rel']}")
             elif fact["rel"] == "ALIAS":
+                if fact["subject"] not in alias_targets:
+                    errors.append(f"{where}: 별칭을 붙일 수 없는 대상이다 (팀, 시스템, 증상, 원인의 id만): {fact['subject']}")
                 if not isinstance(fact["object"], str) or not fact["object"].strip():
                     errors.append(f"{where}: 별칭이 비어 있다")
             elif not _matches(fact, k.get((fact["rel"], fact["subject"], fact["object"]), [])):

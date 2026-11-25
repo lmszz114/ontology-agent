@@ -37,6 +37,9 @@ def _broken(did, mutate):
     # 옛날 정보는 K와 달라야 하고 담당 모순이어야 한다
     ("RB-08", lambda d: d["stale"][0].update(subject="TM10"), "K와 같다"),
     ("RB-08", lambda d: d["stale"][0].update(rel="DEPENDS_ON", object="SY05", subject="SY18"), "모순되지 않는다"),
+    # 별칭은 K에 있는 팀, 시스템, 증상, 원인에만 붙인다 (PR #27 리뷰)
+    ("PM-01", lambda d: next(f for f in d["facts"] if f["rel"] == "ALIAS").update(subject="SY_DOES_NOT_EXIST"), "별칭을 붙일 수 없는"),
+    ("PM-01", lambda d: next(f for f in d["facts"] if f["rel"] == "ALIAS").update(subject="E01"), "별칭을 붙일 수 없는"),
     # 방해 문서에는 사실이 없다
     ("NZ-01", lambda d: d["facts"].append({"rel": "ALIAS", "subject": "SY13", "object": "메일함"}), "방해 문서"),
     ("PM-01", lambda d: d.update(kind="chat"), "접두어"),
