@@ -161,6 +161,9 @@ def grade(out: Path) -> dict:
     # 중단된 반복이 완전한 반복과 같은 평균에 들어가지 않게 한다 (PR #30 리뷰). 문서 목록이 없는 이전 실행은
     # 반복들이 같은 문서 집합인지만 본다
     expected = set(run["documents"]) if run.get("documents") else set().union(*found.values())
+    if not expected:
+        # 문서가 하나도 없으면 빈 반복들이 서로 같아 완전한 반복처럼 보인다. 채점할 것이 없다 (PR #30 리뷰)
+        raise GradeError(f"채점할 문서 결과가 없다: {out}")
     # 기록한 반복 수만큼과 폴더에 있는 반복을 모두 본다. 기록보다 많은 폴더도 검사에서 빠지지 않게 한다 (PR #30 리뷰)
     names = {f"r{i}" for i in range(1, int(run.get("reps", len(reps))) + 1)} | set(found)
     incomplete = {name: sorted(expected - found.get(name, set()))

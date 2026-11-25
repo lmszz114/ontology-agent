@@ -191,3 +191,17 @@ def test_grader_excludes_incomplete_reps_and_counts_empty_reps_as_zero(tmp_path)
     assert result["per_rep"]["r2"]["overall"]["f1"] == 0.0 and result["per_rep"]["r2"]["overall"]["precision"] is None
     r1 = result["per_rep"]["r1"]["overall"]["f1"]
     assert result["summary"]["overall"]["f1"]["mean"] == round(r1 / 2, 4)
+
+
+def test_grader_refuses_reps_without_documents(tmp_path):
+    """문서 목록이 없는 실행에서 반복 폴더가 모두 비면 빈 결과를 채점하지 않는다 (PR #30 리뷰)."""
+    import hashlib
+
+    from eval.corpus.check import PLAN_PATH
+    from eval.grader import extraction as g
+
+    (tmp_path / "run.yaml").write_text(yaml.safe_dump({
+        "plan_hash": hashlib.sha256(PLAN_PATH.read_bytes()).hexdigest(), "reps": 1}), encoding="utf-8")
+    (tmp_path / "r1").mkdir()
+    with pytest.raises(g.GradeError):
+        g.grade(tmp_path)
