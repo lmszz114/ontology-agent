@@ -71,6 +71,11 @@ def _prov_key(rel: str, start: str, end: str, props: dict) -> tuple:
     return (rel, start, end, tuple(sorted(props.items())))
 
 
+def _add_once(items: list, value) -> None:
+    if value not in items:
+        items.append(value)
+
+
 def _clash(c: dict, props: dict, node) -> str | None:
     """후보가 지금 시드(이 배치에서 앞서 넣은 값 포함)의 같은 자리와 다른 값을 가지면 그 이유를 돌려준다.
 
@@ -128,21 +133,26 @@ def apply_to_seed(seed_dir: Path, candidates: list[dict], org: str = "org-a") ->
             continue
         new = c["match"] == "new" and key not in index
         if new:
-            # 같은 사실을 담은 후보가 여럿이면(반복 추출) 시드에는 한 번만 넣고 출처만 합친다
+            # 같은 사실을 담은 후보가 여럿이면(반복 추출) 시드에는 한 번만 넣고 출처만 합친다.
+            # 추출 뒤에 사람이 같은 사실을 시드에 직접 넣었으면 출처 키는 없어도 시드에 이미 있다. 그때도 다시 넣지 않는다
             if rel == "OWNS":
                 owners = node("System", o["id"])["owners"]
-                entry = {"team": s["id"], "scopes": _flow_list([props["scope"]])}
-                if props.get("area"):
-                    entry["area"] = props["area"]
-                owners.append(_flow(entry))
+                if not any(e["team"] == s["id"] and props["scope"] in e["scopes"] and e.get("area") == props.get("area")
+                           for e in owners):
+                    entry = {"team": s["id"], "scopes": _flow_list([props["scope"]])}
+                    if props.get("area"):
+                        entry["area"] = props["area"]
+                    owners.append(_flow(entry))
             elif rel == "DEPENDS_ON":
-                node("System", s["id"])["depends_on"].append(o["id"])
+                _add_once(node("System", s["id"])["depends_on"], o["id"])
             elif rel == "OBSERVED_IN":
-                node("SymptomType", s["id"])["observed_in"].append(o["id"])
+                _add_once(node("SymptomType", s["id"])["observed_in"], o["id"])
             elif rel == "MAY_BE_CAUSED_BY":
-                node("SymptomType", s["id"])["causes"].append(_flow({"cause": o["id"], "prior": c["props"]["prior"]}))
+                causes = node("SymptomType", s["id"])["causes"]
+                if not any(ref["cause"] == o["id"] for ref in causes):  # prior가 다르면 _clash가 이미 돌렸다
+                    causes.append(_flow({"cause": o["id"], "prior": c["props"]["prior"]}))
             elif rel == "ALIAS":
-                node(s["type"], s["id"])["aliases"].append(o["name"])
+                _add_once(node(s["type"], s["id"])["aliases"], o["name"])
         if key in index:
             entry = index[key]
             entry["docs"] = _flow_list(sorted(set(entry["docs"]) | {c["document_id"]}))

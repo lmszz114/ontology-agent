@@ -147,6 +147,26 @@ def test_two_teams_for_one_owner_slot_in_one_batch_goes_to_a_person(repo):
     assert result.applied == ["o1"] and [m["candidate_id"] for m in result.manual] == ["o2"]
 
 
+def test_fact_a_person_already_put_in_the_seed_is_not_added_twice(repo):
+    """추출 뒤에 사람이 같은 사실을 시드에 직접 넣었으면 후보가 new여도 시드에 다시 넣지 않고 출처만 남긴다."""
+    import copy
+
+    _, seed_dir = repo
+    system, scope = _free_owner_slot()
+    a, b = _new_dependency()
+    batch = [cand("o1", "OWNS", "TM03", system, {"scope": scope}), cand("d1", "DEPENDS_ON", a, b)]
+    first = A.apply_to_seed(seed_dir, copy.deepcopy(batch))
+    (seed_dir / "provenance.yaml").write_text("provenance: []\n", encoding="utf-8")  # 사람이 넣은 것처럼 출처를 지운다
+    again = [c | {"id": c["id"] + "x"} for c in batch]
+    second = A.apply_to_seed(seed_dir, again)
+    assert first.applied == ["o1", "d1"] and second.applied == ["o1x", "d1x"]
+    seed = load_seed("org-a", seed_dir=seed_dir)
+    owners = [o for o in next(x for x in seed["systems"] if x["id"] == system)["owners"]
+              if o["team"] == "TM03" and scope in o["scopes"] and o.get("area") is None]
+    assert len(owners) == 1
+    assert next(x for x in seed["systems"] if x["id"] == a)["depends_on"].count(b) == 1
+
+
 def test_seed_check_rejects_two_owners_for_one_slot():
     import copy
 
