@@ -169,15 +169,16 @@ def normalize(llm: LLM, k: Knowledge, doc_id: str, cands: list[dict], result: Do
 
 
 def alias_candidates(cands: list[dict], k: Knowledge, text: str) -> list[dict]:
-    """문서가 쓴 이름이 K 노드로 이어졌는데 그 노드의 이름이나 별칭이 아니면 별칭 후보를 만든다 (R8-3 aliases)."""
+    """문서가 쓴 이름이 K 노드로 이어졌는데 그 노드의 원래 이름과 다르면 별칭 후보를 만든다 (R8-3 aliases)."""
     out, seen = [], set()
     for c in cands:
         for end in (c["subject"], c["object"]):
             if end["type"] not in ALIAS_TARGETS or end["id"] is None:
                 continue
             node = k.node(end["type"], end["id"])
-            known = {_key(node["name"]), *(_key(a) for a in node.get("aliases") or [])}
-            if _key(end["name"]) in known or (end["id"], end["name"]) in seen:
+            # 시드에 이미 있는 별칭도 후보로 낸다. 대조에서 existing이 된다. 설계표의 별칭 정답에 시드 별칭(우편함 = 메일함)이
+            # 있어서다. 원래 이름 그대로 쓴 것만 별칭이 아니다
+            if _key(end["name"]) == _key(node["name"]) or (end["id"], end["name"]) in seen:
                 continue
             seen.add((end["id"], end["name"]))
             spans = [x for x in c["evidence_spans"] if end["name"] in x]

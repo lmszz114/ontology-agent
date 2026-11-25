@@ -73,9 +73,9 @@ def test_pipeline_drops_bad_candidates_normalizes_and_makes_aliases():
     # 관계에 없는 속성(OBSERVED_IN의 prior)은 버린다
     observed = next(c for c in r.candidates if c["relation"] == "OBSERVED_IN")
     assert observed["props"] == {}
-    # 서버팀은 TM03의 이름도 별칭도 아니어서 별칭 후보가 생긴다. 메일함은 시드 별칭이라 생기지 않는다
-    aliases = [(c["subject"]["id"], c["object"]["name"]) for c in r.candidates if c["relation"] == "ALIAS"]
-    assert aliases == [("TM03", "서버팀")]
+    # 원래 이름이 아닌 이름은 별칭 후보가 된다. 시드 별칭(메일함)은 existing, 처음 보는 별칭(서버팀)은 new다
+    aliases = {(c["subject"]["id"], c["object"]["name"]): c["match"] for c in r.candidates if c["relation"] == "ALIAS"}
+    assert aliases == {("TM03", "서버팀"): "new", ("SY13", "메일함"): "existing"}
     # LLM에게는 코드가 잇지 못한 이름만 묻는다
     asked = [kw["messages"][0]["content"] for task, kw in llm.calls if task == "normalization"]
     assert len(asked) == 1 and "서버팀" in asked[0] and "메일함" not in asked[0].split("문서가 쓴 이름:")[1]
