@@ -22,7 +22,7 @@ from eval.corpus.check import load_plan
 from eval.corpus.generate import describe, doc_path, names
 from ontology.seed import load_seed
 
-PROMPT_VERSION = "doc-verify-v1"
+PROMPT_VERSION = "doc-verify-v2"
 RESULT_PATH = Path(__file__).parent / "verify.yaml"
 
 SYSTEM = """너는 사내 문서 검수자다. 문서 원문과 사실 목록을 받는다.
@@ -49,8 +49,19 @@ NOISE_SCHEMA = {
 
 
 def checked_facts(doc: dict) -> list[tuple[str, dict]]:
-    """확인할 사실: (구분, 사실). 별칭도 확인한다. 옛날 정보도 원문에 있어야 conflict로 잡을 수 있다."""
-    return [("fact", f) for f in doc.get("facts") or []] + [("stale", f) for f in doc.get("stale") or []]
+    """LLM에게 확인할 사실: (구분, 사실). 옛날 정보도 원문에 있어야 conflict로 잡을 수 있다.
+
+    별칭은 넣지 않는다. 별칭은 '이 문서가 그 대상을 그 이름으로 부른다'는 뜻이라 원문에 이름이 나오는지만 코드로 본다.
+    문서가 '경매장은 거래소다'처럼 풀어 말하지 않아야 이름 정규화를 시험할 수 있다 (첫 확인 실행에서 별칭 35건이
+    '같다는 말이 없다'로 없음 판정을 받아 기준을 고쳤다)
+    """
+    return ([("fact", f) for f in doc.get("facts") or [] if f["rel"] != "ALIAS"]
+            + [("stale", f) for f in doc.get("stale") or []])
+
+
+def missing_aliases(doc: dict, text: str) -> list[dict]:
+    return [{"kind": "alias", "fact": f, "said": f"별칭 '{f['object']}'", "reason": "원문에 별칭이 나오지 않는다"}
+            for f in doc.get("facts") or [] if f["rel"] == "ALIAS" and f["object"] not in text]
 
 
 def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str]) -> tuple[dict, float]:
@@ -62,12 +73,16 @@ def verify_doc(llm: LLM, doc: dict, text: str, n: dict[str, str]) -> tuple[dict,
         return {"ok": not quotes, "unexpected": quotes}, result.cost["total"]
     items = checked_facts(doc)
     listing = "\n".join(f"{i}. {describe(f, n)}" for i, (_, f) in enumerate(items))
+    # 사실 목록은 원래 이름으로 적혀 있다. 문서가 쓰는 다른 이름을 알려줘야 같은 대상인지 판단한다
+    # (PM-12에서 '사업PM'이 게임사업PM팀인 줄 모르고 담당 사실을 없다고 판정했다)
+    aliases = "\n".join(f"- {n[f['subject']]} = '{f['object']}'" for f in doc.get("facts") or [] if f["rel"] == "ALIAS")
+    content = f"원문:\n{text}\n\n이 문서가 쓰는 다른 이름:\n{aliases or '- 없음'}\n\n사실 목록:\n{listing}"
     result = llm.call(task="grading", name=f"corpus.verify.{doc['id']}", system=SYSTEM,
-                      messages=[{"role": "user", "content": f"원문:\n{text}\n\n사실 목록:\n{listing}"}],
+                      messages=[{"role": "user", "content": content}],
                       output_schema=SCHEMA, max_tokens=3000,
                       metadata={"doc": doc["id"], "prompt_version": PROMPT_VERSION})
     answers = {a["index"]: a for a in result.json()["facts"]}
-    missing = []
+    missing = missing_aliases(doc, text)
     for i, (kind, fact) in enumerate(items):
         a = answers.get(i)
         # 근거 문장이 원문에 없으면 있다고 믿지 않는다

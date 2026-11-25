@@ -52,3 +52,29 @@ def test_plan_errors_are_reported(did, mutate, message):
 def test_every_cause_needs_a_postmortem():
     docs = [d for d in copy.deepcopy(PLAN) if d["id"] != "PM-11"]  # C01의 유일한 회고
     assert any("C01" in e and "회고가 없는" in e for e in check_plan(SEED, docs))
+
+
+def test_relevant_docs_follow_cause_and_skip_stale():
+    """검색 정답 문서는 정답 원인을 다루는 문서이고 옛날 정보 문서는 뺀다 (eval/corpus/relevant.py)."""
+    from eval.corpus.relevant import relevant_docs, stale_docs
+    from eval.validate import load_scenarios
+
+    dev = {s["id"]: s for s in load_scenarios("dev")}
+    test = {s["id"]: s for s in load_scenarios("test")}
+    # C11(이벤트 설정 오류): 회고, 대화, 회의록, 런북. 이벤트 설정을 서버개발팀이 하던 옛날 회의록(MT-02)은 뺀다
+    assert relevant_docs(dev["SC-S4-01"]) == [["CH-06", "MT-01", "PM-05", "RB-01", "RB-02"]]
+    assert stale_docs(dev["SC-S4-01"]) == [["MT-02"]]
+    # 사건 둘이면 사건마다, 원인 미확정과 범위 밖은 비어 있다
+    assert len(relevant_docs(test["SC-S6-06"])) == 2
+    assert relevant_docs(test["SC-S1-09"]) == [[]] and relevant_docs(test["SC-OOS-02"]) == []
+    # 모든 원인 있는 사건은 정답 문서가 하나 이상 있다
+    for s in list(dev.values()) + list(test.values()):
+        from eval.labels import label_incidents
+        for incident, docs in zip(label_incidents(s["expected"]), relevant_docs(s)):
+            assert bool(docs) == bool(incident.get("root_cause")), s["id"]
+
+
+def test_generated_docs_exist_for_every_planned_doc():
+    from eval.corpus.generate import doc_path
+
+    assert all(doc_path(d).exists() for d in PLAN)
