@@ -1,0 +1,66 @@
+{
+ "stage": "execute",
+ "clicked": [
+  "run-AR-ca09cbd91a04"
+ ],
+ "candidates": {
+  "2026-11-25-m4-extract-dev-r1:CH-01:001": [
+   "approved",
+   {
+    "TM06": "approve",
+    "TM03": "approve"
+   }
+  ],
+  "2026-11-25-m4-extract-dev-r1:CH-05:004": [
+   "approved",
+   {
+    "TM03": "approve"
+   }
+  ],
+  "2026-11-25-m4-extract-dev-r1:CH-05:005": [
+   "approved",
+   {
+    "TM10": "approve",
+    "TM03": "approve"
+   }
+  ],
+  "2026-11-25-m4-extract-dev-r1:PM-01:008": [
+   "rejected",
+   {
+    "TM03": "reject"
+   }
+  ]
+ },
+ "runs": [
+  {
+   "run_id": "AR-ca09cbd91a04",
+   "action_id": "A17",
+   "incident_id": null,
+   "status": "done",
+   "actor": "human",
+   "requested_mode": "approval",
+   "gate_blocked": false,
+   "required_approver_teams": [
+    "TM03",
+    "TM06",
+    "TM10"
+   ],
+   "approved_by_teams": [
+    "TM03",
+    "TM06",
+    "TM10"
+   ],
+   "rejected_by_team": null,
+   "executed_by_team": "TM05",
+   "target_report_id": null,
+   "candidate_ids": [
+    "2026-11-25-m4-extract-dev-r1:CH-05:004",
+    "2026-11-25-m4-extract-dev-r1:CH-05:005",
+    "2026-11-25-m4-extract-dev-r1:CH-01:001"
+   ],
+   "commit": "1a9af8b49a5f0170baedeb69baedb6007811f65c",
+   "manual_candidate_ids": [],
+   "manual_reasons": []
+  }
+ ]
+}

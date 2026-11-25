@@ -8,9 +8,16 @@
   반영은 지금 브랜치에 시드 변경을 커밋하고 다시 적재한다. M8 전까지 이 커밋은 main에 머지하지 않는다 (M4 PR 5 결정 5)
 """
 
+import sys
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import streamlit as st
+
+# streamlit run은 스크립트 폴더만 모듈 경로에 넣는다. 저장소 루트를 넣어야 agents, common을 읽는다 (M4 점검에서 발견)
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from agents.extraction import apply as A
 from agents.extraction.rules import Knowledge
