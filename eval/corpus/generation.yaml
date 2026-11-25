@@ -168,10 +168,10 @@ documents:
     prompt_version: doc-gen-v1
     stop_reason: end_turn
   NZ-08:
-    cost_usd: 0.01484
-    generations: 1
+    cost_usd: 0.02905
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v3
     stop_reason: end_turn
   NZ-09:
     cost_usd: 0.01089
@@ -180,22 +180,22 @@ documents:
     prompt_version: doc-gen-v1
     stop_reason: end_turn
   NZ-10:
-    cost_usd: 0.0078
-    generations: 1
+    cost_usd: 0.01919
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v3
     stop_reason: end_turn
   NZ-11:
-    cost_usd: 0.01008
-    generations: 1
+    cost_usd: 0.02061
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v3
     stop_reason: end_turn
   NZ-12:
-    cost_usd: 0.0093
-    generations: 1
+    cost_usd: 0.02298
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v3
     stop_reason: end_turn
   NZ-13:
     cost_usd: 0.00914
@@ -204,10 +204,10 @@ documents:
     prompt_version: doc-gen-v1
     stop_reason: end_turn
   NZ-14:
-    cost_usd: 0.01227
-    generations: 1
+    cost_usd: 0.02621
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v3
     stop_reason: end_turn
   NZ-15:
     cost_usd: 0.01086
@@ -222,10 +222,10 @@ documents:
     prompt_version: doc-gen-v1
     stop_reason: end_turn
   NZ-17:
-    cost_usd: 0.01116
-    generations: 1
+    cost_usd: 0.02562
+    generations: 2
     model: claude-sonnet-5-5
-    prompt_version: doc-gen-v1
+    prompt_version: doc-gen-v3
     stop_reason: end_turn
   NZ-18:
     cost_usd: 0.01255
@@ -443,4 +443,4 @@ documents:
     model: claude-sonnet-5-5
     prompt_version: doc-gen-v1
     stop_reason: end_turn
-total_cost_usd: 1.41589
+total_cost_usd: 1.4941

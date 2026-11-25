@@ -22,7 +22,7 @@ from common.tracing import Tracer
 from eval.corpus.check import load_plan
 from ontology.seed import load_seed
 
-PROMPT_VERSION = "doc-gen-v2"
+PROMPT_VERSION = "doc-gen-v3"
 CORPUS_DIR = Path(__file__).parent
 DOCS_DIR = CORPUS_DIR / "docs"
 RECORD_PATH = CORPUS_DIR / "generation.yaml"
@@ -96,7 +96,9 @@ def prompt(doc: dict, n: dict[str, str]) -> str:
     if aliases:
         lines += ["", "다른 이름:"] + [f"- {describe(f, n)}" for f in aliases]
     if doc["kind"] == "distractor":
-        lines += ["", "장애 원인, 팀의 시스템 담당, 시스템 사이 의존 관계에 대한 사실은 쓰지 않는다. 비슷한 단어가 나와도 다른 뜻으로 쓴다"]
+        # 다른 뜻이라고 해명하면 추출기에게 답을 알려주는 셈이라 방해 문서의 시험이 쉬워진다 (doc-gen-v3, PR #28 표본 검토)
+        lines += ["", "장애 원인, 팀의 시스템 담당, 시스템 사이 의존 관계에 대한 사실은 쓰지 않는다. 비슷한 단어가 나와도 다른 뜻으로 쓴다",
+                  "다른 뜻이라고 설명하거나, 게임 기능이나 서비스 장애와 관계없다고 밝히지 않는다. 읽는 사람이 맥락으로 알게 쓴다"]
     return "\n".join(lines)
 
 

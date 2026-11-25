@@ -205,3 +205,15 @@ def test_manual_only_fails_for_docs_never_verified(tmp_path, monkeypatch, capsys
     assert verify.main() == 1
     assert "RB-08" in capsys.readouterr().err
     assert not (tmp_path / "verify.yaml").exists()
+
+
+# 방해 문서가 '게임과 관계없다'고 스스로 해명하면 추출기에게 답을 알려주는 셈이다 (doc-gen-v3, PR #28 표본 검토)
+DISCLAIMERS = ("관련이 없", "관계가 없", "관계없", "무관", "혼동", "헷갈", "다루지 않", "여기서 말하는", "을 뜻한다", "를 뜻한다")
+
+
+def test_distractors_do_not_explain_themselves():
+    from eval.corpus.generate import doc_path
+
+    found = [(d["id"], w) for d in PLAN if d["kind"] == "distractor"
+             for w in DISCLAIMERS if w in doc_path(d).read_text(encoding="utf-8")]
+    assert found == []

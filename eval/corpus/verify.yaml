@@ -140,9 +140,9 @@ documents:
     prompt_version: doc-verify-v1
     unexpected: []
   NZ-08:
-    cost_usd: 0.00191
+    cost_usd: 0.00377
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
     unexpected: []
   NZ-09:
     cost_usd: 0.00203
@@ -150,19 +150,19 @@ documents:
     prompt_version: doc-verify-v1
     unexpected: []
   NZ-10:
-    cost_usd: 0.00216
+    cost_usd: 0.00422
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
     unexpected: []
   NZ-11:
-    cost_usd: 0.00248
+    cost_usd: 0.00444
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
     unexpected: []
   NZ-12:
-    cost_usd: 0.00191
+    cost_usd: 0.00398
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
     unexpected: []
   NZ-13:
     cost_usd: 0.00268
@@ -170,9 +170,9 @@ documents:
     prompt_version: doc-verify-v1
     unexpected: []
   NZ-14:
-    cost_usd: 0.00194
+    cost_usd: 0.00392
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
     unexpected: []
   NZ-15:
     cost_usd: 0.00204
@@ -185,9 +185,9 @@ documents:
     prompt_version: doc-verify-v1
     unexpected: []
   NZ-17:
-    cost_usd: 0.00202
+    cost_usd: 0.00396
     ok: true
-    prompt_version: doc-verify-v1
+    prompt_version: doc-verify-v2
     unexpected: []
   NZ-18:
     cost_usd: 0.00211
@@ -381,4 +381,4 @@ documents:
     missing: []
     ok: true
     prompt_version: doc-verify-v2
-total_cost_usd: 0.72237
+total_cost_usd: 0.73424
