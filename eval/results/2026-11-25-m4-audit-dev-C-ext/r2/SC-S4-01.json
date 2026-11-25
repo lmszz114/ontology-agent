@@ -1,0 +1,249 @@
+{
+  "run": {
+    "scenario": "SC-S4-01",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T17:28:29.788665+09:00",
+    "finished_at": "2026-11-25T17:28:41.884845+09:00",
+    "seconds": 12.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "5f29ea3ae6b96da7d4eb53668580ffcd",
+    "llm_calls": 4,
+    "usage": {
+      "input": 11650,
+      "output": 2024,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.002177,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "60bb5563d29203e25dfae7c65e06b72fc532476a1420e7c88082b525d67a6a81",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r2",
+        "run_id": "2026-11-25-m4-extract-dev-r2",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "9242f691a12dff0a7b3cce06fce4115a152dbd12bbc471b495e0ad11e5f476f8"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 179,
+        "dropped_new_entity": 15,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 5,
+        "aliases_added": 29,
+        "args_from_location": 7,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 11,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 16,
+          "RESOLVED_BY": 36
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 162,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "4d79b755ba5118ae4af931f8e8fc72575a2fac3d",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "990c85fbde0fb2307bed4907a4230b570d12f65c4244f50e7f195a0464920df0"
+  },
+  "outputs": [
+    {
+      "symptom": "S4",
+      "incident_id": "INC-1f40b7fe9f5a",
+      "report_ids": [
+        "RP-394e08756bdd"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C11",
+          "rank": 1,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": [
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY12"
+              },
+              "result": "inconclusive",
+              "detail": "증상 시작 전에 캐시 상점 설정 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "inconclusive",
+              "detail": "오늘 15:50에 출석 이벤트의 보상 수량 설정이 수정됐다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-8e2d54cb6ef8"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-900b304f487c"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-242ce18c4de7"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-2858d844e36f"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7e7842cac887"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-779f456d345f"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-10c16a66487b"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-d14e0a5c299f"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY12"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S4 이벤트 보상 오지급, 과지급 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C11 이벤트 설정 오류 (점수 2): inconclusive, 근거 ['E07', 'E07']. E07은 query_config_change를 인자 없이 호출하면 안 되고 system이 필요하다(허용 값 SY12, SY15). 그래서 SY12와 SY15를 각각 조회했다. SY12에서는 증상 시작 전 캐시 상점 설정 변경 이력이 없었다. SY15에서는 증상 시작(16:25) 35분 전인 오늘 15:50에 출석 이벤트의 보상 수량 설정이 수정된 기록이 있었다. 이는 가설의 '최근 변경 없음' 전제와 어긋나고, 시점도 중복 지급 신고와 맞는다. 다만 판정 기준은 '이벤트 설정 오류가 확인되는가'인데, 조회 결과는 수량이 변경되었다는 사실만 말하고 변경된 값이 잘못됐는지는 말하지 않는다. 변경이 의도된 조정인지, 수정된 수량이 실제로 중복 지급을 일으켰는지 확인되지 않았으므로 확정도 배제도 할 수 없다. 추가로 필요한 것은 15:50 변경 전후의 보상 수량 값과 의도한 설계값의 비교, 그리고 실제 지급 기록(E02 우편함/보상 지급 기록)에서 같은 보상이 한 번 더 지급됐는지 대조하는 것이다. E02는 이번 근거의 필수 항목이 아니므로 이번 판단에는 포함하지 않았다.",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: ['C11']"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}

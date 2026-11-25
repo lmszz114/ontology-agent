@@ -274,3 +274,29 @@ def test_owner_query_with_owners_missing_scope(driver):
         assert {o["scope"] for o in owner["other_owners"][0]["owns"]} == {None, "logic"}
     finally:
         load_static(driver, SEED)
+
+
+@pytest.mark.integration
+def test_cause_without_location_stays_a_candidate(driver):
+    """원인 후보 관계가 있으면 위치가 없어도 후보다 (R4-1). 위치는 변경 가중에만 쓰여서 가중만 0이다 (M4 점검)."""
+    from datetime import datetime
+
+    from common.writers.events import record_change, reset_event_layer
+    from mcp_servers.ontology_query import queries
+    from ontology.load import load_static, write_graph
+
+    batch = [cand("MAY_BE_CAUSED_BY", "S2", "C04", {"prior": "중간"}), cand("MAY_BE_CAUSED_BY", "S2", "C05", {"prior": "중간"}),
+             cand("LOCATED_IN", "C04", "SY01", {"scope": "operation"})]
+    g, _ = cext.build_cext_graph(SEED, batch)
+    try:
+        write_graph(driver, g, {"hash": "test", "org": "org-a", "kind": "C-ext"})
+        reset_event_layer(driver)
+        record_change(driver, change_id="CG-0", kind="deploy", system_id="SY01",
+                      changed_at=datetime.fromisoformat("2026-11-25T09:00:00+09:00"))
+        ranked = queries.rank_causes(driver, "S2", "2026-11-25T10:00:00+09:00")
+        assert [(r["cause_id"], r["system_id"], r["change_bonus"]) for r in ranked] == [("C04", "SY01", 2), ("C05", None, 0)]
+        cands = {c["cause_id"]: c["located_in"] for c in queries.get_cause_candidates(driver, "S2")}
+        assert cands["C05"] is None and cands["C04"]["system_id"] == "SY01"
+    finally:
+        reset_event_layer(driver)
+        load_static(driver, SEED)

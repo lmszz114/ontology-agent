@@ -1,0 +1,294 @@
+{
+  "run": {
+    "scenario": "SC-S7-02",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T17:35:59.352148+09:00",
+    "finished_at": "2026-11-25T17:36:16.096723+09:00",
+    "seconds": 16.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "fdf4564c0b0ffe6d8220ba88e101b11d",
+    "llm_calls": 9,
+    "usage": {
+      "input": 22326,
+      "output": 2243,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0033541,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "b5d9a6751fab5d52433d343e97084d931c3f67662d6184f8ea8c390d1844cd65",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r3",
+        "run_id": "2026-11-25-m4-extract-dev-r3",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "e082995e8910ac6b5244069ebc8b56ceb59c64d60b52071df8cb064f5dc11a66"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 6,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 6,
+        "aliases_added": 25,
+        "args_from_location": 8,
+        "relationships": {
+          "OWNS": 12,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 12,
+          "LOCATED_IN": 10,
+          "CHECKED_BY": 19,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "4d79b755ba5118ae4af931f8e8fc72575a2fac3d",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "caec21171dcca6df28f0aa76250814ad9f7a56550ff03b88a2364f4930a2f2cb"
+  },
+  "outputs": [
+    {
+      "symptom": "S7",
+      "incident_id": "INC-d86a75d3c316",
+      "report_ids": [
+        "RP-07b809281bb6",
+        "RP-d1afbe0d7dff",
+        "RP-2453487e6663"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        3
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C19",
+          "rank": 1,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY11"
+              },
+              "result": "confirm",
+              "detail": "게임 DB의 쿼리 대기 시간이 20시부터 평소의 15배이고 연결 수가 한계에 가깝다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C19",
+      "primary_team": "TM10",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1c0cb4741673"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-90deba599a63"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-dade822aad9e"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-7fc3791d86e6"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-01f652d5ddf0"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e7212e8a6c2c"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-9b1d6d8cc45c"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-15d7356269bd"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-4213fe788a38"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-53fdeb9c063c"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-d1afbe0d7dff",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8578ca00fac0"
+        },
+        {
+          "report_id": "RP-2453487e6663",
+          "channel": "CH03",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-7f0a60625506"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C19",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY11"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S7 거래소 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C19 게임 DB 부하 (점수 2): confirm, 근거 ['E09']. E09(query_resource_metrics, SY11) 조회 결과 게임 DB의 쿼리 대기 시간이 20시부터 평소의 15배로 증가했고 연결 수가 한계에 가깝다. 판정 근거 E09의 expect인 '자원, 네트워크 지표에 이상 징후가 있다'와 일치하며, E09는 required=true인 유일한 확정 조건이므로 C19 게임 DB 부하 가설은 확정된다. 제보 시점(20:06 이후, CH01~CH03 모두 거래소 응답 지연과 등록/구매 실패)과도 시간대가 맞다.\n-> 1차 담당 TM10",
+      "needs_human": [],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": [
+    {
+      "report_id": "RP-2f3cb386a317",
+      "report_index": 2,
+      "symptom": "none",
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "needs_human": [
+        "증상 8개에 해당하지 않아 사람에게 넘긴다"
+      ]
+    }
+  ]
+}

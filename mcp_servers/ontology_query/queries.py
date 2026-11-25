@@ -49,13 +49,15 @@ def get_symptom_types(driver: Driver) -> list[dict]:
 
 
 def get_cause_candidates(driver: Driver, symptom_id: str) -> list[dict]:
-    """증상의 원인 후보 전체와 사전 가능성, 원인 위치 (R4-1)."""
+    """증상의 원인 후보 전체와 사전 가능성, 원인 위치 (R4-1). 위치가 없는 원인도 후보다 (위치는 null)."""
     _require(driver, "SymptomType", symptom_id)
     return _read(
         driver,
-        "MATCH (:SymptomType {id: $id})-[m:MAY_BE_CAUSED_BY]->(c:Cause)-[l:LOCATED_IN]->(sys:System) "
+        "MATCH (:SymptomType {id: $id})-[m:MAY_BE_CAUSED_BY]->(c:Cause) "
+        "OPTIONAL MATCH (c)-[l:LOCATED_IN]->(sys:System) "
         "RETURN c.id AS cause_id, c.name AS name, m.prior AS prior, "
-        "{system_id: sys.id, system_name: sys.name, scope: l.scope, area: l.area} AS located_in "
+        "CASE WHEN sys IS NULL THEN null ELSE "
+        "{system_id: sys.id, system_name: sys.name, scope: l.scope, area: l.area} END AS located_in "
         "ORDER BY cause_id",
         id=symptom_id,
     )
@@ -80,7 +82,11 @@ def rank_causes(driver: Driver, symptom_id: str, started_at: str) -> list[dict]:
     rows = _read(
         driver,
         "WITH datetime({datetime: $start, timezone: 'UTC'}) AS start "
-        "MATCH (:SymptomType {id: $id})-[m:MAY_BE_CAUSED_BY]->(c:Cause)-[:LOCATED_IN]->(sys:System) "
+        # 후보는 원인 후보 관계(R4-1)로 정한다. 원인 위치는 변경 가중에만 쓰여서, 위치가 없는 원인도 후보로 두고
+        # 변경 가중을 0으로 본다. K에서는 모든 원인에 위치가 있어 결과가 같다. 추출 그래프(C-ext)에서 위치를
+        # 뽑지 못한 원인이 후보에서 사라지던 문제다 (M4 점검)
+        "MATCH (:SymptomType {id: $id})-[m:MAY_BE_CAUSED_BY]->(c:Cause) "
+        "OPTIONAL MATCH (c)-[:LOCATED_IN]->(sys:System) "
         "OPTIONAL MATCH (ch:Change)-[:CHANGED]->(sys) "
         "WHERE datetime({datetime: ch.changed_at, timezone: 'UTC'}) <= start "
         "AND datetime({datetime: ch.changed_at, timezone: 'UTC'}) >= start - duration({hours: $window}) "

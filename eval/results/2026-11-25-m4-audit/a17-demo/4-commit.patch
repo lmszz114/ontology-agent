@@ -1,0 +1,61 @@
+commit 1a9af8b49a5f0170baedeb69baedb6007811f65c
+Author: Claude <noreply@anthropic.com>
+Date:   Wed Nov 25 08:14:21 2026 +0000
+
+    지식 반영 A17: 후보 3개 (AR-ca09cbd91a04)
+    
+    승인: TM03, TM06, TM10 / 실행: TM05
+    반영: 2026-11-25-m4-extract-dev-r1:CH-01:001, 2026-11-25-m4-extract-dev-r1:CH-05:004, 2026-11-25-m4-extract-dev-r1:CH-05:005
+
+diff --git a/ontology/seed/provenance.yaml b/ontology/seed/provenance.yaml
+index 0285972..1218326 100644
+--- a/ontology/seed/provenance.yaml
++++ b/ontology/seed/provenance.yaml
+@@ -6,4 +6,22 @@
+ # 이미 있던 관계에 출처만 더한 것은 manual), docs(근거 문서 id), candidates(반영한 후보 id).
+ # 별칭(ALIAS)은 노드 속성이라 그래프의 관계 출처에는 들어가지 않고 이 파일에만 남는다.
+ # 비어 있으면 시드 해시에 들어가지 않는다. 그래서 이 파일을 더해도 이전 실행 결과를 그대로 채점할 수 있다.
+-provenance: []
++provenance:
++  - rel: DEPENDS_ON
++    start: SY12
++    end: SY13
++    source: manual
++    docs: [CH-01]
++    candidates: [2026-11-25-m4-extract-dev-r1:CH-01:001]
++  - rel: ALIAS
++    start: SY14
++    end: 경매장
++    source: extracted
++    docs: [CH-05]
++    candidates: [2026-11-25-m4-extract-dev-r1:CH-05:004]
++  - rel: ALIAS
++    start: SY11
++    end: DB
++    source: extracted
++    docs: [CH-05]
++    candidates: [2026-11-25-m4-extract-dev-r1:CH-05:005]
+diff --git a/ontology/seed/systems.yaml b/ontology/seed/systems.yaml
+index 11af92a..94dd92b 100644
+--- a/ontology/seed/systems.yaml
++++ b/ontology/seed/systems.yaml
+@@ -105,7 +105,8 @@ systems:
+     name: 게임 DB
+     category: 게임
+     evidence_basis: [일반 가정]
+-    aliases: []
++    aliases:
++      - DB
+     owners:
+       - {team: TM03, scopes: [logic, data, config]}
+       - {team: TM10, scopes: [operation]}  # 운영
+@@ -131,7 +132,8 @@ systems:
+     name: 거래소
+     category: 게임
+     evidence_basis: [일반 가정]
+-    aliases: []
++    aliases:
++      - 경매장
+     owners:
+       - {team: TM03, scopes: [logic, data, config, operation]}
+     collaborators:

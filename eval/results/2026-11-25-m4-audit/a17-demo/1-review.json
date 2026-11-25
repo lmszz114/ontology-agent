@@ -1,0 +1,40 @@
+{
+ "stage": "review",
+ "clicked": [
+  "approve-2026-11-25-m4-extract-dev-r1:CH-05:004",
+  "approve-2026-11-25-m4-extract-dev-r1:CH-05:005",
+  "approve-2026-11-25-m4-extract-dev-r1:CH-01:001",
+  "reject-2026-11-25-m4-extract-dev-r1:PM-01:008",
+  "approve-2026-11-25-m4-extract-dev-r1:CH-01:001",
+  "approve-2026-11-25-m4-extract-dev-r1:CH-05:005"
+ ],
+ "candidates": {
+  "2026-11-25-m4-extract-dev-r1:CH-01:001": [
+   "approved",
+   {
+    "TM06": "approve",
+    "TM03": "approve"
+   }
+  ],
+  "2026-11-25-m4-extract-dev-r1:CH-05:004": [
+   "approved",
+   {
+    "TM03": "approve"
+   }
+  ],
+  "2026-11-25-m4-extract-dev-r1:CH-05:005": [
+   "approved",
+   {
+    "TM10": "approve",
+    "TM03": "approve"
+   }
+  ],
+  "2026-11-25-m4-extract-dev-r1:PM-01:008": [
+   "rejected",
+   {
+    "TM03": "reject"
+   }
+  ]
+ },
+ "runs": []
+}
