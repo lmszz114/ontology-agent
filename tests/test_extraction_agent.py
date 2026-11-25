@@ -102,6 +102,9 @@ def test_run_rejects_test_documents_and_bad_folders(monkeypatch, capsys):
     assert "M8" in capsys.readouterr().err
     assert run.main(["--out", "/tmp/elsewhere"]) == 1
     assert run.main(["--out", "eval/results/a b"]) == 1
+    # 실행 ID는 폴더 이름이라 eval/results 바로 아래 폴더만 받는다 (PR #30 리뷰)
+    assert run.main(["--out", "eval/results/a/x-extract"]) == 1
+    assert "바로 아래" in capsys.readouterr().err
 
 
 def _write_rep(tmp_path, rep, docs):
@@ -145,7 +148,7 @@ def test_grader_counts_against_plan(tmp_path, monkeypatch):
     _write_rep(tmp_path, "r1", [
         ("PM-01", [good, half, extra, named, alias_c], [{"reason": "근거 문장이 원문에 없다"}], 6),
         (noise["id"], [extra], [], 1)])
-    _write_rep(tmp_path, "r2", [("PM-01", [good], [], 1)])
+    _write_rep(tmp_path, "r2", [("PM-01", [good], [], 1), (noise["id"], [], [], 0)])
     result = g.grade(tmp_path)
     r1 = result["per_rep"]["r1"]
     gold_n = len(PM01["facts"]) + len(PM01.get("stale") or [])
@@ -164,3 +167,26 @@ def test_grader_refuses_changed_plan(tmp_path):
     (tmp_path / "run.yaml").write_text(yaml.safe_dump({"plan_hash": "old"}), encoding="utf-8")
     with pytest.raises(g.GradeError):
         g.grade(tmp_path)
+
+
+def test_grader_excludes_incomplete_reps_and_counts_empty_reps_as_zero(tmp_path):
+    """문서가 빠진 반복은 평균에서 빼고 따로 적는다. 후보를 하나도 못 낸 반복의 F1은 0이다 (PR #30 리뷰)."""
+    import hashlib
+
+    from eval.corpus.check import PLAN_PATH
+    from eval.grader import extraction as g
+
+    docs = ["PM-01", "CH-04"]
+    (tmp_path / "run.yaml").write_text(yaml.safe_dump({
+        "plan_hash": hashlib.sha256(PLAN_PATH.read_bytes()).hexdigest(), "prompt_version": "t", "git_commit": "c",
+        "git_dirty": False, "models": {}, "started_at": "s", "reps": 3, "documents": docs}), encoding="utf-8")
+    first = next(f for f in PM01["facts"] if f["rel"] != "ALIAS")
+    good = _cand(first["rel"], first["subject"], first["object"], first.get("props"))
+    _write_rep(tmp_path, "r1", [("PM-01", [good], [], 1), ("CH-04", [], [], 0)])
+    _write_rep(tmp_path, "r2", [("PM-01", [], [], 0), ("CH-04", [], [], 0)])
+    _write_rep(tmp_path, "r3", [("PM-01", [good], [], 1)])  # 중단된 반복
+    result = g.grade(tmp_path)
+    assert result["incomplete_reps"] == {"r3": ["CH-04"]} and result["reps"] == 2
+    assert result["per_rep"]["r2"]["overall"]["f1"] == 0.0 and result["per_rep"]["r2"]["overall"]["precision"] is None
+    r1 = result["per_rep"]["r1"]["overall"]["f1"]
+    assert result["summary"]["overall"]["f1"]["mean"] == round(r1 / 2, 4)

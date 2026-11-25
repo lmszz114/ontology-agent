@@ -7,6 +7,7 @@ run:
     normalization: claude-haiku-5-5
   started_at: '2026-11-25T14:19:09+09:00'
 reps: 1
+incomplete_reps: {}
 summary:
   overall:
     precision:

@@ -25,7 +25,7 @@ from common.writers.extraction import ID_PATTERN, list_candidates, record_candid
 from eval.corpus.check import PLAN_PATH, load_plan
 from eval.corpus.generate import doc_path
 from eval.runner.__main__ import check_loaded_seed
-from eval.runner.runner import RunnerError, check_out_dir, git_state
+from eval.runner.runner import RESULTS_DIR, ROOT, RunnerError, check_out_dir, git_state
 from ontology.db import get_driver
 from ontology.seed import load_seed, seed_hash
 
@@ -67,6 +67,10 @@ def prepare(args) -> tuple[Path, dict, list[dict]]:
     """LLM을 부르기 전에 할 수 있는 확인을 모두 한다."""
     out = Path(args.out)
     check_out_dir(out)
+    # 실행 ID는 폴더 이름에서 만든다. 결과 폴더를 eval/results 바로 아래로만 받아야 다른 결과가 같은 실행 ID를
+    # 쓰지 않는다 (PR #30 리뷰)
+    if out.resolve().parent != (ROOT / RESULTS_DIR).resolve():
+        raise RunnerError(f"추출 결과 폴더는 {RESULTS_DIR.as_posix()} 바로 아래 폴더여야 한다: {out}")
     if not ID_PATTERN.fullmatch(out.name):
         raise RunnerError(f"폴더 이름은 실행 ID로 쓰여 영문, 숫자, '_', '.', '-'만 쓴다: {out.name}")
     if args.reps < 1:
@@ -87,6 +91,8 @@ def prepare(args) -> tuple[Path, dict, list[dict]]:
         if not args.resume:
             raise RunnerError(f"이미 결과가 있는 폴더다. 이어 돌리려면 --resume: {out}")
         diff = [key for key in SAME if before.get(key) != meta[key]]
+        if before.get("documents") and before["documents"] != [d["id"] for d in docs]:
+            diff.append("documents")  # 이어 돌릴 때 문서 목록이 다르면 채점기가 완전한 반복을 가를 수 없다
         if diff:
             raise RunnerError(f"앞 실행과 조건이 다르다: {diff}")
     return out, meta, docs
@@ -116,6 +122,7 @@ def main(argv=None) -> int:
             run_file = out / "run.yaml"
             if not run_file.exists():
                 record = meta | {"started_at": datetime.now(KST).isoformat(timespec="seconds"), "reps": args.reps,
+                                 "documents": [d["id"] for d in docs],
                                  "prices": llm.config.price_record(sorted(set(meta["models"].values())))}
                 write_text_atomic(run_file, yaml.safe_dump(record, allow_unicode=True, sort_keys=False))
             else:

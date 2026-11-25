@@ -7,6 +7,7 @@ run:
     normalization: claude-haiku-5-5
   started_at: '2026-11-25T14:20:32+09:00'
 reps: 1
+incomplete_reps: {}
 summary:
   overall:
     precision:
@@ -97,7 +98,7 @@ summary:
         mean: 0.92
         stdev: null
       f1:
-        mean: 0.7666
+        mean: 0.7667
         stdev: null
   props_accuracy:
     mean: 1.0
@@ -186,7 +187,7 @@ per_rep:
         fn: 2
         precision: 0.6571
         recall: 0.92
-        f1: 0.7666
+        f1: 0.7667
     props_accuracy: 1.0
     props_compared: 66
     normalization_accuracy: 1.0

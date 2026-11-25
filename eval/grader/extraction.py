@@ -52,10 +52,11 @@ def _ratio(n: int, d: int) -> float | None:
     return round(n / d, 4) if d else None
 
 
-def _f1(p: float | None, r: float | None) -> float | None:
-    if p is None or r is None:
-        return None
-    return round(2 * p * r / (p + r), 4) if p + r else 0.0
+def _f1(n: dict) -> float | None:
+    """개수로 F1을 계산한다. 정답과 후보가 모두 없을 때만 해당 없음이다. 후보가 없어 정밀도가 없어도 정답이 있으면
+    F1은 0이다. 그래야 완전히 실패한 반복도 평균에 들어간다 (PR #30 리뷰)."""
+    d = 2 * n["tp"] + n["fp"] + n["fn"]
+    return round(2 * n["tp"] / d, 4) if d else None
 
 
 def grade_rep(rep_dir: Path, plan: list[dict]) -> dict:
@@ -119,7 +120,7 @@ def grade_rep(rep_dir: Path, plan: list[dict]) -> dict:
     for rel, n in counts.items():
         p = _ratio(n["tp"], n["tp"] + n["fp"])
         rc = _ratio(n["tp"], n["tp"] + n["fn"])
-        per_rel[rel] = n | {"precision": p, "recall": rc, "f1": _f1(p, rc)}
+        per_rel[rel] = n | {"precision": p, "recall": rc, "f1": _f1(n)}
     tp = sum(n["tp"] for n in counts.values())
     fp = sum(n["fp"] for n in counts.values())
     fn = sum(n["fn"] for n in counts.values())
@@ -127,7 +128,7 @@ def grade_rep(rep_dir: Path, plan: list[dict]) -> dict:
     return {
         "documents": len(files),
         "overall": {"tp": tp, "fp": fp, "fn": fn, "precision": p, "recall": rc,
-                    "f1": _f1(p, rc)},
+                    "f1": _f1({"tp": tp, "fp": fp, "fn": fn})},
         "relations": per_rel,
         "props_accuracy": _ratio(props_ok, props_total), "props_compared": props_total,
         "normalization_accuracy": _ratio(norm_ok, norm_total), "normalization_names": norm_total,
@@ -155,7 +156,17 @@ def grade(out: Path) -> dict:
     reps = sorted(p for p in out.glob("r*") if p.is_dir() and p.name[1:].isdigit())
     if not reps:
         raise GradeError(f"반복 결과가 없다: {out}")
-    results = {p.name: grade_rep(p, plan) for p in reps}
+    found = {p.name: {f.stem for f in p.glob("*.yaml")} for p in reps}
+    # 반복마다 같은 문서를 모두 돌았는지 본다. 실행 기록의 문서 목록과 다르면 그 반복은 평균에서 빼고 따로 적는다.
+    # 중단된 반복이 완전한 반복과 같은 평균에 들어가지 않게 한다 (PR #30 리뷰). 문서 목록이 없는 이전 실행은
+    # 반복들이 같은 문서 집합인지만 본다
+    expected = set(run["documents"]) if run.get("documents") else set().union(*found.values())
+    names = [f"r{i}" for i in range(1, int(run.get("reps", len(reps))) + 1)]
+    incomplete = {name: sorted(expected - found.get(name, set())) for name in names if found.get(name) != expected}
+    complete = [p for p in reps if p.name not in incomplete]
+    if not complete:
+        raise GradeError(f"문서를 모두 돈 반복이 없다: {incomplete}")
+    results = {p.name: grade_rep(p, plan) for p in complete}
     keys = ["precision", "recall", "f1"]
     summary = {
         "overall": {k: _summary([r["overall"][k] for r in results.values()]) for k in keys},
@@ -166,7 +177,7 @@ def grade(out: Path) -> dict:
                    "distractor_candidates", "false_positive_in_k", "cost_usd"):
         summary[metric] = _summary([r[metric] for r in results.values()])
     return {"run": {k: run[k] for k in ("prompt_version", "git_commit", "git_dirty", "models", "started_at")},
-            "reps": len(results), "summary": summary, "per_rep": results}
+            "reps": len(results), "incomplete_reps": incomplete, "summary": summary, "per_rep": results}
 
 
 def main(argv=None) -> int:
@@ -182,6 +193,8 @@ def main(argv=None) -> int:
         return 1
     write_text_atomic(out / "GRADE.yaml", yaml.safe_dump(result, allow_unicode=True, sort_keys=False))
     s = result["summary"]
+    if result["incomplete_reps"]:
+        print(f"문서가 빠져 평균에서 뺀 반복: {result['incomplete_reps']}", file=sys.stderr)
     print(f"반복 {result['reps']}회, F1 {s['overall']['f1']}, 정밀도 {s['overall']['precision']}, "
           f"재현율 {s['overall']['recall']}")
     for rel in RELATIONS:
