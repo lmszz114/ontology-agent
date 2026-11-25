@@ -1,0 +1,262 @@
+{
+  "run": {
+    "scenario": "SC-S2-02",
+    "split": "dev",
+    "config": "C-ext",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-25T17:20:12.318361+09:00",
+    "finished_at": "2026-11-25T17:20:33.385355+09:00",
+    "seconds": 21.1,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "48c0d15ae63dc2d9ab0e0f80ce72a93d",
+    "llm_calls": 7,
+    "usage": {
+      "input": 25286,
+      "output": 3513,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0042851,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "cext_from": "eval/results/2026-11-25-m4-extract-dev",
+    "knowledge_graph": {
+      "hash": "f16a2d60be47ccf0059a27f3e6d2e16169e85f830e694af4708b0500995760b5",
+      "source": {
+        "folder": "eval/results/2026-11-25-m4-extract-dev",
+        "rep": "r1",
+        "run_id": "2026-11-25-m4-extract-dev-r1",
+        "extraction_seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+        "files_hash": "063d2a68d22d08cb0023c83502175ea595a38689b4a37c7e6f0107e58ef38d43"
+      },
+      "builder": "cext-v1",
+      "stats": {
+        "candidates": 177,
+        "dropped_new_entity": 7,
+        "default_prior": 5,
+        "no_scope": 1,
+        "default_required": 0,
+        "unknown_condition": 0,
+        "voted_slots": 7,
+        "aliases_added": 26,
+        "args_from_location": 6,
+        "relationships": {
+          "OWNS": 13,
+          "DEPENDS_ON": 12,
+          "OBSERVED_IN": 7,
+          "MAY_BE_CAUSED_BY": 13,
+          "LOCATED_IN": 9,
+          "CHECKED_BY": 18,
+          "RESOLVED_BY": 38
+        }
+      },
+      "counts": {
+        "nodes": 119,
+        "relationships": 168,
+        "removed_nodes": 0
+      }
+    },
+    "git_commit": "4d79b755ba5118ae4af931f8e8fc72575a2fac3d",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "492beb4d3ac1e356b1b4e52789c77bc1d42cee66545dd5f5fb6a290ef9d9f285"
+  },
+  "outputs": [
+    {
+      "symptom": "S2",
+      "incident_id": "INC-8bde1ae53c8a",
+      "report_ids": [
+        "RP-728b7a023308"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C04",
+          "rank": 1,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "rule_out",
+              "detail": "다른 타이틀의 로그인 성공률은 평소와 같다. 이 타이틀만 실패한다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C05",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "inconclusive",
+              "detail": "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "inconclusive",
+              "detail": "다른 타이틀의 로그인 성공률은 평소와 같다. 이 타이틀만 실패한다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-4f5c7039e54b"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-d66008644887"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-e59dc4307d02"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-8b9d6e15910b"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6e7d1a53e159"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-1c4a86e1c2a4"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-bea3ebee1a04"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-0f3e4143ffc4"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C04",
+          "tool": "check_cross_title_login",
+          "check_id": "E03",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C05",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S2 로그인 불가, 접속 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C04 공통 계정 인증 장애 (점수 2): rule_out, 근거 ['E03']. E03(다른 타이틀 로그인 상태 확인)을 조회한 결과, 다른 타이틀의 로그인 성공률은 평소와 같고 이 타이틀만 실패하는 것으로 나타났다. 판정 근거 E03의 expect는 '다른 타이틀 로그인도 같이 안 된다'였고 required가 true이므로 하나라도 expect와 다르면 배제다. 공통 계정 인증 장애라면 타이틀과 무관하게 로그인이 함께 실패해야 하므로 C04는 배제된다. 이 타이틀 고유 원인(클라이언트, 이 타이틀의 서버, 설정 변경 등)을 별도로 확인할 필요가 있다.\n-> 원인 C05 게임 로그인 서버 장애 (점수 2): inconclusive, 근거 ['E04', 'E03']. E03은 이미 조회된 K1 결과를 사용했다. 다른 타이틀의 로그인 성공률은 평소와 같고 이 타이틀만 실패하므로 기대값 '다른 타이틀 로그인은 정상이다'와 일치한다. E04는 이번에 query_server_log를 호출했다. 게임 로그인 서버의 시스템 ID가 주어지지 않아 도구 설명의 예시 ID인 SY10을 넣었는데, 결과는 SY10이 월드 서버이며 증상과 관련된 오류 로그와 처리 지연 로그가 없다는 것이었다. 로그인 서버의 ID를 확인하지 못했으므로 이 결과는 C05의 대상 시스템에 대한 결과가 아니다. 따라서 기대값 '증상과 관련된 오류 로그가 남아 있다'가 맞는지 틀리는지 판정할 수 없고, 월드 서버 결과로 C05를 배제하지도 않는다. 확정하거나 배제하려면 게임 로그인 서버의 정확한 시스템 ID가 필요하다. 그 ID를 받으면 E04를 다시 조회해 판정할 수 있다.",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: ['C05']"
+      ],
+      "retrieved_docs": null
+    }
+  ],
+  "unclassified": []
+}
