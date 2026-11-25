@@ -1,0 +1,61 @@
+# 원인 미확정: 한 월드 렉 제보지만 자원, 처리 지연 로그, 콘텐츠 일정 모두 이상이 없다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S8-05
+type: T5
+boundary: null
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH01
+  reporter: U5901
+  at: 2027-02-02T16:30+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E09
+    args:
+      system: SY05
+    observations:
+      status: normal
+    detail: 서버 인프라 자원 지표는 평소 범위다
+  - check: E04
+    args:
+      system: SY10
+    observations:
+      delay_log: absent
+    detail: 월드 서버 처리 지연 로그는 없다
+  - check: E14
+    observations:
+      overlaps_large_content: 'no'
+    detail: 16시 전후 7월드에 예정된 대규모 콘텐츠가 없다
+  - check: E15
+    observations:
+      scope: one_world
+    detail: 렉 제보가 7월드에서만 몇 건 들어왔다
+  changes: []
+expected:
+  incidents:
+  - reports:
+    - 0
+    symptom: S8
+    scope: one_world
+    severity: SEV3
+    root_cause: null
+    ruled_out:
+    - C20
+    - C21
+    required_checks: []
+    primary_team: null
+    resolved_conditions: []
+    procedures: []
+    auto_actions:
+    - A01
+    - A02
+    - A03
+    - A04
+    - A05
+    approval_actions: &id001 []
+    forbidden_actions: *id001
+  unclassified: []

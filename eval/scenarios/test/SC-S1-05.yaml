@@ -1,0 +1,77 @@
+# 환불 요구가 결제 문제처럼 보이게 하는 함정(4단계 3-4 예시). 결제 기록은 있고 우편함 배포 뒤 지급 기록이 없다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S1-05
+type: T2
+boundary: 결제 플랫폼 vs 게임 서버 지급
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH01
+  reporter: U4401
+  at: 2027-01-18T20:14+09:00
+  text: (제보 문장 생성 전)
+- channel: CH02
+  reporter: U4402
+  at: 2027-01-18T20:31+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E01
+    observations:
+      approval: present
+    detail: 두 유저 모두 결제 승인 기록이 정상이다 (둘 다 3월드 캐릭터)
+  - check: E02
+    observations:
+      delivery: absent
+    detail: 3월드에서 19:40 이후 지급 기록이 0건이다. 다른 월드는 정상이다
+  - check: E06
+    args:
+      system: SY13
+    observations:
+      deploy: success
+    detail: 우편함 배포가 19:40에 완료됐다
+  - check: E15
+    observations:
+      scope: one_world
+    detail: 같은 증상 문의가 3월드에서만 들어온다
+  changes:
+  - kind: deploy
+    system: SY13
+    at: 2027-01-18T19:40+09:00
+expected:
+  symptom: S1
+  scope: one_world
+  incident_groups:
+  - - 0
+    - 1
+  severity: SEV2
+  root_cause: C02
+  ruled_out:
+  - C01
+  - C03
+  required_checks:
+  - E01
+  - E02
+  primary_team: TM03
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P6
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A10
+  - A15
+  forbidden_actions: *id001

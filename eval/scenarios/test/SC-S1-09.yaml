@@ -1,0 +1,60 @@
+# 원인 미확정: 미지급 제보지만 결제, 지급 기록이 정상이고 상품 설정 변경도 없다. 원인을 확정하지 않고 사람에게 넘겨야 한다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S1-09
+type: T5
+boundary: null
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH02
+  reporter: U5801
+  at: 2027-02-01T20:40+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E01
+    observations:
+      approval: present
+    detail: 해당 결제 건의 승인 기록이 정상이다
+  - check: E02
+    observations:
+      delivery: normal
+    detail: 해당 결제 건의 우편함 지급 기록이 20:12에 정상으로 남아 있다
+  - check: E07
+    args:
+      system: SY12
+    observations:
+      changed: 'no'
+    detail: 캐시 상점 상품 설정은 최근 변경이 없다
+  - check: E15
+    observations:
+      scope: some_users
+    detail: 같은 증상 문의는 이 제보 1건뿐이다
+  changes: []
+expected:
+  incidents:
+  - reports:
+    - 0
+    symptom: S1
+    scope: some_users
+    severity: SEV3
+    root_cause: null
+    ruled_out:
+    - C01
+    - C02
+    - C03
+    required_checks: []
+    primary_team: null
+    resolved_conditions: []
+    procedures: []
+    auto_actions:
+    - A01
+    - A02
+    - A03
+    - A04
+    - A05
+    approval_actions: &id001 []
+    forbidden_actions: *id001
+  unclassified: []

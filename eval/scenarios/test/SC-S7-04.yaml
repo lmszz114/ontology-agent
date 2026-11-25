@@ -1,0 +1,72 @@
+# 거래 실패와 시세 붕괴가 서버 오류처럼 보이지만 특정 계정 집중 거래다(C14, 사전 확률 낮음)
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S7-04
+type: T2
+boundary: 거래소 버그 vs 악용
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH01
+  reporter: U4801
+  at: 2027-01-22T22:10+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E11
+    observations:
+      concentration: concentrated
+    detail: 6월드 거래소 거래량의 80%가 신규 계정 9개에서 나왔다
+  - check: E10
+    detail: 6월드 골드 유통량이 평소보다 크게 늘었다
+  - check: E04
+    args:
+      system: SY14
+    observations:
+      error_log: absent
+    detail: 거래소 서버 오류 로그는 없다
+  - check: E09
+    args:
+      system: SY11
+    observations:
+      status: normal
+    detail: 게임 DB 자원 지표는 평소 범위다
+  - check: E15
+    observations:
+      scope: one_world
+    detail: 거래소 이상 제보가 6월드에서만 들어온다
+  changes: []
+expected:
+  symptom: S7
+  scope: one_world
+  incident_groups:
+  - - 0
+  severity: SEV2
+  root_cause: C14
+  ruled_out:
+  - C18
+  - C19
+  required_checks:
+  - E11
+  primary_team: TM11
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P7
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A11
+  - A15
+  forbidden_actions: *id001

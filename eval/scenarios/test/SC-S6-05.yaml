@@ -1,0 +1,71 @@
+# 확률 조작 항의가 실제 확률 문제처럼 보이지만 공개 페이지 표기만 틀렸다(C15)
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S6-05
+type: T2
+boundary: 확률 표기 vs 실제 확률
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH01
+  reporter: U4701
+  at: 2027-01-21T19:00+09:00
+  text: (제보 문장 생성 전)
+- channel: CH02
+  reporter: U4702
+  at: 2027-01-21T19:20+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E08
+    observations:
+      public_vs_table: different
+      table_vs_actual: same
+    detail: 공개 페이지는 최고 등급 2%, 테이블과 실제 결과는 0.2%다
+  - check: E05
+    args:
+      area: probability
+    observations:
+      changed: 'no'
+    detail: 확률 영역 테이블은 최근 변경이 없다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 확률 조작 의혹 글이 모든 월드에서 올라온다
+  changes: []
+expected:
+  symptom: S6
+  scope: all_service
+  incident_groups:
+  - - 0
+    - 1
+  severity: SEV2
+  root_cause: C15
+  ruled_out:
+  - C16
+  - C17
+  required_checks:
+  - E05
+  - E08
+  primary_team: TM06
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P8
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A12
+  - A15
+  forbidden_actions: *id001

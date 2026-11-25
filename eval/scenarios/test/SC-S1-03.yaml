@@ -1,0 +1,58 @@
+# 결제 승인 기록 오류(C01). 결제 플랫폼 승인 응답이 오류로 남고 지급도 되지 않았다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S1-03
+type: T1
+boundary: null
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH02
+  reporter: U3101
+  at: 2027-01-05T19:20+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E01
+    observations:
+      approval: error
+    detail: 해당 결제 건의 결제 플랫폼 승인 응답이 오류 코드로 기록돼 있다. 카드사 쪽 승인 문자는 발송됐다
+  - check: E02
+    observations:
+      delivery: absent
+    detail: 해당 결제 건에 대한 우편함 지급 기록이 없다
+  - check: E15
+    observations:
+      scope: some_users
+    detail: 같은 증상 문의는 이 제보 1건뿐이다
+  changes: []
+expected:
+  symptom: S1
+  scope: some_users
+  incident_groups:
+  - - 0
+  severity: SEV3
+  root_cause: C01
+  ruled_out:
+  - C02
+  - C03
+  required_checks:
+  - E01
+  primary_team: TM09
+  resolved_conditions:
+  - 미지급
+  procedures:
+  - P6
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A14
+  approval_actions: &id001
+  - A10
+  - A15
+  forbidden_actions: *id001

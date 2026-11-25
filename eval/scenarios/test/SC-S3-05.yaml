@@ -1,0 +1,62 @@
+# 패치 배포 실행 오류(C10). 패치 배포가 일부만 끝나 한 월드의 일부 유저가 구버전 클라이언트로 접속한다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-S3-05
+type: T1
+boundary: null
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH01
+  reporter: U3701
+  at: 2027-01-11T10:15+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks:
+  - check: E06
+    args:
+      system: SY18
+    observations:
+      deploy: partial
+    detail: 클라이언트 패치 배포가 일부 배포 서버에서 실패해 부분 완료 상태다
+  - check: E13
+    observations:
+      outdated_clients: present
+    detail: 8월드 접속자의 약 20%가 이전 버전 클라이언트다
+  - check: E15
+    observations:
+      scope: one_world
+    detail: 패치 뒤 화면이 깨진다는 문의가 8월드에서만 들어온다
+  changes:
+  - kind: patch
+    system: SY18
+    at: 2027-01-11T07:00+09:00
+expected:
+  symptom: S3
+  scope: one_world
+  incident_groups:
+  - - 0
+  severity: SEV3
+  root_cause: C10
+  ruled_out:
+  - C07
+  - C08
+  - C09
+  required_checks:
+  - E06
+  - E13
+  primary_team: TM10
+  resolved_conditions: []
+  procedures:
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A14
+  approval_actions: &id001
+  - A15
+  forbidden_actions: *id001

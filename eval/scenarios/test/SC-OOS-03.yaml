@@ -1,0 +1,21 @@
+# 범위 밖: 비밀번호 분실 상담. 증상 8개에 해당하지 않아 사건을 열지 않고 사람에게 넘겨야 한다
+# 2026-11-25 test 세트 준비. 진단 프롬프트(diagnosis-v7)보다 늦게 만든 시나리오다. 정답 라벨은 에이전트 실행 전에
+# 고정하고 사용자가 검토한다 (4단계 4-2). 조치 목록만 라벨의 절차에서 펼쳤고 나머지 라벨은 손으로 적었다
+id: SC-OOS-03
+type: T6
+boundary: null
+source: 설계
+split: test
+text_source: 생성 전. 라벨과 환경은 2026-11-25 작성 (진단 프롬프트 diagnosis-v7 이후, 에이전트 실행 전)
+reports:
+- channel: CH02
+  reporter: U6031
+  at: 2027-02-04T10:20+09:00
+  text: (제보 문장 생성 전)
+environment:
+  checks: []
+  changes: []
+expected:
+  incidents: []
+  unclassified:
+  - 0
