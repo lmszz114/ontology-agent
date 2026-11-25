@@ -236,6 +236,14 @@ def read_action_run(driver: Driver, run_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+def list_knowledge_runs(driver: Driver) -> list[dict]:
+    """후보에 붙은 지식 반영(A17) 실행 기록 전체. 검수 화면이 읽는다."""
+    with driver.session() as session:
+        ids = session.execute_read(lambda tx: tx.run(
+            "MATCH (r:ActionRun)-[:FOR]->(:Candidate) RETURN DISTINCT r.id AS id ORDER BY id").value())
+    return [read_action_run(driver, run_id) for run_id in ids]
+
+
 def list_changes(driver: Driver) -> list[dict]:
     """기록된 변경 이력 전체 (사건 데이터). 구성 A의 원인 순위가 변경 가중을 판단할 때 읽는다."""
     with driver.session() as session:
