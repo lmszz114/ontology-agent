@@ -410,6 +410,9 @@ def build_graph(deps: Deps):
         diag = dict(state["diag"])
         incident = state["incidents"][diag["incident_id"]]
         try:
+            # 사건마다 바뀌는 지식(문서 검색 구성 B의 검색 결과)을 먼저 준비한다. 다른 구성은 하는 일이 없다 (M5 PR 3)
+            diag["retrieval"] = await deps.knowledge.begin_incident(diag["incident_id"],
+                                                                    [r["text"] for r in incident["reports"]])
             ranked = await deps.knowledge.rank_causes(incident["symptom_id"], incident["opened_at"].isoformat())
             problem = None
         except KnowledgeUnavailable as exc:
@@ -898,7 +901,9 @@ def build_graph(deps: Deps):
                            for c in [*(r["scope_lookup"] for r in incident["reports"]), *diag["tool_calls"]]],
             "explanation": _explain(incident, diag, symptom_by_id),
             "needs_human": diag["needs_human"],
-            "retrieved_docs": None,  # 문서 검색 구성(B, H)만 쓴다
+            # 문서 검색 구성(B, H)이 이 사건에서 검색해 온 문서 (처음 나온 순서). 다른 구성은 None
+            "retrieved_docs": (diag.get("retrieval") or {}).get("docs"),
+            "retrieval": diag.get("retrieval"),
         }
         return {"outputs": [*(state.get("outputs") or []), output], "diag": None}
 

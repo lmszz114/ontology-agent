@@ -14,6 +14,7 @@
 import os
 import sys
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -24,6 +25,7 @@ from mcp import Client, StdioServerParameters
 from agents.diagnosis.graph import KST, Deps, build_graph, initial_state
 from agents.diagnosis.prompts import PROMPT_VERSION
 from common.knowledge import GraphKnowledge, KnowledgeProvider
+from common.knowledge.search import SearchKnowledge
 from common.knowledge.text import TextKnowledge
 from common.models import LLM, LLMResult
 from common.models.config import USAGE_FIELDS
@@ -35,6 +37,9 @@ from ontology.seed import load_seed
 ROOT = Path(__file__).parent.parent.parent
 # MCP 서버 프로세스에 넘기는 환경 변수. API 키 같은 비밀값은 넘기지 않는다
 PASS_ENV = ("PATH", "HOME", "NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD", "LANG")
+# 문서 검색 서버는 Voyage를 부른다. 키는 프록시가 붙이므로(네트워크 시크릿) 프록시와 인증서 설정을 넘긴다
+SEARCH_ENV = ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy", "SSL_CERT_FILE",
+              "REQUESTS_CA_BUNDLE", "VOYAGE_API_KEY")
 
 @dataclass(frozen=True)
 class KnowledgeContext:
@@ -46,24 +51,48 @@ class KnowledgeContext:
     driver: Any                  # 사건 데이터(변경 이력)를 읽는다
     org: str
     results: list[LLMResult]     # 진단 실행의 LLM 호출 목록. 공급자의 호출도 비용과 토큰에 함께 센다
+    docs: Client | None = None   # 문서 검색 MCP 클라이언트 (구성 B)
 
 
 # 비교 구성별 지식 공급자 (4단계 2-2, 5단계 4-2). 에이전트 코드는 하나이고 지식 공급자만 바꿔 끼운다
 KNOWLEDGE: dict[str, Callable[[KnowledgeContext], KnowledgeProvider]] = {
     "A": lambda ctx: TextKnowledge(llm=ctx.llm, seed=load_seed(ctx.org), results=ctx.results,
                                    changes=lambda: events.list_changes(ctx.driver), name="A"),
+    # 검색 설정은 dev 검색 비교로 고른 값이다 (common/knowledge/search.B_SETTINGS, M5 PR 2)
+    "B": lambda ctx: SearchKnowledge(docs=ctx.docs, tracer=ctx.tracer, settings=_b_settings(), llm=ctx.llm,
+                                     seed=load_seed(ctx.org), results=ctx.results,
+                                     changes=lambda: events.list_changes(ctx.driver)),
     "C": lambda ctx: GraphKnowledge(ctx.onto, ctx.tracer, name="C"),
     # C와 같은 공급자다. 실행기가 추출 후보로 만든 그래프 DB(7689)에 연결해 준다 (ontology/cext, M4 PR 6)
     "C-ext": lambda ctx: GraphKnowledge(ctx.onto, ctx.tracer, name="C-ext"),
 }
 # 개발용 그래프가 아니라 추출 그래프 DB에서 진단하는 구성
 EXT_CONFIGS = {"C-ext"}
+# 문서 검색 서버를 띄우는 구성
+SEARCH_CONFIGS = {"B"}
+
+
+def _b_settings():
+    from common.knowledge.search import B_SETTINGS
+
+    if B_SETTINGS is None:
+        raise ValueError("구성 B의 검색 설정을 아직 고르지 않았다 (common/knowledge/search.B_SETTINGS, M5 PR 2)")
+    return B_SETTINGS
 
 
 def _server(module: str, extra: dict[str, str]) -> StdioServerParameters:
     env = {k: os.environ[k] for k in PASS_ENV if k in os.environ}
     env |= {"PYTHONPATH": str(ROOT)} | extra
     return StdioServerParameters(command=sys.executable, args=["-m", module], env=env, cwd=str(ROOT))
+
+
+@asynccontextmanager
+async def _optional_client(params: StdioServerParameters | None):
+    if params is None:
+        yield None
+        return
+    async with Client(params) as client:
+        yield client
 
 
 def prepare_event_layer(driver, scenario: dict) -> None:
@@ -85,13 +114,16 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
     onto_params = _server("mcp_servers.ontology_query.server",
                           {"ORG": org} | ({"NEO4J_URI": neo4j_uri} if neo4j_uri else {}))
     mock_params = _server("mcp_servers.mock_tools.server", {"ORG": org, "MOCK_ENV_FILE": str(scenario_path.resolve())})
-    async with Client(onto_params) as onto, Client(mock_params) as mock:
+    docs_params = (_server("mcp_servers.doc_search.server",
+                           {"ORG": org} | {k: os.environ[k] for k in SEARCH_ENV if k in os.environ})
+                   if config in SEARCH_CONFIGS else None)
+    async with Client(onto_params) as onto, Client(mock_params) as mock, _optional_client(docs_params) as docs:
         listed = await mock.list_tools()
         mock_tools = [{"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
                       for t in listed.tools]
         results: list[LLMResult] = []
         knowledge = KNOWLEDGE[config](KnowledgeContext(onto=onto, tracer=tracer, llm=llm, driver=driver, org=org,
-                                                       results=results))
+                                                       results=results, docs=docs))
         deps = Deps(
             driver=driver, llm=llm, tracer=tracer, knowledge=knowledge, llm_results=results,
             mock_client=mock, mock_tools=mock_tools, tool_checks=queries.get_evidence_tools(driver),
@@ -122,6 +154,8 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
             # 지식 공급자의 답이 검증에 두 번 실패한 질문 (구성 A). 그래프 공급자는 없다
             "knowledge_errors": list(getattr(knowledge, "errors", [])),
             "knowledge_prompt_version": getattr(knowledge, "prompt_version", None),
+            # 구성 B: 검색 설정. 색인 확인(조각 목록 해시)은 실행기가 남긴다
+            "search_settings": knowledge.settings.as_dict() if config in SEARCH_CONFIGS else None,
         },
         "outputs": state.get("outputs") or [],
         "unclassified": state.get("unclassified") or [],

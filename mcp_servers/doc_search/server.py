@@ -31,6 +31,8 @@ def build_server(driver: Driver, embedder) -> MCPServer:
 
 
 def main() -> None:
+    import os
+
     from common.retrieval.chunking import all_chunks
     from common.retrieval.index import check_index
     from common.retrieval.voyage import Voyage
@@ -39,7 +41,7 @@ def main() -> None:
     from ontology.seed import load_seed
 
     driver = get_driver()
-    check_index(driver, all_chunks(load_seed(), load_plan()))
+    check_index(driver, all_chunks(load_seed(os.environ.get("ORG", "org-a")), load_plan()))
     build_server(driver, Voyage()).run()
 
 

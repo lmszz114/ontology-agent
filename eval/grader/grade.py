@@ -89,6 +89,16 @@ def check_basis(result: dict, seed: dict) -> None:
             raise GradeError(f"{run['scenario']}: test 세트가 잠금과 다르다: {locked[:3]}")
     if run.get("seed_hash") and run["seed_hash"] != seed_hash(seed):
         raise GradeError(f"{run['scenario']}: 실행 때의 시드와 지금 시드가 다르다. 실행 커밋({run['git_commit'][:7]})에서 채점한다")
+    if run.get("config") == "B":
+        # 검색 색인이 지금 시드와 문서로 만든 것과 같아야 한다 (M5 PR 3)
+        from common.retrieval.chunking import all_chunks, corpus_hash
+        from eval.corpus.check import load_plan
+
+        index = run.get("retrieval_index") or {}
+        if not index.get("corpus_hash") or not run.get("search_settings"):
+            raise GradeError(f"{run['scenario']}: 구성 B 결과에 검색 색인이나 검색 설정 기록이 없다")
+        if index["corpus_hash"] != corpus_hash(all_chunks(seed, load_plan())):
+            raise GradeError(f"{run['scenario']}: 실행 때의 검색 색인과 지금 시드, 문서로 만든 조각이 다르다")
     graph = run.get("knowledge_graph")
     if run.get("config") == "C-ext" or graph is not None:
         # C-ext 결과는 그래프 기록이 꼭 있어야 한다. 없으면 어떤 그래프로 돌았는지 확인할 수 없다 (PR #32 리뷰).

@@ -96,7 +96,12 @@ class TextKnowledge:
         self.changes = changes          # 시나리오의 변경 이력 (사건 데이터)
         self.errors: list[str] = []     # 검증에 두 번 실패한 질문
         self.system = [{"type": "text", "text": P.SYSTEM + "\n" + k_text(seed), "cache_control": {"type": "ephemeral"}}]
+        self.retry = P.RETRY
         self._memo: dict[tuple, Any] = {}
+
+    async def begin_incident(self, incident_id: str, reports: list[str]) -> dict | None:
+        """구성 A는 기준 지식 전체를 쓰므로 사건마다 바꾸는 것이 없다."""
+        return None
 
     # --- 공통 ---------------------------------------------------------------
 
@@ -120,7 +125,7 @@ class TextKnowledge:
             if not errors:
                 return data
             messages += [{"role": "assistant", "content": result.text or "(빈 답)"},
-                         {"role": "user", "content": P.RETRY.format(errors="\n".join(f"- {e}" for e in errors))}]
+                         {"role": "user", "content": self.retry.format(errors="\n".join(f"- {e}" for e in errors))}]
         self.errors.append(f"{name}: {errors}")
         raise KnowledgeUnavailable(f"{name}: {errors}")
 
