@@ -31,8 +31,9 @@ class SearchSettings:
         return {"scheme": self.scheme, "rerank": self.rerank, "k": self.k}
 
 
-# dev 검색 비교(eval/results/...-m5-retrieval-dev)를 보고 사용자가 고른다. 고르기 전에는 구성 B를 돌리지 않는다
-B_SETTINGS: SearchSettings | None = None
+# dev 검색 비교(eval/results/2026-11-26-m5-retrieval-dev)를 보고 사용자가 골랐다 (2026-11-26).
+# 12가지 중 Recall@10 0.6321, MRR 0.8214로 가장 높고 옛날 문서가 들어오지 않았다. 사건 14개라 작은 차이는 우연일 수 있다
+B_SETTINGS: SearchSettings | None = SearchSettings(scheme="fixed", rerank=True, k=10)
 
 
 def id_listing(seed: dict) -> str:
