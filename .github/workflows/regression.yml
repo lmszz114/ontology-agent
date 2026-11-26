@@ -1,0 +1,97 @@
+name: 회귀 테스트
+
+# 배포 전 회귀 테스트 (설계 5단계 3-2, M6 PR 3). dev 대표 시나리오 10건을 구성 C로 1회 돌리고 통과 기준을 본다.
+# LLM을 부르므로 비용이 든다 (1회 약 0.05 USD 추정). 에이전트 동작을 바꿀 수 있는 파일이 바뀐 PR과 손으로 돌릴 때만 돈다.
+# 시나리오와 통과 기준: eval/regression.yaml. 비밀값: ONTOLOGY_ANTHROPIC_API_KEY, LANGFUSE_PUBLIC_KEY,
+# LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL (저장소 설정의 Actions secrets)
+
+on:
+  pull_request:
+    paths:
+      - "agents/**"
+      - "common/**"
+      - "mcp_servers/**"
+      - "ontology/**"
+      - "packages/**"
+      - "eval/runner/**"
+      - "eval/grader/**"
+      - "eval/labels.py"
+      - "eval/regression.py"
+      - "eval/regression.yaml"
+      - "eval/scenarios/dev/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 같은 PR에 새 커밋이 오면 앞 실행을 멈춘다. 지난 커밋의 결과에 비용을 쓰지 않는다
+concurrency:
+  group: regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      neo4j:
+        image: neo4j:2026.10.2-community
+        ports:
+          - 7687:7687
+        env:
+          NEO4J_AUTH: neo4j/localdev-password
+        options: >-
+          --health-cmd "cypher-shell -u neo4j -p localdev-password 'RETURN 1'"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 30
+    env:
+      NEO4J_URI: bolt://localhost:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: localdev-password
+      ONTOLOGY_ANTHROPIC_API_KEY: ${{ secrets.ONTOLOGY_ANTHROPIC_API_KEY }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+      OUT: eval/results/regression-ci
+      # uv run이 잠금 파일을 고치지 않게 한다. 고치면 실행기가 커밋하지 않은 변경으로 보고 멈춘다
+      UV_FROZEN: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: 비밀값 확인
+        # 포크에서 온 PR은 비밀값을 받지 못한다. 빈 키로 돌지 않고 이유를 남기고 멈춘다
+        run: |
+          missing=""
+          for name in ONTOLOGY_ANTHROPIC_API_KEY LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY LANGFUSE_BASE_URL; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then echo "저장소 비밀값이 없다:$missing"; exit 1; fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: uv 설치
+        run: pip install uv
+      - name: 의존성 설치
+        run: uv sync --frozen
+      - name: 스키마 적용과 시드 적재
+        run: |
+          uv run python -m ontology.apply_schema
+          uv run python -m ontology.load
+      - name: 시나리오 실행 (구성 C, 1회)
+        run: uv run python -m eval.runner --config C --scenario $(uv run python -m eval.regression paths) --out "$OUT"
+      - name: 채점
+        run: uv run python -m eval.grader "$OUT"
+      - name: 통과 기준 확인
+        run: uv run python -m eval.regression check "$OUT" | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash -o pipefail {0}
+      - name: 결과 올리기
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-results
+          path: ${{ env.OUT }}
+          if-no-files-found: ignore
+          retention-days: 30
