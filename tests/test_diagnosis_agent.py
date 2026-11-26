@@ -1023,3 +1023,18 @@ def test_condition_check_id_follows_called_tool(db, seed):
     calls = [c for c in out["tool_calls"] if c["step"] == "9.condition"]
     assert [(c["tool"], c["check_id"]) for c in calls] == [("query_config_change", "E07")]
     assert any("판정 근거는 E02인데 도구 query_config_change는 E07다" in n for n in out["needs_human"])
+
+
+def test_tool_round_limit_is_not_an_output_error(db, seed):
+    """도구 호출만 이어가다 한도에 닿으면 불명확으로 두고 사람에게 넘기되, 출력 형식 오류로 세지 않는다 (PR #39 리뷰)."""
+    from agents.diagnosis.graph import MAX_TOOL_ROUNDS, OUTPUT_ERROR
+
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    model.check = lambda params: message(
+        [{"type": "tool_use", "id": "tu_pay", "name": "query_payment_record", "input": {}}], stop_reason="tool_use")
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    assert out["hypotheses"][0]["result"] == "inconclusive"
+    assert any(f"도구 호출 {MAX_TOOL_ROUNDS}회" in reason for reason in out["needs_human"])
+    assert not any(OUTPUT_ERROR in reason for reason in out["needs_human"])

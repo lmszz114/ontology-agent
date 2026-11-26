@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Any
 
 from common.knowledge import text_prompts as P
-from common.knowledge.base import KnowledgeUnavailable
+from common.knowledge.base import OUTPUT_ERROR, KnowledgeUnavailable
 from common.knowledge.k_text import k_text
 from common.models import LLM, LLMResult
 
@@ -127,7 +127,7 @@ class TextKnowledge:
             messages += [{"role": "assistant", "content": result.text or "(빈 답)"},
                          {"role": "user", "content": self.retry.format(errors="\n".join(f"- {e}" for e in errors))}]
         self.errors.append(f"{name}: {errors}")
-        raise KnowledgeUnavailable(f"{name}: {errors}")
+        raise KnowledgeUnavailable(f"{name} {OUTPUT_ERROR}: {errors}")
 
     def _memoized(self, key: tuple, make: Callable[[], Any]) -> Any:
         if key not in self._memo:

@@ -14,7 +14,7 @@ import pytest
 
 from common.knowledge import text_prompts as P
 from common.knowledge.k_text import k_text
-from common.knowledge.base import KnowledgeUnavailable
+from common.knowledge.base import OUTPUT_ERROR, KnowledgeUnavailable
 from common.knowledge.text import TextKnowledge
 from common.models import LLM, load_model_config
 from mcp_servers.ontology_query import queries
@@ -91,7 +91,8 @@ def test_rank_converts_answer_and_computes_gap_in_code():
 def test_undefined_id_is_asked_again_then_recorded():
     bad = {"candidates": [{"cause_id": "C02", "score": 3, "rank": 1, "change_ids": ["CG-9"], "reason": "x"}]}
     kp, results = provider(Script(bad, bad))
-    with pytest.raises(KnowledgeUnavailable):
+    # 검증에 두 번 실패한 사유에는 출력 형식 오류 표시가 붙는다. 진단 에이전트가 사람 확인 사유로 남기면 채점기가 센다 (PR #39 리뷰)
+    with pytest.raises(KnowledgeUnavailable, match=OUTPUT_ERROR):
         asyncio.run(kp.rank_causes("S1", "2026-12-03T20:14:00+09:00"))
     assert len(results) == 2 and "CG-9" in kp.errors[0]
     # 실패도 기억한다. 같은 질문을 다시 묻지 않는다

@@ -24,6 +24,7 @@ from agents.diagnosis import prompts
 from common.gate import gate
 from common.gate.gate import GateError
 from common.knowledge import KnowledgeProvider, KnowledgeUnavailable
+from common.knowledge.base import OUTPUT_ERROR  # 사람 확인 사유에 붙는 출력 형식 오류 표시. 채점기도 쓴다
 from common.models import LLM, LLMResult
 from common.rules.severity import ESCALATION_COUNT, ESCALATION_WINDOW, SCOPES, base_severity, escalate
 from common.tool_calls import call_tool
@@ -173,10 +174,6 @@ def _structure_errors(data: Any, schema: dict) -> list[str]:
                 elif item_type in types and not isinstance(item, types[item_type]):
                     errors.append(f"{name}의 항목은 {item_type}이어야 한다: {item!r}")
     return errors
-
-
-# LLM 출력이 형식 검증을 두 번 통과하지 못해 사람에게 넘긴 사유에 붙는 말. 채점기가 이 말로 출력 형식 오류를 센다
-OUTPUT_ERROR = "출력 검증 실패"
 
 
 def _flag(state: dict, incident_id: str, reason: str) -> dict:
@@ -484,7 +481,7 @@ def build_graph(deps: Deps):
             "reason": {"type": "string"},
         })
         messages: list[dict] = [{"role": "user", "content": content}]
-        data, called, retried = None, [], False
+        data, called, retried, answered = None, [], False, False
         required = [(c["check_id"], c["args"]) for c in checks if c["required"]]
         for _ in range(0 if problem else MAX_TOOL_ROUNDS):
             result = deps.llm.call(
@@ -510,6 +507,7 @@ def build_graph(deps: Deps):
                                "reused_results로 인용한 뒤 다시 답한다")})
                     data = None
                     continue
+                answered = True
                 break
             messages.append({"role": "assistant", "content": [b.model_dump(mode="json", exclude_none=True)
                                                               for b in result.message.content]})
@@ -526,6 +524,9 @@ def build_graph(deps: Deps):
             messages.append({"role": "user", "content": answers})
 
         unreadable = None
+        if not problem and not answered:
+            # 도구 호출만 이어가다 한도에 닿은 경우. 형식이 틀린 답이 아니라 답이 없는 것이라 출력 형식 오류로 세지 않는다 (PR #39 리뷰)
+            problem = f"판정 근거 단계({cause_id})가 도구 호출 {MAX_TOOL_ROUNDS}회 안에 답하지 않았다"
         if problem:
             verdict = {"result": "inconclusive", "reason": problem, "used_checks": [], "reused_results": []}
         elif (data is None or _structure_errors(data, schema)

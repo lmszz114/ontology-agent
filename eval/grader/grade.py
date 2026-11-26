@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from agents.diagnosis.graph import OUTPUT_ERROR
+from common.knowledge.base import OUTPUT_ERROR
 from common.rules.severity import LEVELS
 from eval.labels import label_groups, label_incidents, scenario_org
 from eval.lock import lock_errors
