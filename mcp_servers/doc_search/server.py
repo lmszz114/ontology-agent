@@ -5,6 +5,8 @@
 기준 지식 K와 현장 문서를 조각 단위로 검색한다. 읽기 전용이다. 색인이 지금 시드, 문서와 다르면 띄우지 않는다.
 """
 
+import threading
+
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from neo4j import Driver
@@ -13,6 +15,9 @@ from common.retrieval.search import SearchError, search
 
 
 def build_server(driver: Driver, embedder) -> MCPServer:
+    # 동기 도구는 워커 스레드에서 겹쳐 돌 수 있다. 호출별 Voyage 사용량을 공유 카운터의 전후 차이로 재므로
+    # 측정 구간을 잠가 다른 호출의 토큰이 섞이지 않게 한다 (PR #35 리뷰). 진단은 사건마다 차례로 검색해 느려지지 않는다
+    lock = threading.Lock()
     server = MCPServer("doc-search", instructions="사내 기준 지식과 현장 문서(회고, 런북, 대화, 회의록)를 검색한다. 읽기 전용이다.")
 
     @server.tool()
@@ -23,13 +28,15 @@ def build_server(driver: Driver, embedder) -> MCPServer:
         results의 각 조각: chunk_id, doc_id(문서 id, 기준 지식은 K), text, score, rank.
         usage는 이 호출에서 쓴 Voyage 토큰이다(캐시에 있던 임베딩은 0). 실행 기록에 남긴다.
         """
-        before = (embedder.usage.embed_tokens, embedder.usage.rerank_tokens)
-        try:
-            rows = search(driver, embedder, query, scheme=scheme, k=k, rerank=rerank)
-        except SearchError as exc:
-            raise ToolError(str(exc)) from exc
-        return {"results": rows, "usage": {"calls": 1, "embed_tokens": embedder.usage.embed_tokens - before[0],
-                                           "rerank_tokens": embedder.usage.rerank_tokens - before[1]}}
+        with lock:
+            before = (embedder.usage.embed_tokens, embedder.usage.rerank_tokens)
+            try:
+                rows = search(driver, embedder, query, scheme=scheme, k=k, rerank=rerank)
+            except SearchError as exc:
+                raise ToolError(str(exc)) from exc
+            usage = {"calls": 1, "embed_tokens": embedder.usage.embed_tokens - before[0],
+                     "rerank_tokens": embedder.usage.rerank_tokens - before[1]}
+        return {"results": rows, "usage": usage}
 
     return server
 
