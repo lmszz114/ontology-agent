@@ -122,8 +122,10 @@ def main(argv=None) -> int:
     seed, plan = load_seed(args.org), load_plan()
     scenarios = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted(Path("eval/scenarios/dev").glob("*.yaml"))]
     qs = queries(scenarios, plan)
-    calls = len(qs) * len(SCHEMES) * (1 if args.no_rerank else 2)
-    print(f"사건 {len(qs)}개, 검색 {calls}번(리랭크 {0 if args.no_rerank else calls // 2}번)", file=sys.stderr)
+    # 벡터 검색은 k마다 다시 하고, 리랭크 검색은 한 번 하고 자른다 (evaluate와 같은 계산)
+    vector_calls = len(qs) * len(SCHEMES) * len(TOP_KS)
+    rerank_calls = 0 if args.no_rerank else len(qs) * len(SCHEMES)
+    print(f"사건 {len(qs)}개, 검색 {vector_calls + rerank_calls}번(리랭크 {rerank_calls}번)", file=sys.stderr)
     if args.dry_run:
         return 0
     if not args.out:
