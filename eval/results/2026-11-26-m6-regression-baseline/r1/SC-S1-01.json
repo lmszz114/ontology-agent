@@ -1,0 +1,225 @@
+{
+  "run": {
+    "scenario": "SC-S1-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T15:46:14.790151+09:00",
+    "finished_at": "2026-11-26T15:46:29.685507+09:00",
+    "seconds": 14.9,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "d9a9e699e1d3dc3e9875ceb935751c02",
+    "llm_calls": 4,
+    "usage": {
+      "input": 12204,
+      "output": 1447,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0019439000000000001,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "search_settings": null,
+    "voyage_usage": null,
+    "package": {
+      "id": "org-a",
+      "version": 1
+    },
+    "git_commit": "f800e0ee7ff20744f0841d5096aaaf5a8eb16ce8",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "7d356fcaf58412ff42d1a716bfc7abd1dcc4dde0a5d18635d280b16a46b18d13",
+    "scenario_hash": "a74bb3f6c325958bf46bba26ae12cf6472e7820637f323ea62d34a00c20b125c"
+  },
+  "outputs": [
+    {
+      "symptom": "S1",
+      "incident_id": "INC-c07d1c6cab11",
+      "report_ids": [
+        "RP-d53993a34c33"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C02",
+          "rank": 1,
+          "score": 3,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "confirm",
+              "detail": "해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "confirm",
+              "detail": "해당 결제 건에 대한 우편함 지급 기록이 없다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C01",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C03",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C02",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P6",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-2665e35f0780"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-a77e2eee7954"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-d86cb9ec6c1d"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-bea9131789bb"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-928bdfdeee13"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-eba08b5e4cf9"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-7c59ede76bc0"
+        },
+        {
+          "action_id": "A10",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-bf9de4cc7f02"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_payment_record",
+          "check_id": "E01",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S1 결제 후 아이템 미지급 (영향 범위 some_users, 심각도 SEV3)\n-> 원인 C02 우편함 지급 누락 (점수 3): confirm, 근거 ['E01', 'E02']. E01 결과: 해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있어 expect('결제 승인 기록이 있다')와 일치한다. E02 결과: 해당 결제 건에 대한 우편함 지급 기록이 없어 expect('우편함 지급 기록이 없다')와 일치한다. 두 필수 근거(required=true)가 모두 expect대로 나왔으므로 C02 우편함 지급 누락 가설은 확정된다. 다만 제보 시각(20:14)과 결제 승인 시각(19:44)이 약 30분 차이 나며, 영향 범위가 some_users이므로 같은 증상의 다른 유저 건 확인은 별도로 필요할 수 있다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": null,
+      "retrieval": null
+    }
+  ],
+  "unclassified": []
+}

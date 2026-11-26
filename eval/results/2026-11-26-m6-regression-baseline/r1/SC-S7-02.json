@@ -1,0 +1,326 @@
+{
+  "run": {
+    "scenario": "SC-S7-02",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T15:49:22.204895+09:00",
+    "finished_at": "2026-11-26T15:49:47.677185+09:00",
+    "seconds": 25.5,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "c225b7b2ee904aeef7283e518d52d730",
+    "llm_calls": 11,
+    "usage": {
+      "input": 30794,
+      "output": 3229,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.0046939,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "search_settings": null,
+    "voyage_usage": null,
+    "package": {
+      "id": "org-a",
+      "version": 1
+    },
+    "git_commit": "f800e0ee7ff20744f0841d5096aaaf5a8eb16ce8",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "7d356fcaf58412ff42d1a716bfc7abd1dcc4dde0a5d18635d280b16a46b18d13",
+    "scenario_hash": "caec21171dcca6df28f0aa76250814ad9f7a56550ff03b88a2364f4930a2f2cb"
+  },
+  "outputs": [
+    {
+      "symptom": "S7",
+      "incident_id": "INC-6b749b8fe855",
+      "report_ids": [
+        "RP-5542600bdc46",
+        "RP-e1524728def3",
+        "RP-2a12d30d380b"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        3
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C18",
+          "rank": 1,
+          "score": 3,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY14"
+              },
+              "result": "rule_out",
+              "detail": "거래소에 증상과 관련된 오류 로그가 없다. 거래소에 처리 지연 로그가 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E06",
+              "tool": "query_deploy_history",
+              "args": {
+                "system": "SY14"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 거래소 배포 이력이 없다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C19",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY11"
+              },
+              "result": "confirm",
+              "detail": "게임 DB의 쿼리 대기 시간이 20시부터 평소의 15배이고 연결 수가 한계에 가깝다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C14",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C19",
+      "primary_team": "TM10",
+      "collaborators": [
+        {
+          "team_id": "TM03",
+          "why": "같은 시스템의 다른 부분 담당"
+        }
+      ],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3237f7841b1e"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3a2b67ccb677"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-87cae7876878"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-34c13fd30a9e"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-2f8117e99549"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-08786f1b06ac"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-673f99c83592"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-6f3a24becf85"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-23931b449ce5"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-7226a8bba2a5"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-e1524728def3",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-7dfb2ad177c3"
+        },
+        {
+          "report_id": "RP-2a12d30d380b",
+          "channel": "CH03",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-ada1d6003b05"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C18",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY14"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C18",
+          "tool": "query_deploy_history",
+          "check_id": "E06",
+          "args": {
+            "system": "SY14"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C19",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY11"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S7 거래소 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C18 거래소 서버 오류 (점수 3): rule_out, 근거 ['E04', 'E06']. E04(query_server_log, SY14) 결과 거래소에 증상과 관련된 오류 로그가 없고 처리 지연 로그도 없어, 기대값 '거래소에 증상과 관련된 오류 로그가 있다'와 다르다. E06(query_deploy_history, SY14) 결과 증상 시작 전 거래소 배포 이력이 없어, 기대값 '증상 시작 전에 거래소 배포 이력이 있다'와 다르다. 필수 근거 두 개 중 하나라도 기대와 다르면 배제이므로 C18 거래소 서버 오류는 rule_out으로 판정한다.\n-> 원인 C19 게임 DB 부하 (점수 2): confirm, 근거 ['E09']. 판정 근거 E09(query_resource_metrics, system=SY11)를 새로 조회했다. 결과는 게임 DB의 쿼리 대기 시간이 20시부터 평소의 15배이고 연결 수가 한계에 가깝다는 것이었다. E09는 required=true이고 expect는 '게임 DB의 자원(부하) 지표가 한계에 가깝거나 넘었다'이므로 조건과 일치한다. 확정 조건이 이것 하나뿐이므로 C19(게임 DB 부하)는 확정된다. 이미 조회한 K1(거래소 오류 로그 없음)과 K2(증상 전 거래소 배포 없음)는 판정 근거가 아니라 참고 정보이므로 판단에 쓰지 않았다.\n-> 1차 담당 TM10",
+      "needs_human": [],
+      "retrieved_docs": null,
+      "retrieval": null
+    }
+  ],
+  "unclassified": [
+    {
+      "report_id": "RP-c535a693a3a1",
+      "report_index": 2,
+      "symptom": "none",
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "needs_human": [
+        "증상 8개에 해당하지 않아 사람에게 넘긴다"
+      ]
+    }
+  ]
+}

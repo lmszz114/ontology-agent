@@ -26,4 +26,11 @@ criteria:
   top1_drop: 0.1
 # 기준 값. 이 설정으로 처음 돌린 결과에서 옮긴다 (python -m eval.regression baseline 결과폴더).
 # 시드, 프롬프트, 모델을 일부러 바꿔 결과가 바뀌면 사람이 확인하고 다시 쓴다. 다시 쓴 이력은 Git에 남는다
-baseline: null
+baseline:
+  top1: 1.0
+  git_commit: f800e0ee7ff20744f0841d5096aaaf5a8eb16ce8
+  started_at: '2026-11-26T15:46:14.790151+09:00'
+  models:
+  - claude-haiku-5-5
+  prompt_version: diagnosis-v7
+  seed_hash: 7d356fcaf58412ff42d1a716bfc7abd1dcc4dde0a5d18635d280b16a46b18d13
