@@ -183,6 +183,8 @@ def test_cache_drops_a_cut_last_line_but_stops_on_a_broken_middle_line(tmp_path)
     path.write_text(good + "\n" + '{"key": "b", "embe', encoding="utf-8")
     v = V.Voyage(cache_dir=tmp_path)
     assert v._cache == {"a": [1.0]} and path.read_text(encoding="utf-8") == good + "\n"
+    path.write_text(good, encoding="utf-8")  # 온전한 기록인데 줄바꿈 전에 끊긴 경우
+    assert V.Voyage(cache_dir=tmp_path)._cache == {"a": [1.0]} and path.read_text(encoding="utf-8") == good + "\n"
     path.write_text('{"key": "b", "embe\n' + good + "\n", encoding="utf-8")
     with pytest.raises(V.VoyageError, match="1번째 줄"):
         V.Voyage(cache_dir=tmp_path)

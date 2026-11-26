@@ -68,6 +68,10 @@ class Voyage:
                     return
                 self._cache[row["key"]] = row["embedding"]
             offset += len(line) + 1
+        if data and not data.endswith(b"\n"):
+            # 마지막 기록은 온전한데 줄바꿈 전에 끊겼다. 다음 기록이 같은 줄에 붙지 않게 줄바꿈을 더한다 (PR #35 리뷰)
+            with self._cache_path.open("ab") as f:
+                f.write(b"\n")
 
     def _post(self, path: str, body: dict) -> dict:
         errors = 0
