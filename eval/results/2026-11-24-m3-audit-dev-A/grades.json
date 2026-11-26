@@ -12,6 +12,8 @@
     "git_commit": "a8ac98cbab5d5b2f7baf403f20379d364e91bc38",
     "git_dirty": false,
     "seed_hash": null,
+    "cext_from": null,
+    "knowledge_graphs": null,
     "scenarios": [
       "SC-S1-01",
       "SC-S2-01",
@@ -330,6 +332,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -340,6 +352,16 @@
       "type": "T1",
       "runs": 3,
       "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
         "symptom": 3,
         "top1": 3,
         "top3": 3,
@@ -368,6 +390,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -378,6 +410,16 @@
       "type": "T1",
       "runs": 3,
       "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
         "symptom": 3,
         "top1": 3,
         "top3": 3,
@@ -406,6 +448,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -416,6 +468,16 @@
       "type": "T1",
       "runs": 3,
       "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
         "symptom": 3,
         "top1": 3,
         "top3": 3,
@@ -444,6 +506,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -463,6 +535,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -473,6 +555,16 @@
       "type": "T1",
       "runs": 3,
       "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
         "symptom": 3,
         "top1": 3,
         "top3": 3,
@@ -501,6 +593,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -511,6 +613,16 @@
       "type": "T1",
       "runs": 3,
       "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
         "symptom": 3,
         "top1": 3,
         "top3": 3,
@@ -539,6 +651,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -549,6 +671,16 @@
       "type": "T1",
       "runs": 3,
       "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
         "symptom": 3,
         "top1": 3,
         "top3": 3,
@@ -577,6 +709,16 @@
         "severity_within1": 3,
         "procedures": 3
       },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
       "first_failures": [
         null,
         null,
@@ -600,31 +742,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 2,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C02",
-            "C01",
-            "C03"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
           "approval_missing": [],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -646,31 +795,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C04",
-            "C05",
-            "C06"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C04",
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05",
+              "C06"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -692,31 +848,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C05",
-            "C04",
-            "C06"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C05",
+            "C04",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C04",
+              "C06"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -738,32 +901,40 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
           "ranking": [
             "C07",
             "C08",
             "C09",
             "C10"
           ],
-          "top1": true,
-          "top3": true,
-          "pre_rank_top1": true,
-          "team": true,
-          "procedures": true,
-          "approval_missing": [],
+          "rankings": [
+            [
+              "C07",
+              "C08",
+              "C09",
+              "C10"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -785,32 +956,40 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 3,
-            "covered": 3
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 1,
           "severity": true,
           "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
           "ranking": [
             "C08",
             "C07",
             "C09",
             "C10"
           ],
-          "top1": true,
-          "top3": true,
-          "pre_rank_top1": true,
-          "team": true,
-          "procedures": true,
-          "approval_missing": [],
+          "rankings": [
+            [
+              "C08",
+              "C07",
+              "C09",
+              "C10"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -832,30 +1011,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C11",
-            "C12"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -877,29 +1062,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 1,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 2,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C12"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 1,
+          "approval_need": 2,
           "approval_missing": [],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -921,29 +1111,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 2,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -965,31 +1160,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C16",
-            "C15",
-            "C17"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1011,31 +1213,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C15",
-            "C16",
-            "C17"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1057,31 +1266,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C18",
-            "C19",
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1105,30 +1321,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 2,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C19",
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1150,30 +1372,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 1,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C20",
-            "C21"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
           "approval_missing": [],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1195,29 +1423,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 3,
-            "covered": 3
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C21"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1273,31 +1506,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 2,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C02",
-            "C01",
-            "C03"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
           "approval_missing": [],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1319,31 +1559,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C04",
-            "C05",
-            "C06"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C04",
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05",
+              "C06"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1365,31 +1612,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C05",
-            "C04",
-            "C06"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C05",
+            "C04",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C04",
+              "C06"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1411,32 +1665,40 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
           "ranking": [
             "C07",
             "C08",
             "C09",
             "C10"
           ],
-          "top1": true,
-          "top3": true,
-          "pre_rank_top1": true,
-          "team": true,
-          "procedures": true,
-          "approval_missing": [],
+          "rankings": [
+            [
+              "C07",
+              "C08",
+              "C09",
+              "C10"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1458,32 +1720,40 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 3,
-            "covered": 3
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 1,
           "severity": true,
           "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
           "ranking": [
             "C08",
             "C07",
             "C09",
             "C10"
           ],
-          "top1": true,
-          "top3": true,
-          "pre_rank_top1": true,
-          "team": true,
-          "procedures": true,
-          "approval_missing": [],
+          "rankings": [
+            [
+              "C08",
+              "C07",
+              "C09",
+              "C10"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1505,30 +1775,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C11",
-            "C12"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1550,29 +1826,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 1,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 2,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C12"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 1,
+          "approval_need": 2,
           "approval_missing": [],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1594,29 +1875,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 2,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1638,31 +1924,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C16",
-            "C15",
-            "C17"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1684,31 +1977,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C15",
-            "C16",
-            "C17"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1730,31 +2030,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C18",
-            "C19",
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1778,30 +2085,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 2,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C19",
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1823,30 +2136,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 1,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C20",
-            "C21"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
           "approval_missing": [],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1868,29 +2187,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 3,
-            "covered": 3
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C21"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1946,31 +2270,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 2,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C02",
-            "C01",
-            "C03"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
           "approval_missing": [],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -1992,31 +2323,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C04",
-            "C05",
-            "C06"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C04",
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05",
+              "C06"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2038,31 +2376,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C05",
-            "C04",
-            "C06"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C05",
+            "C04",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C04",
+              "C06"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2084,32 +2429,40 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [],
           "ranking": [
             "C07",
             "C08",
             "C09",
             "C10"
           ],
-          "top1": true,
-          "top3": true,
-          "pre_rank_top1": true,
-          "team": true,
-          "procedures": true,
-          "approval_missing": [],
+          "rankings": [
+            [
+              "C07",
+              "C08",
+              "C09",
+              "C10"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2131,32 +2484,40 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 3,
-            "covered": 3
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 1,
           "severity": true,
           "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [],
           "ranking": [
             "C08",
             "C07",
             "C09",
             "C10"
           ],
-          "top1": true,
-          "top3": true,
-          "pre_rank_top1": true,
-          "team": true,
-          "procedures": true,
-          "approval_missing": [],
+          "rankings": [
+            [
+              "C08",
+              "C07",
+              "C09",
+              "C10"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2178,30 +2539,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C11",
-            "C12"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2223,29 +2590,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 1,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 2,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C12"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 1,
+          "approval_need": 2,
           "approval_missing": [],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2267,29 +2639,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 2,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2311,31 +2688,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C16",
-            "C15",
-            "C17"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2357,31 +2741,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 4,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C15",
-            "C16",
-            "C17"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
           "approval_missing": [],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2403,31 +2794,38 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C18",
-            "C19",
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2451,30 +2849,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 1,
-            "covered": 1
-          },
           "unnecessary": 0,
-          "exploratory": 2,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C19",
-            "C14"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 2,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C14"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2496,30 +2900,36 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 2,
-            "covered": 2
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 1,
           "unauthorized": [],
-          "approval_need": 1,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C20",
-            "C21"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": true,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
           "approval_missing": [],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
@@ -2541,29 +2951,34 @@
           },
           "grouping": true,
           "symptom": true,
-          "required": {
-            "total": 3,
-            "covered": 3
-          },
           "unnecessary": 0,
-          "exploratory": 0,
           "gate_blocked": 0,
           "refused": [],
           "verdict_mismatch": [],
           "verdict_judged": 2,
           "unauthorized": [],
-          "approval_need": 3,
           "severity": true,
           "severity_within1": true,
-          "ranking": [
-            "C21"
-          ],
           "top1": true,
           "top3": true,
           "pre_rank_top1": false,
           "team": true,
           "procedures": true,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 3,
           "approval_missing": [],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
           "approval": true,
           "unauthorized_ok": true,
           "first_failure": null,
