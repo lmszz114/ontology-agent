@@ -2,6 +2,7 @@
 
 실행: python -m eval.grader.retrieval --out eval/results/<폴더>      # dev 시나리오, 설정 12가지
       python -m eval.grader.retrieval --dry-run                     # 사건 수와 검색 횟수만 본다
+      python -m eval.grader.retrieval --out ... --no-rerank         # 리랭크 없는 6가지만 (Voyage 속도 제한 때문에 나눠 돌릴 때)
 
 진단 없이 검색 단계만 채점한다 (G4). LLM을 부르지 않는다. Voyage 임베딩과 리랭크만 부른다.
 - 검색어: 정답 사건의 제보 원문을 이어 붙인 것. 구성 B 진단도 사건의 제보 원문으로 검색한다 (M5 사용자 결정).
@@ -62,11 +63,12 @@ def random_recall(chunk_docs: list[str], relevant: list[str], k: int, rng: rando
     return total / RANDOM_DRAWS
 
 
-def evaluate(driver, embedder, qs: list[dict], chunk_docs: dict[str, list[str]]) -> dict:
+def evaluate(driver, embedder, qs: list[dict], chunk_docs: dict[str, list[str]],
+             reranks: tuple[bool, ...] = (False, True)) -> dict:
     rows, configs = [], {}
     for q in qs:
         for scheme in SCHEMES:
-            for rerank in (False, True):
+            for rerank in reranks:
                 found = search(driver, embedder, q["query"], scheme=scheme, k=MAX_K, rerank=rerank)
                 for k in TOP_KS:
                     s = score(docs_of(found[:k]), q["relevant"], q["stale"])
@@ -110,14 +112,15 @@ def main(argv=None) -> int:
     parser.add_argument("--out")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--org", default="org-a")
+    parser.add_argument("--no-rerank", action="store_true", help="리랭크 없는 설정만 채점한다")
     args = parser.parse_args(argv)
     from ontology.seed import load_seed
 
     seed, plan = load_seed(args.org), load_plan()
     scenarios = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted(Path("eval/scenarios/dev").glob("*.yaml"))]
     qs = queries(scenarios, plan)
-    calls = len(qs) * len(SCHEMES) * 2
-    print(f"사건 {len(qs)}개, 검색 {calls}번(리랭크 {calls // 2}번)", file=sys.stderr)
+    calls = len(qs) * len(SCHEMES) * (1 if args.no_rerank else 2)
+    print(f"사건 {len(qs)}개, 검색 {calls}번(리랭크 {0 if args.no_rerank else calls // 2}번)", file=sys.stderr)
     if args.dry_run:
         return 0
     if not args.out:
@@ -133,12 +136,12 @@ def main(argv=None) -> int:
     voyage = Voyage()
     with get_driver() as driver:
         meta = check_index(driver, chunks)
-        result = evaluate(driver, voyage, qs, chunk_docs)
+        result = evaluate(driver, voyage, qs, chunk_docs, (False,) if args.no_rerank else (False, True))
     now = datetime.now(timezone(timedelta(hours=9)))
     result = {"run": {"date": now.date().isoformat(), "started_at": now.isoformat(), "split": "dev",
                       "embed_model": EMBED_MODEL, "rerank_model": RERANK_MODEL, "corpus_hash": meta["corpus_hash"],
                       "embed_tokens": voyage.usage.embed_tokens, "rerank_tokens": voyage.usage.rerank_tokens,
-                      "rate_waits": voyage.rate_waits}} | result
+                      "rate_waits": voyage.rate_waits, "rerank": not args.no_rerank}} | result
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     write_text_atomic(out / "RETRIEVAL.yaml", yaml.safe_dump(result, allow_unicode=True, sort_keys=False))
