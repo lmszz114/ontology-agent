@@ -1,6 +1,6 @@
 run:
   date: '2026-11-26'
-  started_at: '2026-11-26T10:24:25.601799+09:00'
+  started_at: '2026-11-26T13:15:43.461483+09:00'
   split: dev
   embed_model: voyage-4
   rerank_model: rerank-3
@@ -12,12 +12,12 @@ run:
 incidents: 14
 summary:
   paragraph/vector/k3:
-    recall: 0.3369
-    mrr: 0.6786
+    recall: 0.3548
+    mrr: 0.7024
     stale_rate: 0.0
   paragraph/vector/k5:
     recall: 0.3845
-    mrr: 0.7202
+    mrr: 0.7262
     stale_rate: 0.0
   paragraph/vector/k10:
     recall: 0.5262
@@ -127,7 +127,6 @@ rows:
   - CH-01
   - PM-22
   - PM-01
-  - MT-03
   recall: 0.5
   rr: 0.3333333333333333
   stale: false
@@ -445,22 +444,22 @@ rows:
   incident: 0
   config: paragraph/vector/k3
   docs:
-  - CH-11
   - PM-23
   - PM-03
-  recall: 0.0
-  rr: 0.0
+  - PM-04
+  recall: 0.25
+  rr: 0.3333333333333333
   stale: false
 - scenario: SC-S3-01
   incident: 0
   config: paragraph/vector/k5
   docs:
-  - CH-11
   - PM-23
   - PM-03
   - PM-04
+  - K
   recall: 0.25
-  rr: 0.25
+  rr: 0.3333333333333333
   stale: false
 - scenario: SC-S3-01
   incident: 0
@@ -1506,7 +1505,6 @@ rows:
   - PM-08
   - K
   - PM-09
-  - CH-01
   recall: 0.25
   rr: 0.3333333333333333
   stale: false
