@@ -52,9 +52,9 @@ class Voyage:
 
     def _load_cache(self) -> None:
         """캐시를 읽는다. 쓰다가 끊겨 마지막 줄만 깨졌으면 그 줄을 잘라 내고, 중간 줄이 깨졌으면 멈춘다 (PR #35 리뷰)."""
-        text = self._cache_path.read_text(encoding="utf-8")
-        lines = text.split("\n")
-        offset = 0
+        data = self._cache_path.read_bytes()
+        lines = data.split(b"\n")
+        offset = 0  # 지금 줄이 시작하는 바이트 위치
         for i, line in enumerate(lines):
             if line:
                 try:
@@ -62,7 +62,9 @@ class Voyage:
                 except json.JSONDecodeError as exc:
                     if any(rest for rest in lines[i + 1:]):
                         raise VoyageError(f"임베딩 캐시 {self._cache_path}의 {i + 1}번째 줄이 깨졌다") from exc
-                    self._cache_path.write_text(text[:offset], encoding="utf-8")
+                    # 정상 기록을 다시 쓰지 않고 깨진 줄의 시작 위치에서 파일을 자른다 (PR #35 리뷰)
+                    with self._cache_path.open("r+b") as f:
+                        f.truncate(offset)
                     return
                 self._cache[row["key"]] = row["embedding"]
             offset += len(line) + 1
