@@ -145,7 +145,7 @@ def main(argv=None) -> int:
     except RunnerError as exc:
         print(f"채점할 수 없다: {exc}", file=sys.stderr)
         return 1
-    if (out / "RETRIEVAL.yaml").exists():
+    if any((out / name).exists() for name in ("RETRIEVAL.yaml", "RETRIEVAL.md")):
         print(f"채점할 수 없다: {out}에 이미 결과가 있다. 새 폴더를 준다", file=sys.stderr)
         return 1
     if git.dirty and not args.allow_dirty:
