@@ -1,0 +1,1211 @@
+{
+  "run": {
+    "scenario": "SC-S8-02",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T11:36:25.989847+09:00",
+    "finished_at": "2026-11-26T11:38:29.160869+09:00",
+    "seconds": 123.2,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "e45eee24a3f0f34463cb71abf106e0f6",
+    "llm_calls": 54,
+    "usage": {
+      "input": 122396,
+      "output": 17774,
+      "cache_read": 0,
+      "cache_write_5m": 113217,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.035278725,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v2",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "93908607f33aa266e39d15eb1a724ec7ec108e3f",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "7d7556cad5a5d162c8d7910c9fdbbe18739e65b0618a00a75b10f7760602991c"
+  },
+  "outputs": [
+    {
+      "symptom": "S8",
+      "incident_id": "INC-b264f55ff055",
+      "report_ids": [
+        "RP-3623e1eac140",
+        "RP-e9b7b85e1f87",
+        "RP-b6655c1f056b",
+        "RP-bcb174954f89",
+        "RP-2733d46cf0f3",
+        "RP-5ce5ae7bf9d3",
+        "RP-43dd2b43d3c8",
+        "RP-fe9ac21ceb55",
+        "RP-3301464f3b24",
+        "RP-1d46a8ab705d",
+        "RP-00567266430c",
+        "RP-3f8338f1355f",
+        "RP-e56dda957299",
+        "RP-1b11bc8b9d1c",
+        "RP-5c36fe804af3",
+        "RP-71d3b83bec7d",
+        "RP-42559ae47339",
+        "RP-b67bcac77c11",
+        "RP-ef55e8b88bdf",
+        "RP-1824fe5ed7b1"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV2",
+      "escalated": true,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C20",
+          "rank": 1,
+          "score": 3,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "rule_out",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": false
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "rule_out",
+              "detail": "21시부터 3월드 공성전이 진행 중이다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C21",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "confirm",
+              "detail": "3월드 월드 서버에 공성전 시작 직후부터 처리 지연 로그가 계속 남는다",
+              "reused": false
+            },
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "confirm",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": true
+            },
+            {
+              "check_id": "E14",
+              "tool": "query_content_schedule",
+              "args": {},
+              "result": "confirm",
+              "detail": "21시부터 3월드 공성전이 진행 중이다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": "C21",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A01",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-05360b2538d9"
+        },
+        {
+          "action_id": "A02",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-5d7bf43f32e5"
+        },
+        {
+          "action_id": "A03",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-899fd06c2609"
+        },
+        {
+          "action_id": "A04",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-0b2b20a38c63"
+        },
+        {
+          "action_id": "A05",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-3dbd4b095d4d"
+        },
+        {
+          "action_id": "A06",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-6f3c566c2758"
+        },
+        {
+          "action_id": "A07",
+          "requested_mode": "auto",
+          "status": "pending_approval",
+          "gate_blocked": true,
+          "run_id": "AR-817e68116f61"
+        },
+        {
+          "action_id": "A08",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-13d5876651fe"
+        },
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-fdbeb1749c03"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-125e30137b9d"
+        }
+      ],
+      "merge_replies": [
+        {
+          "report_id": "RP-e9b7b85e1f87",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-89d602a2d8db"
+        },
+        {
+          "report_id": "RP-b6655c1f056b",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-90826d39b1ad"
+        },
+        {
+          "report_id": "RP-bcb174954f89",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-53faa4cde342"
+        },
+        {
+          "report_id": "RP-2733d46cf0f3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-4676cb584f76"
+        },
+        {
+          "report_id": "RP-5ce5ae7bf9d3",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f591deeba6f9"
+        },
+        {
+          "report_id": "RP-43dd2b43d3c8",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-1c9b6956f18c"
+        },
+        {
+          "report_id": "RP-fe9ac21ceb55",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-40ee30c0eeb7"
+        },
+        {
+          "report_id": "RP-3301464f3b24",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-322c5fbabb76"
+        },
+        {
+          "report_id": "RP-1d46a8ab705d",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-08a3e6e8c4c6"
+        },
+        {
+          "report_id": "RP-00567266430c",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f30ff9775bc6"
+        },
+        {
+          "report_id": "RP-3f8338f1355f",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-6e3e8b2e1c64"
+        },
+        {
+          "report_id": "RP-e56dda957299",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-41d8b129b77a"
+        },
+        {
+          "report_id": "RP-1b11bc8b9d1c",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-435f67671ecc"
+        },
+        {
+          "report_id": "RP-5c36fe804af3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a6f08f884214"
+        },
+        {
+          "report_id": "RP-71d3b83bec7d",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-0099a54651c6"
+        },
+        {
+          "report_id": "RP-42559ae47339",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-519831a80932"
+        },
+        {
+          "report_id": "RP-b67bcac77c11",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-24a2872aac33"
+        },
+        {
+          "report_id": "RP-ef55e8b88bdf",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b82e312a5031"
+        },
+        {
+          "report_id": "RP-1824fe5ed7b1",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-1f239e52c058"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C20",
+          "tool": "query_content_schedule",
+          "check_id": "E14",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C21",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S8 대규모 콘텐츠 중 서버 과부하 (영향 범위 one_world, 심각도 SEV2)\n-> 원인 C20 서버 자원 부족 (점수 3): rule_out, 근거 ['E09', 'E14']. E09(SY05 자원, 네트워크 지표 조회) 결과는 '서버 인프라의 자원, 네트워크 지표가 정상 범위다'로, 기대값인 '한계에 가깝거나 넘었다'와 다르다. 필수 근거 하나가 expect와 다르므로 C20 서버 자원 부족은 배제된다. E14(콘텐츠 일정 대조) 결과는 '21시부터 3월드 공성전이 진행 중이다'로 기대값과 일치하여 증상 시점과 대규모 콘텐츠 시간이 겹친다는 점은 확인되었지만, 자원 지표가 정상이므로 서버 자원 부족 가설은 성립하지 않는다. 제보 내용의 스킬 지연, 순간이동, 튕김 현상은 공성 시간에만 집중되어 있으나 이 판정은 자원 부족 가설에 한정된다.\n-> 원인 C21 콘텐츠 처리 로직 비효율 (점수 2): confirm, 근거 ['E04', 'E09', 'E14']. E04(query_server_log, SY10)를 새로 조회한 결과 3월드 월드 서버에 공성전 시작 직후부터 처리 지연 로그가 계속 남아 있었고, ' 특정 콘텐츠 처리 지연 로그가 있다'는 expect와 일치했다. E09는 이미 조회된 K1(SY05)에서 서버 인프라 자원과 네트워크 지표가 정상 범위로 나와 '자원에 여유가 있다'는 expect와 일치했다. E14는 이미 조회된 K2에서 21시부터 3월드 공성전이 진행 중으로 나와 '대규모 콘텐츠 진행 시간과 겹친다'는 expect와 일치했다. 필수 근거 3개가 모두 expect대로 나왔으므로 C21 확정으로 판정한다. 다만 처리 지연 로그가 공성전 시작 시점과 맞물린다는 점은 확인되었으나, 로직 비효율의 구체적 코드 원인까지는 이 로그만으로 특정되지 않는다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": [
+        "PM-10",
+        "PM-21",
+        "K",
+        "CH-11",
+        "PM-18",
+        "PM-13"
+      ],
+      "retrieval": {
+        "incident_id": "INC-b264f55ff055",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-10",
+          "PM-21",
+          "K",
+          "CH-11",
+          "PM-18",
+          "PM-13"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-10:001",
+            "doc_id": "PM-10",
+            "score": 0.8637300133705139
+          },
+          {
+            "chunk_id": "fixed:PM-10:002",
+            "doc_id": "PM-10",
+            "score": 0.8249697089195251
+          },
+          {
+            "chunk_id": "fixed:PM-21:002",
+            "doc_id": "PM-21",
+            "score": 0.8045849204063416
+          },
+          {
+            "chunk_id": "fixed:PM-10:003",
+            "doc_id": "PM-10",
+            "score": 0.7411460280418396
+          },
+          {
+            "chunk_id": "fixed:PM-21:003",
+            "doc_id": "PM-21",
+            "score": 0.7401171922683716
+          },
+          {
+            "chunk_id": "fixed:K:021",
+            "doc_id": "K",
+            "score": 0.7128932476043701
+          },
+          {
+            "chunk_id": "fixed:PM-21:001",
+            "doc_id": "PM-21",
+            "score": 0.6877723336219788
+          },
+          {
+            "chunk_id": "fixed:CH-11:001",
+            "doc_id": "CH-11",
+            "score": 0.6822119355201721
+          },
+          {
+            "chunk_id": "fixed:PM-18:003",
+            "doc_id": "PM-18",
+            "score": 0.6291754841804504
+          },
+          {
+            "chunk_id": "fixed:PM-13:001",
+            "doc_id": "PM-13",
+            "score": 0.5376755595207214
+          }
+        ],
+        "extra": [
+          {
+            "question": [
+              "checks",
+              "C20"
+            ],
+            "query": "C20 서버 자원 부족 원인을 확인하는 판정 근거와 확정 조건",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.8280222415924072
+              },
+              {
+                "chunk_id": "fixed:K:035",
+                "doc_id": "K",
+                "score": 0.8163299560546875
+              },
+              {
+                "chunk_id": "fixed:PM-10:001",
+                "doc_id": "PM-10",
+                "score": 0.7848139405250549
+              },
+              {
+                "chunk_id": "fixed:PM-21:002",
+                "doc_id": "PM-21",
+                "score": 0.6520869135856628
+              },
+              {
+                "chunk_id": "fixed:PM-10:003",
+                "doc_id": "PM-10",
+                "score": 0.6503493189811707
+              },
+              {
+                "chunk_id": "fixed:CH-11:001",
+                "doc_id": "CH-11",
+                "score": 0.6450971364974976
+              },
+              {
+                "chunk_id": "fixed:K:036",
+                "doc_id": "K",
+                "score": 0.6067637205123901
+              },
+              {
+                "chunk_id": "fixed:PM-21:001",
+                "doc_id": "PM-21",
+                "score": 0.5865453481674194
+              },
+              {
+                "chunk_id": "fixed:PM-13:002",
+                "doc_id": "PM-13",
+                "score": 0.5857635140419006
+              },
+              {
+                "chunk_id": "fixed:K:022",
+                "doc_id": "K",
+                "score": 0.5689038634300232
+              }
+            ]
+          },
+          {
+            "question": [
+              "checks",
+              "C21"
+            ],
+            "query": "C21 콘텐츠 처리 로직 비효율 원인을 확인하는 판정 근거와 확정 조건",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:036",
+                "doc_id": "K",
+                "score": 0.8356859683990479
+              },
+              {
+                "chunk_id": "fixed:PM-21:002",
+                "doc_id": "PM-21",
+                "score": 0.8258021473884583
+              },
+              {
+                "chunk_id": "fixed:PM-21:001",
+                "doc_id": "PM-21",
+                "score": 0.805214524269104
+              },
+              {
+                "chunk_id": "fixed:PM-21:003",
+                "doc_id": "PM-21",
+                "score": 0.7798573970794678
+              },
+              {
+                "chunk_id": "fixed:CH-11:001",
+                "doc_id": "CH-11",
+                "score": 0.6791478991508484
+              },
+              {
+                "chunk_id": "fixed:K:022",
+                "doc_id": "K",
+                "score": 0.557356059551239
+              },
+              {
+                "chunk_id": "fixed:PM-04:002",
+                "doc_id": "PM-04",
+                "score": 0.5363487005233765
+              },
+              {
+                "chunk_id": "fixed:K:037",
+                "doc_id": "K",
+                "score": 0.5076260566711426
+              },
+              {
+                "chunk_id": "fixed:K:021",
+                "doc_id": "K",
+                "score": 0.5055293440818787
+              },
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.495159387588501
+              }
+            ]
+          },
+          {
+            "question": [
+              "owner",
+              "C21"
+            ],
+            "query": "C21 콘텐츠 처리 로직 비효율 원인의 위치 시스템과 담당 팀",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-21:003",
+                "doc_id": "PM-21",
+                "score": 0.798132598400116
+              },
+              {
+                "chunk_id": "fixed:K:036",
+                "doc_id": "K",
+                "score": 0.7804364562034607
+              },
+              {
+                "chunk_id": "fixed:PM-21:002",
+                "doc_id": "PM-21",
+                "score": 0.7561886310577393
+              },
+              {
+                "chunk_id": "fixed:PM-21:001",
+                "doc_id": "PM-21",
+                "score": 0.6458993554115295
+              },
+              {
+                "chunk_id": "fixed:CH-11:001",
+                "doc_id": "CH-11",
+                "score": 0.6193886995315552
+              },
+              {
+                "chunk_id": "fixed:K:022",
+                "doc_id": "K",
+                "score": 0.6079680323600769
+              },
+              {
+                "chunk_id": "fixed:PM-15:003",
+                "doc_id": "PM-15",
+                "score": 0.5947123765945435
+              },
+              {
+                "chunk_id": "fixed:K:021",
+                "doc_id": "K",
+                "score": 0.5684357285499573
+              },
+              {
+                "chunk_id": "fixed:K:001",
+                "doc_id": "K",
+                "score": 0.5432004928588867
+              },
+              {
+                "chunk_id": "fixed:MT-01:002",
+                "doc_id": "MT-01",
+                "score": 0.5170055031776428
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P1"
+            ],
+            "query": "P1 장애 접수와 분류 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.9023446440696716
+              },
+              {
+                "chunk_id": "fixed:K:041",
+                "doc_id": "K",
+                "score": 0.8031398057937622
+              },
+              {
+                "chunk_id": "fixed:K:010",
+                "doc_id": "K",
+                "score": 0.6095967888832092
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.5144583582878113
+              },
+              {
+                "chunk_id": "fixed:PM-13:002",
+                "doc_id": "PM-13",
+                "score": 0.5139921307563782
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.48779383301734924
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.4728626608848572
+              },
+              {
+                "chunk_id": "fixed:K:025",
+                "doc_id": "K",
+                "score": 0.4345036745071411
+              },
+              {
+                "chunk_id": "fixed:PM-13:001",
+                "doc_id": "PM-13",
+                "score": 0.4282424747943878
+              },
+              {
+                "chunk_id": "fixed:K:024",
+                "doc_id": "K",
+                "score": 0.4280882179737091
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P2"
+            ],
+            "query": "P2 에스컬레이션 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:043",
+                "doc_id": "K",
+                "score": 0.8692943453788757
+              },
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.8493849635124207
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.5949239134788513
+              },
+              {
+                "chunk_id": "fixed:K:044",
+                "doc_id": "K",
+                "score": 0.5224670767784119
+              },
+              {
+                "chunk_id": "fixed:RB-04:002",
+                "doc_id": "RB-04",
+                "score": 0.5205084085464478
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.5100129842758179
+              },
+              {
+                "chunk_id": "fixed:RB-03:002",
+                "doc_id": "RB-03",
+                "score": 0.5081010460853577
+              },
+              {
+                "chunk_id": "fixed:RB-05:002",
+                "doc_id": "RB-05",
+                "score": 0.5001367926597595
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.4859117865562439
+              },
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.48531031608581543
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P3"
+            ],
+            "query": "P3 긴급 공지 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:043",
+                "doc_id": "K",
+                "score": 0.8781497478485107
+              },
+              {
+                "chunk_id": "fixed:RB-04:002",
+                "doc_id": "RB-04",
+                "score": 0.7734009027481079
+              },
+              {
+                "chunk_id": "fixed:RB-04:001",
+                "doc_id": "RB-04",
+                "score": 0.7612572908401489
+              },
+              {
+                "chunk_id": "fixed:RB-05:002",
+                "doc_id": "RB-05",
+                "score": 0.7116418480873108
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.6882346868515015
+              },
+              {
+                "chunk_id": "fixed:PM-10:003",
+                "doc_id": "PM-10",
+                "score": 0.6811702847480774
+              },
+              {
+                "chunk_id": "fixed:PM-08:003",
+                "doc_id": "PM-08",
+                "score": 0.6732977032661438
+              },
+              {
+                "chunk_id": "fixed:PM-25:003",
+                "doc_id": "PM-25",
+                "score": 0.6685264706611633
+              },
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.6681697368621826
+              },
+              {
+                "chunk_id": "fixed:PM-22:003",
+                "doc_id": "PM-22",
+                "score": 0.664243757724762
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P4"
+            ],
+            "query": "P4 긴급 점검 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:043",
+                "doc_id": "K",
+                "score": 0.8817440867424011
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.8322062492370605
+              },
+              {
+                "chunk_id": "fixed:RB-05:002",
+                "doc_id": "RB-05",
+                "score": 0.8178943991661072
+              },
+              {
+                "chunk_id": "fixed:PM-08:003",
+                "doc_id": "PM-08",
+                "score": 0.6709524393081665
+              },
+              {
+                "chunk_id": "fixed:PM-10:003",
+                "doc_id": "PM-10",
+                "score": 0.6665967106819153
+              },
+              {
+                "chunk_id": "fixed:PM-13:002",
+                "doc_id": "PM-13",
+                "score": 0.6545350551605225
+              },
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.652956485748291
+              },
+              {
+                "chunk_id": "fixed:PM-03:003",
+                "doc_id": "PM-03",
+                "score": 0.6507236957550049
+              },
+              {
+                "chunk_id": "fixed:PM-25:003",
+                "doc_id": "PM-25",
+                "score": 0.649416446685791
+              },
+              {
+                "chunk_id": "fixed:PM-09:003",
+                "doc_id": "PM-09",
+                "score": 0.6491991877555847
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedures",
+              "C21",
+              "SEV2"
+            ],
+            "query": "C21 콘텐츠 처리 로직 비효율 원인 확정 뒤 여는 대응 절차와 조치, SEV2 등급 절차",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-21:003",
+                "doc_id": "PM-21",
+                "score": 0.7845448851585388
+              },
+              {
+                "chunk_id": "fixed:PM-21:001",
+                "doc_id": "PM-21",
+                "score": 0.6804401278495789
+              },
+              {
+                "chunk_id": "fixed:PM-21:002",
+                "doc_id": "PM-21",
+                "score": 0.6796694397926331
+              },
+              {
+                "chunk_id": "fixed:K:036",
+                "doc_id": "K",
+                "score": 0.6687049865722656
+              },
+              {
+                "chunk_id": "fixed:PM-15:003",
+                "doc_id": "PM-15",
+                "score": 0.5613084435462952
+              },
+              {
+                "chunk_id": "fixed:K:050",
+                "doc_id": "K",
+                "score": 0.5109571814537048
+              },
+              {
+                "chunk_id": "fixed:CH-11:001",
+                "doc_id": "CH-11",
+                "score": 0.5096064805984497
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.5014240145683289
+              },
+              {
+                "chunk_id": "fixed:PM-10:003",
+                "doc_id": "PM-10",
+                "score": 0.49232780933380127
+              },
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.49141964316368103
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P10"
+            ],
+            "query": "P10 원인 수정과 반영 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.8909040093421936
+              },
+              {
+                "chunk_id": "fixed:RB-03:001",
+                "doc_id": "RB-03",
+                "score": 0.8719075918197632
+              },
+              {
+                "chunk_id": "fixed:RB-03:002",
+                "doc_id": "RB-03",
+                "score": 0.8444378972053528
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.7603705525398254
+              },
+              {
+                "chunk_id": "fixed:PM-16:003",
+                "doc_id": "PM-16",
+                "score": 0.7003856897354126
+              },
+              {
+                "chunk_id": "fixed:PM-07:003",
+                "doc_id": "PM-07",
+                "score": 0.6917991042137146
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.6912475824356079
+              },
+              {
+                "chunk_id": "fixed:PM-20:003",
+                "doc_id": "PM-20",
+                "score": 0.6888760328292847
+              },
+              {
+                "chunk_id": "fixed:PM-21:003",
+                "doc_id": "PM-21",
+                "score": 0.682323157787323
+              },
+              {
+                "chunk_id": "fixed:PM-04:003",
+                "doc_id": "PM-04",
+                "score": 0.6774271130561829
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}
