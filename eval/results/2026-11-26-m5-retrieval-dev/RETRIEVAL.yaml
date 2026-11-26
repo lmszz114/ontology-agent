@@ -1,0 +1,1864 @@
+run:
+  date: '2026-11-26'
+  started_at: '2026-11-26T10:24:25.601799+09:00'
+  split: dev
+  embed_model: voyage-4
+  rerank_model: rerank-3
+  corpus_hash: 9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7
+  embed_tokens: 0
+  rerank_tokens: 380092
+  rate_waits: 0
+  rerank: true
+incidents: 14
+summary:
+  paragraph/vector/k3:
+    recall: 0.3369
+    mrr: 0.6786
+    stale_rate: 0.0
+  paragraph/vector/k5:
+    recall: 0.3845
+    mrr: 0.7202
+    stale_rate: 0.0
+  paragraph/vector/k10:
+    recall: 0.5262
+    mrr: 0.744
+    stale_rate: 0.0
+  paragraph/rerank/k3:
+    recall: 0.2798
+    mrr: 0.631
+    stale_rate: 0.0
+  paragraph/rerank/k5:
+    recall: 0.4012
+    mrr: 0.6964
+    stale_rate: 0.0
+  paragraph/rerank/k10:
+    recall: 0.4964
+    mrr: 0.6964
+    stale_rate: 0.0
+  fixed/vector/k3:
+    recall: 0.2714
+    mrr: 0.6786
+    stale_rate: 0.0
+  fixed/vector/k5:
+    recall: 0.4583
+    mrr: 0.7202
+    stale_rate: 0.0
+  fixed/vector/k10:
+    recall: 0.5643
+    mrr: 0.7202
+    stale_rate: 0.0714
+  fixed/rerank/k3:
+    recall: 0.3571
+    mrr: 0.8214
+    stale_rate: 0.0
+  fixed/rerank/k5:
+    recall: 0.4548
+    mrr: 0.8214
+    stale_rate: 0.0
+  fixed/rerank/k10:
+    recall: 0.6321
+    mrr: 0.8214
+    stale_rate: 0.0
+random_recall:
+  paragraph/random/k3: 0.0348
+  paragraph/random/k5: 0.0575
+  paragraph/random/k10: 0.1102
+  fixed/random/k3: 0.0348
+  fixed/random/k5: 0.0589
+  fixed/random/k10: 0.1146
+rows:
+- scenario: SC-S1-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-22
+  - PM-12
+  - PM-01
+  recall: 0.3333333333333333
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-22
+  - PM-12
+  - PM-01
+  - CH-01
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-22
+  - PM-12
+  - PM-01
+  - CH-01
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - K
+  - PM-12
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - K
+  - PM-12
+  - CH-01
+  recall: 0.16666666666666666
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - K
+  - PM-12
+  - CH-01
+  - PM-22
+  - PM-01
+  - MT-03
+  recall: 0.5
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - CH-01
+  - PM-12
+  recall: 0.16666666666666666
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - CH-01
+  - PM-12
+  - PM-01
+  recall: 0.3333333333333333
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - CH-01
+  - PM-12
+  - PM-01
+  - PM-22
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - CH-01
+  - PM-01
+  - PM-12
+  recall: 0.3333333333333333
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - CH-01
+  - PM-01
+  - PM-12
+  - PM-22
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S1-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - CH-01
+  - PM-01
+  - PM-12
+  - PM-22
+  - K
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-23
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-23
+  - PM-03
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-23
+  - PM-03
+  - PM-02
+  recall: 0.2
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-23
+  - CH-02
+  - PM-03
+  recall: 0.2
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-23
+  - CH-02
+  - PM-03
+  - K
+  - PM-02
+  recall: 0.4
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-23
+  - CH-02
+  - PM-03
+  - K
+  - PM-02
+  recall: 0.4
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-03
+  - PM-02
+  recall: 0.2
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-03
+  - PM-02
+  - PM-23
+  recall: 0.2
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-03
+  - PM-02
+  - PM-23
+  - CH-02
+  recall: 0.4
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-02
+  - PM-23
+  recall: 0.2
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-02
+  - PM-23
+  - CH-02
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-02
+  - PM-23
+  - CH-02
+  - PM-03
+  - K
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-23
+  - PM-02
+  - CH-02
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-23
+  - PM-02
+  - CH-02
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-23
+  - PM-02
+  - CH-02
+  - PM-03
+  recall: 0.6
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - CH-02
+  - PM-02
+  - PM-23
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - CH-02
+  - PM-02
+  - PM-23
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - CH-02
+  - PM-02
+  - PM-23
+  - PM-13
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-02
+  - CH-02
+  recall: 0.2
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-02
+  - CH-02
+  - PM-23
+  recall: 0.4
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-02
+  - CH-02
+  - PM-23
+  - PM-03
+  recall: 0.6
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-02
+  - PM-23
+  - CH-02
+  recall: 0.4
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-02
+  - PM-23
+  - CH-02
+  recall: 0.4
+  rr: 0.5
+  stale: false
+- scenario: SC-S2-02
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-02
+  - PM-23
+  - CH-02
+  - RB-05
+  - PM-03
+  - PM-13
+  recall: 0.8
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - CH-11
+  - PM-23
+  - PM-03
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - CH-11
+  - PM-23
+  - PM-03
+  - PM-04
+  recall: 0.25
+  rr: 0.25
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - CH-11
+  - PM-23
+  - PM-03
+  - PM-04
+  - K
+  - CH-12
+  recall: 0.25
+  rr: 0.25
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - K
+  - CH-07
+  - PM-04
+  recall: 0.25
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - K
+  - CH-07
+  - PM-04
+  - PM-23
+  - CH-10
+  recall: 0.25
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - K
+  - CH-07
+  - PM-04
+  - PM-23
+  - CH-10
+  - PM-03
+  - PM-02
+  recall: 0.25
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - K
+  - PM-02
+  - CH-02
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - K
+  - PM-02
+  - CH-02
+  - PM-04
+  - PM-03
+  recall: 0.25
+  rr: 0.25
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - K
+  - PM-02
+  - CH-02
+  - PM-04
+  - PM-03
+  - CH-12
+  - PM-23
+  - CH-04
+  recall: 0.25
+  rr: 0.25
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - K
+  - PM-04
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - K
+  - PM-04
+  - PM-03
+  - PM-23
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - K
+  - PM-04
+  - PM-03
+  - PM-23
+  - PM-10
+  - CH-03
+  - CH-08
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-14
+  - CH-06
+  - PM-15
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-14
+  - CH-06
+  - PM-15
+  - PM-17
+  - CH-11
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-14
+  - CH-06
+  - PM-15
+  - PM-17
+  - CH-11
+  - PM-22
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-14
+  - PM-17
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-14
+  - PM-17
+  - K
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-14
+  - PM-17
+  - K
+  - PM-15
+  - PM-16
+  - PM-18
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-17
+  - PM-14
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-17
+  - PM-14
+  - PM-05
+  - PM-18
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-17
+  - PM-14
+  - PM-05
+  - PM-18
+  - CH-06
+  - RB-01
+  - PM-22
+  - K
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-14
+  - PM-17
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-14
+  - PM-17
+  - PM-15
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S3-02
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-14
+  - PM-17
+  - PM-15
+  - PM-18
+  - CH-13
+  - PM-05
+  - K
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - CH-06
+  - PM-05
+  - PM-17
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - CH-06
+  - PM-05
+  - PM-17
+  - K
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - CH-06
+  - PM-05
+  - PM-17
+  - K
+  - PM-22
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - CH-06
+  - K
+  - PM-05
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - CH-06
+  - K
+  - PM-05
+  - PM-14
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - CH-06
+  - K
+  - PM-05
+  - PM-14
+  - PM-17
+  - CH-09
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - CH-06
+  - PM-05
+  - PM-17
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - CH-06
+  - PM-05
+  - PM-17
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - CH-06
+  - PM-05
+  - PM-17
+  - K
+  - CH-13
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - CH-06
+  - PM-05
+  - K
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - CH-06
+  - PM-05
+  - K
+  - PM-17
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - CH-06
+  - PM-05
+  - K
+  - PM-17
+  - CH-13
+  - CH-09
+  recall: 0.4
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - RB-01
+  - PM-17
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - RB-01
+  - PM-17
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - RB-01
+  - PM-17
+  - CH-06
+  - PM-05
+  - PM-22
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-22
+  - RB-01
+  - PM-01
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-22
+  - RB-01
+  - PM-01
+  - PM-17
+  - CH-13
+  recall: 0.5
+  rr: 0.25
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-22
+  - RB-01
+  - PM-01
+  - PM-17
+  - CH-13
+  - PM-11
+  - K
+  recall: 0.5
+  rr: 0.25
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-17
+  - PM-05
+  - PM-22
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-17
+  - PM-05
+  - PM-22
+  - RB-01
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-17
+  - PM-05
+  - PM-22
+  - RB-01
+  - PM-01
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-17
+  - RB-01
+  - PM-05
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-17
+  - RB-01
+  - PM-05
+  - PM-22
+  - CH-13
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S4-02
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-17
+  - RB-01
+  - PM-05
+  - PM-22
+  - CH-13
+  - PM-01
+  - PM-11
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - CH-09
+  - PM-06
+  - K
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - CH-09
+  - PM-06
+  - K
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - CH-09
+  - PM-06
+  - K
+  - PM-18
+  - PM-24
+  - RB-02
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - K
+  - PM-06
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - K
+  - PM-06
+  - PM-18
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - K
+  - PM-06
+  - PM-18
+  - CH-09
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-06
+  - K
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-06
+  - K
+  - PM-24
+  - CH-09
+  recall: 0.75
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-06
+  - K
+  - PM-24
+  - CH-09
+  - PM-18
+  recall: 0.75
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-06
+  - K
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-06
+  - K
+  - PM-18
+  - CH-09
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S5-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-06
+  - K
+  - PM-18
+  - CH-09
+  - PM-24
+  - RB-02
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - CH-14
+  - PM-07
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - CH-14
+  - PM-07
+  - PM-20
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - CH-14
+  - PM-07
+  - PM-20
+  - PM-19
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-07
+  - CH-14
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-07
+  - CH-14
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-07
+  - CH-14
+  - PM-20
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - CH-14
+  - PM-07
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - CH-14
+  - PM-07
+  - PM-20
+  - CH-10
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - CH-14
+  - PM-07
+  - PM-20
+  - CH-10
+  - CH-04
+  recall: 0.5
+  rr: 0.5
+  stale: true
+- scenario: SC-S6-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - CH-14
+  - PM-07
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - CH-14
+  - PM-07
+  recall: 0.25
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - CH-14
+  - PM-07
+  - PM-20
+  - PM-19
+  - CH-10
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-07
+  - RB-07
+  recall: 0.3333333333333333
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-07
+  - RB-07
+  - CH-14
+  - PM-20
+  recall: 0.3333333333333333
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-07
+  - RB-07
+  - CH-14
+  - PM-20
+  - CH-10
+  recall: 0.6666666666666666
+  rr: 0.5
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-19
+  - PM-07
+  - CH-10
+  recall: 0.6666666666666666
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-19
+  - PM-07
+  - CH-10
+  - RB-07
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-19
+  - PM-07
+  - CH-10
+  - RB-07
+  - CH-14
+  - PM-20
+  - K
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - CH-10
+  - CH-14
+  - PM-07
+  recall: 0.3333333333333333
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - CH-10
+  - CH-14
+  - PM-07
+  - PM-20
+  recall: 0.3333333333333333
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - CH-10
+  - CH-14
+  - PM-07
+  - PM-20
+  - RB-07
+  - PM-19
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - CH-10
+  - PM-19
+  recall: 0.6666666666666666
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - CH-10
+  - PM-19
+  - PM-07
+  recall: 0.6666666666666666
+  rr: 1.0
+  stale: false
+- scenario: SC-S6-02
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - CH-10
+  - PM-19
+  - PM-07
+  - RB-07
+  - PM-20
+  - CH-14
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-08
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-08
+  - K
+  - PM-12
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-08
+  - K
+  - PM-12
+  - CH-01
+  - PM-18
+  - PM-15
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - K
+  - PM-08
+  - PM-14
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - K
+  - PM-08
+  - PM-14
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - K
+  - PM-08
+  - PM-14
+  - PM-15
+  - PM-01
+  - PM-11
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-08
+  - K
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-08
+  - K
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-08
+  - K
+  - PM-18
+  - PM-12
+  - CH-09
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - K
+  - PM-08
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - K
+  - PM-08
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S7-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - K
+  - PM-08
+  - PM-11
+  - PM-18
+  - PM-05
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-08
+  - K
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-08
+  - K
+  - PM-09
+  - CH-01
+  recall: 0.25
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-08
+  - K
+  - PM-09
+  - CH-01
+  - PM-25
+  recall: 0.5
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-09
+  - K
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-09
+  - K
+  - PM-08
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-09
+  - K
+  - PM-08
+  - PM-10
+  - PM-25
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - K
+  - PM-08
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - K
+  - PM-08
+  - PM-09
+  recall: 0.25
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - K
+  - PM-08
+  - PM-09
+  - PM-10
+  - CH-01
+  - PM-25
+  - CH-07
+  recall: 0.5
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-09
+  - K
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-09
+  - K
+  - PM-08
+  recall: 0.25
+  rr: 1.0
+  stale: false
+- scenario: SC-S7-02
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-09
+  - K
+  - PM-08
+  - PM-10
+  - PM-25
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-10
+  - PM-21
+  - CH-11
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-10
+  - PM-21
+  - CH-11
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-10
+  - PM-21
+  - CH-11
+  - K
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-10
+  - K
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-10
+  - K
+  - PM-21
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-10
+  - K
+  - PM-21
+  - CH-11
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-21
+  - CH-11
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-21
+  - CH-11
+  - PM-10
+  recall: 1.0
+  rr: 0.5
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-21
+  - CH-11
+  - PM-10
+  - K
+  - PM-20
+  recall: 1.0
+  rr: 0.5
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-10
+  - PM-21
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-10
+  - PM-21
+  - CH-11
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-01
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-10
+  - PM-21
+  - CH-11
+  - K
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: paragraph/vector/k3
+  docs:
+  - PM-21
+  - PM-10
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: paragraph/vector/k5
+  docs:
+  - PM-21
+  - PM-10
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: paragraph/vector/k10
+  docs:
+  - PM-21
+  - PM-10
+  - K
+  - CH-11
+  - PM-13
+  - PM-03
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: paragraph/rerank/k3
+  docs:
+  - PM-10
+  - K
+  recall: 0.0
+  rr: 0.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: paragraph/rerank/k5
+  docs:
+  - PM-10
+  - K
+  - PM-21
+  recall: 0.5
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: paragraph/rerank/k10
+  docs:
+  - PM-10
+  - K
+  - PM-21
+  - PM-18
+  recall: 0.5
+  rr: 0.3333333333333333
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: fixed/vector/k3
+  docs:
+  - PM-21
+  - PM-10
+  recall: 0.5
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: fixed/vector/k5
+  docs:
+  - PM-21
+  - PM-10
+  - CH-11
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: fixed/vector/k10
+  docs:
+  - PM-21
+  - PM-10
+  - CH-11
+  - K
+  - PM-18
+  recall: 1.0
+  rr: 1.0
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: fixed/rerank/k3
+  docs:
+  - PM-10
+  - PM-21
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: fixed/rerank/k5
+  docs:
+  - PM-10
+  - PM-21
+  recall: 0.5
+  rr: 0.5
+  stale: false
+- scenario: SC-S8-02
+  incident: 0
+  config: fixed/rerank/k10
+  docs:
+  - PM-10
+  - PM-21
+  - K
+  - CH-11
+  - PM-18
+  - PM-13
+  recall: 1.0
+  rr: 0.5
+  stale: false
