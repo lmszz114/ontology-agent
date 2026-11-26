@@ -101,19 +101,41 @@ def test_conflicting_owners_both_stay():
     assert sorted(s for s, _, _ in rels(g, "OWNS")) == ["TM04", "TM10"]
 
 
-def _copy_extract(tmp_path, reps=("r1",)):
+def _copy_extract(tmp_path, reps=("r1",), current_seed=False):
+    """저장소의 dev 추출 결과를 표본으로 복사한다.
+
+    current_seed=True면 실행 기록의 시드 해시를 지금 시드로 바꾼다. 저장소의 추출은 M6에서 절차 규칙을 시드로
+    옮기기 전 시드로 돌아 C-ext가 받지 않는다. 그래프를 만들고 조회하는 기능을 보려는 테스트만 쓴다.
+    바꾼 규칙(rules.yaml)은 이름 정규화가 대조하는 K 노드가 아니다
+    """
     out = tmp_path / "extract"
     out.mkdir()
-    shutil.copy(EXTRACT_DEV / "run.yaml", out / "run.yaml")
+    run = yaml.safe_load((EXTRACT_DEV / "run.yaml").read_text(encoding="utf-8"))
+    if current_seed:
+        run["seed_hash"] = seed_hash(SEED)
+    (out / "run.yaml").write_text(yaml.safe_dump(run, allow_unicode=True, sort_keys=False), encoding="utf-8")
     for rep in reps:
         shutil.copytree(EXTRACT_DEV / rep, out / rep)
     return out
 
 
+def test_extraction_from_another_seed_is_refused(tmp_path, monkeypatch):
+    """추출 때와 다른 시드로는 C-ext를 돌리지 않는다. 저장소의 dev 추출은 M6 전 시드라 LLM을 부르기 전에 멈춘다."""
+    from eval.runner.__main__ import check_cext, parse_args
+    from eval.runner.runner import RunnerError
+
+    monkeypatch.setenv("NEO4J_URI", "bolt://localhost:7687")
+    monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7689")
+    args = parse_args(["--config", "C-ext", "--split", "dev", "--out", "eval/results/x", "--cext-from", str(EXTRACT_DEV)])
+    with pytest.raises(RunnerError, match="시드"):
+        check_cext(args)
+
+
 def test_load_candidates_refuses_incomplete_rep_and_hash_tracks_files(tmp_path):
     out = _copy_extract(tmp_path, ("r1", "r2"))
     _, before = cext.load_candidates(out, "r1")
-    assert before["extraction_seed_hash"] == seed_hash(SEED)
+    # 추출 실행 기록(run.yaml)의 시드 해시를 그대로 옮긴다. M6에서 절차 규칙을 시드로 옮겨 지금 시드와는 다르다
+    assert before["extraction_seed_hash"] == yaml.safe_load((out / "run.yaml").read_text(encoding="utf-8"))["seed_hash"]
     first = min((out / "r2").glob("*.yaml"))
     first.unlink()
     with pytest.raises(cext.CextError, match="모두 돌지 않은"):
@@ -145,13 +167,13 @@ def test_runner_requires_cext_from_only_for_cext():
     assert args.cext_from == str(EXTRACT_DEV)
 
 
-def test_runner_refuses_ext_db_same_as_dev_db(monkeypatch):
+def test_runner_refuses_ext_db_same_as_dev_db(monkeypatch, tmp_path):
     from eval.runner.__main__ import check_cext, parse_args
     from eval.runner.runner import RunnerError
 
     monkeypatch.setenv("NEO4J_URI", "bolt://localhost:7687")
     monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7687/")
-    args = parse_args(["--config", "C-ext", "--split", "dev", "--out", "eval/results/x", "--cext-from", str(EXTRACT_DEV)])
+    args = parse_args(["--config", "C-ext", "--split", "dev", "--out", "eval/results/x", "--cext-from", str(_copy_extract(tmp_path, ("r1", "r2", "r3"), current_seed=True))])
     with pytest.raises(RunnerError, match="같은 서버"):
         check_cext(args)
     monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7689")
@@ -179,12 +201,12 @@ def test_grader_stops_when_the_graph_cannot_be_rebuilt(tmp_path):
 
 
 @pytest.mark.integration
-def test_load_cext_and_query_it(driver):
+def test_load_cext_and_query_it(driver, tmp_path):
     from mcp_servers.ontology_query import queries
     from ontology.load import load_static
 
     try:
-        info = cext.load_cext(driver, SEED, EXTRACT_DEV, "r1")
+        info = cext.load_cext(driver, SEED, _copy_extract(tmp_path, current_seed=True), "r1")
         meta = cext.loaded_meta(driver)
         assert meta["kind"] == "C-ext" and meta["hash"] == info["hash"] and meta["source"].endswith("-r1")
         assert info["counts"]["relationships"] > 0
@@ -233,7 +255,7 @@ def test_resume_refuses_results_from_another_graph(tmp_path, monkeypatch):
 
     monkeypatch.setenv("NEO4J_URI", "bolt://localhost:7687")
     monkeypatch.setenv("NEO4J_EXT_URI", "bolt://localhost:7689")
-    src = _copy_extract(tmp_path)
+    src = _copy_extract(tmp_path, current_seed=True)
     _, source = cext.load_candidates(src, "r1")
     out = tmp_path / "out"
     (out / "r1").mkdir(parents=True)

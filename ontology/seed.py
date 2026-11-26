@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 
 from ontology.conditions import validate_cause_conditions
+from ontology.rules import validate_rules
 
 ROOT = Path(__file__).parent.parent
 SEED_DIR = Path(__file__).parent / "seed"
@@ -28,6 +29,8 @@ SEED_FILES = {
     "actions.yaml": "actions",
     "severities.yaml": "severities",
 }
+# 판단 규칙이 여는 절차 (R1, R3, R7). 그래프에 넣지 않는다
+RULES_FILE = "rules.yaml"
 
 
 PROVENANCE_FILE = "provenance.yaml"
@@ -43,8 +46,7 @@ def load_seed(org: str = "org-a", seed_dir: Path = SEED_DIR) -> dict:
     for filename, key in SEED_FILES.items():
         data = _read(seed_dir / filename)
         seed[key] = data[key]
-        if key == "severities":
-            seed["escalation_procedure"] = data["escalation_procedure"]
+    seed["rules"] = _read(seed_dir / RULES_FILE)
 
     # 반영된 지식의 출처. 비어 있으면 넣지 않아 시드 해시가 바뀌지 않는다 (M4 PR 5)
     provenance = (_read(seed_dir / PROVENANCE_FILE) or {}).get("provenance") if (seed_dir / PROVENANCE_FILE).exists() else None
@@ -105,6 +107,7 @@ def validate_seed(seed: dict) -> None:
                 if holders.setdefault(slot, owner["team"]) != owner["team"]:
                     raise ValueError(f"{system['id']}의 {slot} 담당이 둘이다: {holders[slot]}, {owner['team']}")
     validate_cause_conditions(seed)
+    validate_rules(seed)
 
 
 def resolve_owner_teams(seed: dict, cause_id: str) -> list[str]:

@@ -32,6 +32,7 @@ from common.models.config import USAGE_FIELDS
 from common.tracing import Tracer
 from common.writers import events
 from mcp_servers.ontology_query import queries
+from ontology.rules import rules_of
 from ontology.seed import load_seed
 
 ROOT = Path(__file__).parent.parent.parent
@@ -130,6 +131,7 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
             driver=driver, llm=llm, tracer=tracer, knowledge=knowledge, llm_results=results,
             mock_client=mock, mock_tools=mock_tools, tool_checks=queries.get_evidence_tools(driver),
             symptoms=queries.get_symptom_types(driver), systems=queries.get_systems(driver),
+            rules=rules_of(load_seed(org)),
         )
         graph = build_graph(deps)
         started = datetime.now(KST)
