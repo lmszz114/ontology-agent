@@ -440,6 +440,10 @@ def test_rules_reject_unknown_and_human_only_procedures(seed):
     with pytest.raises(ValueError, match="사람만 여는"):
         validate_rules(bad)
     bad = copy.deepcopy(seed)
+    bad["rules"]["rule_procedures"]["intake"] = bad["rules"]["rule_procedures"]["fix"]
+    with pytest.raises(ValueError, match="같은 절차"):
+        validate_rules(bad)
+    bad = copy.deepcopy(seed)
     bad["rules"]["urgent_levels"] = ["SEV9"]
     with pytest.raises(ValueError, match="등급"):
         validate_rules(bad)

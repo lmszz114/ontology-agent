@@ -88,6 +88,9 @@ def validate_seed(seed: dict) -> None:
     roles = {r["id"] for r in seed["roles"]}
     assigned = {}
     for ra in seed["role_assignments"]:
+        # 역할과 팀은 둘 다 꼭 있어야 한다. require는 빈 값을 넘기므로 따로 막는다 (PR #37 리뷰)
+        if ra.get("role") is None or ra.get("team") is None:
+            raise ValueError(f"역할 배정에 역할이나 팀이 비어 있다: {ra}")
         require(ra["role"], roles, f"역할 배정 {ra['role']}")
         require(ra["team"], teams, f"역할 배정 {ra['role']}.team")
         if assigned.setdefault(ra["role"], ra["team"]) != ra["team"]:

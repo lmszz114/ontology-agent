@@ -44,6 +44,9 @@ def validate_rules(seed: dict) -> None:
     procs = data.get("rule_procedures") or {}
     if set(procs) != set(RULE_KEYS):
         raise ValueError(f"rules.yaml의 rule_procedures는 {list(RULE_KEYS)}여야 한다: {sorted(procs)}")
+    if len(set(procs.values())) != len(procs):
+        # 규칙마다 다른 절차여야 한다. 같으면 한 절차가 두 규칙으로 열려 어느 규칙이 열었는지 가를 수 없다 (PR #37 리뷰)
+        raise ValueError(f"rules.yaml: 두 규칙이 같은 절차를 가리킨다: {procs}")
     known = {p["id"] for p in seed["procedures"]}
     for key, procedure in procs.items():
         if procedure not in known:

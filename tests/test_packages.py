@@ -50,6 +50,10 @@ def test_channel_role_needs_a_team():
     seed["role_assignments"] = [r for r in seed["role_assignments"] if r["role"] != "RL03"]
     with pytest.raises(ValueError, match="맡은 팀이 없다"):
         validate_seed(seed)
+    seed = copy.deepcopy(load_seed("org-b"))
+    next(r for r in seed["role_assignments"] if r["role"] == "RL03")["team"] = None
+    with pytest.raises(ValueError, match="비어 있다"):
+        validate_seed(seed)
     seed = copy.deepcopy(load_seed("org-a"))
     seed["role_assignments"].append({"role": "RL03", "team": "TM07"})
     with pytest.raises(ValueError, match="두 팀"):
