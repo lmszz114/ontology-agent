@@ -1,0 +1,539 @@
+{
+  "run": {
+    "scenario": "SC-S1-01",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T11:54:48.605248+09:00",
+    "finished_at": "2026-11-26T11:55:36.146545+09:00",
+    "seconds": 47.5,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "7876e64375755466f62b691517cc9f7d",
+    "llm_calls": 11,
+    "usage": {
+      "input": 15375,
+      "output": 8166,
+      "cache_read": 0,
+      "cache_write_5m": 71777,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.014592625,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v2",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "93908607f33aa266e39d15eb1a724ec7ec108e3f",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "a74bb3f6c325958bf46bba26ae12cf6472e7820637f323ea62d34a00c20b125c"
+  },
+  "outputs": [
+    {
+      "symptom": "S1",
+      "incident_id": "INC-b0b03f3d14d6",
+      "report_ids": [
+        "RP-200e652edd12"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C02",
+          "rank": 1,
+          "score": 3,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "confirm",
+              "detail": "해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "confirm",
+              "detail": "해당 결제 건에 대한 우편함 지급 기록이 없다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C01",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        },
+        {
+          "cause_id": "C03",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": null,
+          "findings": []
+        }
+      ],
+      "root_cause": "C02",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_payment_record",
+          "check_id": "E01",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S1 결제 후 아이템 미지급 (영향 범위 some_users, 심각도 SEV3)\n-> 원인 C02 우편함 지급 누락 (점수 3): confirm, 근거 ['E01', 'E02']. E01 결제 기록 조회 결과, 해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있어 expect(결제 승인 기록이 있다)와 일치한다. E02 우편함 조회 결과, 해당 결제 건에 대한 우편함 지급 기록이 없어 expect(우편함 지급 기록이 없다)와 일치한다. 두 확정 조건(required=true)이 모두 expect대로 나왔으므로 C02 우편함 지급 누락으로 확정한다. 다만 제보 시각은 20:14이고 결제 승인은 19:44로 확인되어 제보 내용과 시간 차이가 있으며, 영향 범위는 some_users이므로 동일 증상 유저 전체 규모는 이 조회만으로는 파악되지 않는다.\n-> 1차 담당 TM03",
+      "needs_human": [
+        "절차, 조치 선택 출력 검증 실패: [\"항상 여는 절차가 빠졌다: ['P10']\"]"
+      ],
+      "retrieved_docs": [
+        "CH-01",
+        "PM-01",
+        "PM-12",
+        "PM-22",
+        "K"
+      ],
+      "retrieval": {
+        "incident_id": "INC-b0b03f3d14d6",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "CH-01",
+          "PM-01",
+          "PM-12",
+          "PM-22",
+          "K"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:CH-01:001",
+            "doc_id": "CH-01",
+            "score": 0.799741268157959
+          },
+          {
+            "chunk_id": "fixed:PM-01:001",
+            "doc_id": "PM-01",
+            "score": 0.7847190499305725
+          },
+          {
+            "chunk_id": "fixed:PM-12:001",
+            "doc_id": "PM-12",
+            "score": 0.7664355039596558
+          },
+          {
+            "chunk_id": "fixed:CH-01:003",
+            "doc_id": "CH-01",
+            "score": 0.743910014629364
+          },
+          {
+            "chunk_id": "fixed:PM-22:002",
+            "doc_id": "PM-22",
+            "score": 0.717229425907135
+          },
+          {
+            "chunk_id": "fixed:K:017",
+            "doc_id": "K",
+            "score": 0.7152975797653198
+          },
+          {
+            "chunk_id": "fixed:PM-22:001",
+            "doc_id": "PM-22",
+            "score": 0.7148764133453369
+          },
+          {
+            "chunk_id": "fixed:PM-12:002",
+            "doc_id": "PM-12",
+            "score": 0.702502965927124
+          },
+          {
+            "chunk_id": "fixed:PM-12:003",
+            "doc_id": "PM-12",
+            "score": 0.6455350518226624
+          },
+          {
+            "chunk_id": "fixed:K:022",
+            "doc_id": "K",
+            "score": 0.6415692567825317
+          }
+        ],
+        "extra": [
+          {
+            "question": [
+              "checks",
+              "C02"
+            ],
+            "query": "C02 우편함 지급 누락 원인을 확인하는 판정 근거와 확정 조건",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:022",
+                "doc_id": "K",
+                "score": 0.8498793244361877
+              },
+              {
+                "chunk_id": "fixed:PM-22:002",
+                "doc_id": "PM-22",
+                "score": 0.8164569139480591
+              },
+              {
+                "chunk_id": "fixed:K:023",
+                "doc_id": "K",
+                "score": 0.7453979849815369
+              },
+              {
+                "chunk_id": "fixed:PM-22:001",
+                "doc_id": "PM-22",
+                "score": 0.7092897295951843
+              },
+              {
+                "chunk_id": "fixed:PM-17:002",
+                "doc_id": "PM-17",
+                "score": 0.6978357434272766
+              },
+              {
+                "chunk_id": "fixed:PM-01:002",
+                "doc_id": "PM-01",
+                "score": 0.6900448203086853
+              },
+              {
+                "chunk_id": "fixed:RB-03:001",
+                "doc_id": "RB-03",
+                "score": 0.633915364742279
+              },
+              {
+                "chunk_id": "fixed:PM-22:003",
+                "doc_id": "PM-22",
+                "score": 0.6124522686004639
+              },
+              {
+                "chunk_id": "fixed:CH-01:002",
+                "doc_id": "CH-01",
+                "score": 0.610505223274231
+              },
+              {
+                "chunk_id": "fixed:PM-01:001",
+                "doc_id": "PM-01",
+                "score": 0.6059101819992065
+              }
+            ]
+          },
+          {
+            "question": [
+              "owner",
+              "C02"
+            ],
+            "query": "C02 우편함 지급 누락 원인의 위치 시스템과 담당 팀",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-22:002",
+                "doc_id": "PM-22",
+                "score": 0.856346607208252
+              },
+              {
+                "chunk_id": "fixed:K:022",
+                "doc_id": "K",
+                "score": 0.7850596904754639
+              },
+              {
+                "chunk_id": "fixed:PM-22:003",
+                "doc_id": "PM-22",
+                "score": 0.7618649005889893
+              },
+              {
+                "chunk_id": "fixed:PM-01:002",
+                "doc_id": "PM-01",
+                "score": 0.7437301278114319
+              },
+              {
+                "chunk_id": "fixed:PM-17:002",
+                "doc_id": "PM-17",
+                "score": 0.705852210521698
+              },
+              {
+                "chunk_id": "fixed:K:023",
+                "doc_id": "K",
+                "score": 0.6937741041183472
+              },
+              {
+                "chunk_id": "fixed:PM-22:001",
+                "doc_id": "PM-22",
+                "score": 0.6234935522079468
+              },
+              {
+                "chunk_id": "fixed:PM-17:003",
+                "doc_id": "PM-17",
+                "score": 0.5625194907188416
+              },
+              {
+                "chunk_id": "fixed:RB-01:001",
+                "doc_id": "RB-01",
+                "score": 0.5530351400375366
+              },
+              {
+                "chunk_id": "fixed:PM-01:003",
+                "doc_id": "PM-01",
+                "score": 0.5234754085540771
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P1"
+            ],
+            "query": "P1 장애 접수와 분류 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.9024311304092407
+              },
+              {
+                "chunk_id": "fixed:K:041",
+                "doc_id": "K",
+                "score": 0.8025624752044678
+              },
+              {
+                "chunk_id": "fixed:K:010",
+                "doc_id": "K",
+                "score": 0.6090155243873596
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.5152330994606018
+              },
+              {
+                "chunk_id": "fixed:PM-13:002",
+                "doc_id": "PM-13",
+                "score": 0.5138317942619324
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.48808377981185913
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.47309407591819763
+              },
+              {
+                "chunk_id": "fixed:K:025",
+                "doc_id": "K",
+                "score": 0.434690922498703
+              },
+              {
+                "chunk_id": "fixed:K:024",
+                "doc_id": "K",
+                "score": 0.42819783091545105
+              },
+              {
+                "chunk_id": "fixed:PM-13:001",
+                "doc_id": "PM-13",
+                "score": 0.42819032073020935
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedures",
+              "C02",
+              "SEV3"
+            ],
+            "query": "C02 우편함 지급 누락 원인 확정 뒤 여는 대응 절차와 조치, SEV3 등급 절차",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-22:002",
+                "doc_id": "PM-22",
+                "score": 0.7378336191177368
+              },
+              {
+                "chunk_id": "fixed:PM-22:003",
+                "doc_id": "PM-22",
+                "score": 0.7342202067375183
+              },
+              {
+                "chunk_id": "fixed:PM-01:003",
+                "doc_id": "PM-01",
+                "score": 0.706339955329895
+              },
+              {
+                "chunk_id": "fixed:K:022",
+                "doc_id": "K",
+                "score": 0.683314859867096
+              },
+              {
+                "chunk_id": "fixed:RB-03:001",
+                "doc_id": "RB-03",
+                "score": 0.6760246753692627
+              },
+              {
+                "chunk_id": "fixed:RB-01:001",
+                "doc_id": "RB-01",
+                "score": 0.6654907464981079
+              },
+              {
+                "chunk_id": "fixed:PM-01:002",
+                "doc_id": "PM-01",
+                "score": 0.656990647315979
+              },
+              {
+                "chunk_id": "fixed:PM-22:001",
+                "doc_id": "PM-22",
+                "score": 0.646996259689331
+              },
+              {
+                "chunk_id": "fixed:PM-17:003",
+                "doc_id": "PM-17",
+                "score": 0.6151835322380066
+              },
+              {
+                "chunk_id": "fixed:K:023",
+                "doc_id": "K",
+                "score": 0.6024455428123474
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P10"
+            ],
+            "query": "P10 원인 수정과 반영 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.8911455869674683
+              },
+              {
+                "chunk_id": "fixed:RB-03:001",
+                "doc_id": "RB-03",
+                "score": 0.8718255758285522
+              },
+              {
+                "chunk_id": "fixed:RB-03:002",
+                "doc_id": "RB-03",
+                "score": 0.8445989489555359
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.7601442337036133
+              },
+              {
+                "chunk_id": "fixed:PM-16:003",
+                "doc_id": "PM-16",
+                "score": 0.7005679607391357
+              },
+              {
+                "chunk_id": "fixed:PM-07:003",
+                "doc_id": "PM-07",
+                "score": 0.6917449235916138
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.6907114386558533
+              },
+              {
+                "chunk_id": "fixed:PM-20:003",
+                "doc_id": "PM-20",
+                "score": 0.6887931823730469
+              },
+              {
+                "chunk_id": "fixed:PM-21:003",
+                "doc_id": "PM-21",
+                "score": 0.6821815967559814
+              },
+              {
+                "chunk_id": "fixed:PM-04:003",
+                "doc_id": "PM-04",
+                "score": 0.6771716475486755
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

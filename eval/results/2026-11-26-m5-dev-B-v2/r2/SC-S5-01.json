@@ -1,0 +1,739 @@
+{
+  "run": {
+    "scenario": "SC-S5-01",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T11:46:22.956199+09:00",
+    "finished_at": "2026-11-26T11:47:32.281453+09:00",
+    "seconds": 69.3,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "0949d883011116c76608ced147d6fd68",
+    "llm_calls": 17,
+    "usage": {
+      "input": 25258,
+      "output": 12743,
+      "cache_read": 12301,
+      "cache_write_5m": 106731,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.022361685,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v2",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "93908607f33aa266e39d15eb1a724ec7ec108e3f",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "cfec9a9b9e22376759b168e1946f7781f60232be9e6a6c7695cfdc2aa3951dc4"
+  },
+  "outputs": [
+    {
+      "symptom": "S5",
+      "incident_id": "INC-6fbf523b2a77",
+      "report_ids": [
+        "RP-349c30c58e0d"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C13",
+          "rank": 1,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY10"
+              },
+              "result": "rule_out",
+              "detail": "월드 서버에 증상과 관련된 오류 로그가 없다. 월드 서버에 처리 지연 로그가 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E12",
+              "tool": "request_qa_repro",
+              "args": {},
+              "result": "rule_out",
+              "detail": "QA가 같은 조건에서 재현하지 못했다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C14",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E11",
+              "tool": "query_account_activity",
+              "args": {},
+              "result": "confirm",
+              "detail": "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C14",
+      "primary_team": "TM11",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C13",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY10"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C13",
+          "tool": "request_qa_repro",
+          "check_id": "E12",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C14",
+          "tool": "query_account_activity",
+          "check_id": "E11",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "9.condition",
+          "cause_id": "C14",
+          "tool": "query_account_activity",
+          "check_id": "E11",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S5 아이템 복사, 재화 비정상 증식 (영향 범위 some_users, 심각도 SEV2)\n-> 원인 C13 복사 버그 (점수 2): rule_out, 근거 ['E04', 'E12']. 필수 판정 근거 E04(SY10 서버 오류 로그)는 증상과 관련된 오류 로그가 없고 처리 지연 로그도 없다는 결과로, 기대값인 '관련 오류 로그 있음'과 다르다. 필수 근거 E12(QA 복사 재현)도 QA가 같은 조건에서 재현하지 못했다는 결과로, 기대값인 '복사 재현 성공'과 다르다. 필수 근거 두 개가 모두 기대와 다르므로 C13 복사 버그 가설은 배제된다. 참고용 E10(재화 유통량)은 확정·배제에 쓰지 않았다. 다만 거래소 골드 시세 붕괴와 강화석 대량 등록이라는 증상 자체의 원인은 이 결과만으로 설명되지 않으므로 다른 가설을 별도로 검토할 필요가 있다.\n-> 원인 C14 어뷰징 (불법 프로그램, 악용) (점수 2): confirm, 근거 ['E11']. 필수 판정 근거 E11(계정별 거래, 행동 집중도 조회)을 조회했다. 결과는 최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다는 것이었다. 이는 기대값인 '소수 계정에 거래와 행동이 집중돼 있다'와 일치한다. 필수 근거가 모두 기대값과 맞으므로 C14 어뷰징 가설은 확정된다. 참고용 E10은 필수가 아니어서 조회하지 않았고 판정에 쓰지 않았다. 이미 조회한 K1(월드 서버 로그 정상)과 K2(QA 재현 실패)는 E11 판정과 무관하여 재사용하지 않았다.\n-> 1차 담당 TM11",
+      "needs_human": [
+        "절차, 조치 선택 출력 검증 실패: [\"항상 여는 절차가 빠졌다: ['P10']\"]"
+      ],
+      "retrieved_docs": [
+        "PM-06",
+        "K",
+        "PM-18",
+        "CH-09",
+        "PM-24",
+        "RB-02"
+      ],
+      "retrieval": {
+        "incident_id": "INC-6fbf523b2a77",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-06",
+          "K",
+          "PM-18",
+          "CH-09",
+          "PM-24",
+          "RB-02"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-06:001",
+            "doc_id": "PM-06",
+            "score": 0.7988964319229126
+          },
+          {
+            "chunk_id": "fixed:K:020",
+            "doc_id": "K",
+            "score": 0.7485843896865845
+          },
+          {
+            "chunk_id": "fixed:K:019",
+            "doc_id": "K",
+            "score": 0.6891784071922302
+          },
+          {
+            "chunk_id": "fixed:PM-18:002",
+            "doc_id": "PM-18",
+            "score": 0.6397868990898132
+          },
+          {
+            "chunk_id": "fixed:CH-09:001",
+            "doc_id": "CH-09",
+            "score": 0.5993148684501648
+          },
+          {
+            "chunk_id": "fixed:PM-18:001",
+            "doc_id": "PM-18",
+            "score": 0.5911680459976196
+          },
+          {
+            "chunk_id": "fixed:PM-24:001",
+            "doc_id": "PM-24",
+            "score": 0.5237568616867065
+          },
+          {
+            "chunk_id": "fixed:PM-06:002",
+            "doc_id": "PM-06",
+            "score": 0.4977228045463562
+          },
+          {
+            "chunk_id": "fixed:RB-02:001",
+            "doc_id": "RB-02",
+            "score": 0.47861650586128235
+          },
+          {
+            "chunk_id": "fixed:PM-24:003",
+            "doc_id": "PM-24",
+            "score": 0.4721922278404236
+          }
+        ],
+        "extra": [
+          {
+            "question": [
+              "checks",
+              "C13"
+            ],
+            "query": "C13 복사 버그 원인을 확인하는 판정 근거와 확정 조건",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:030",
+                "doc_id": "K",
+                "score": 0.8127859234809875
+              },
+              {
+                "chunk_id": "fixed:PM-18:002",
+                "doc_id": "PM-18",
+                "score": 0.7872757911682129
+              },
+              {
+                "chunk_id": "fixed:CH-09:001",
+                "doc_id": "CH-09",
+                "score": 0.6934898495674133
+              },
+              {
+                "chunk_id": "fixed:PM-18:001",
+                "doc_id": "PM-18",
+                "score": 0.675573468208313
+              },
+              {
+                "chunk_id": "fixed:K:020",
+                "doc_id": "K",
+                "score": 0.5697222352027893
+              },
+              {
+                "chunk_id": "fixed:PM-04:002",
+                "doc_id": "PM-04",
+                "score": 0.5521984696388245
+              },
+              {
+                "chunk_id": "fixed:RB-02:001",
+                "doc_id": "RB-02",
+                "score": 0.5475234389305115
+              },
+              {
+                "chunk_id": "fixed:PM-14:002",
+                "doc_id": "PM-14",
+                "score": 0.535276472568512
+              },
+              {
+                "chunk_id": "fixed:K:031",
+                "doc_id": "K",
+                "score": 0.5258741974830627
+              },
+              {
+                "chunk_id": "fixed:CH-09:004",
+                "doc_id": "CH-09",
+                "score": 0.5257208943367004
+              }
+            ]
+          },
+          {
+            "question": [
+              "checks",
+              "C14"
+            ],
+            "query": "C14 어뷰징 (불법 프로그램, 악용) 원인을 확인하는 판정 근거와 확정 조건",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:031",
+                "doc_id": "K",
+                "score": 0.8098141551017761
+              },
+              {
+                "chunk_id": "fixed:PM-24:002",
+                "doc_id": "PM-24",
+                "score": 0.7768474221229553
+              },
+              {
+                "chunk_id": "fixed:PM-06:001",
+                "doc_id": "PM-06",
+                "score": 0.7493610382080078
+              },
+              {
+                "chunk_id": "fixed:PM-24:001",
+                "doc_id": "PM-24",
+                "score": 0.7434718608856201
+              },
+              {
+                "chunk_id": "fixed:PM-06:002",
+                "doc_id": "PM-06",
+                "score": 0.7191900610923767
+              },
+              {
+                "chunk_id": "fixed:RB-02:001",
+                "doc_id": "RB-02",
+                "score": 0.6035857200622559
+              },
+              {
+                "chunk_id": "fixed:PM-24:003",
+                "doc_id": "PM-24",
+                "score": 0.5151225924491882
+              },
+              {
+                "chunk_id": "fixed:RB-02:002",
+                "doc_id": "RB-02",
+                "score": 0.48814627528190613
+              },
+              {
+                "chunk_id": "fixed:PM-06:003",
+                "doc_id": "PM-06",
+                "score": 0.46792033314704895
+              },
+              {
+                "chunk_id": "fixed:K:037",
+                "doc_id": "K",
+                "score": 0.439229279756546
+              }
+            ]
+          },
+          {
+            "question": [
+              "owner",
+              "C14"
+            ],
+            "query": "C14 어뷰징 (불법 프로그램, 악용) 원인의 위치 시스템과 담당 팀",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-06:002",
+                "doc_id": "PM-06",
+                "score": 0.7512320876121521
+              },
+              {
+                "chunk_id": "fixed:PM-24:002",
+                "doc_id": "PM-24",
+                "score": 0.7348101139068604
+              },
+              {
+                "chunk_id": "fixed:K:031",
+                "doc_id": "K",
+                "score": 0.718390166759491
+              },
+              {
+                "chunk_id": "fixed:PM-06:003",
+                "doc_id": "PM-06",
+                "score": 0.6414666771888733
+              },
+              {
+                "chunk_id": "fixed:PM-06:001",
+                "doc_id": "PM-06",
+                "score": 0.5795716643333435
+              },
+              {
+                "chunk_id": "fixed:PM-24:001",
+                "doc_id": "PM-24",
+                "score": 0.5703961253166199
+              },
+              {
+                "chunk_id": "fixed:PM-24:003",
+                "doc_id": "PM-24",
+                "score": 0.5632415413856506
+              },
+              {
+                "chunk_id": "fixed:K:020",
+                "doc_id": "K",
+                "score": 0.49508440494537354
+              },
+              {
+                "chunk_id": "fixed:K:006",
+                "doc_id": "K",
+                "score": 0.46811649203300476
+              },
+              {
+                "chunk_id": "fixed:K:001",
+                "doc_id": "K",
+                "score": 0.44661858677864075
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P1"
+            ],
+            "query": "P1 장애 접수와 분류 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.9024322628974915
+              },
+              {
+                "chunk_id": "fixed:K:041",
+                "doc_id": "K",
+                "score": 0.8028094172477722
+              },
+              {
+                "chunk_id": "fixed:K:010",
+                "doc_id": "K",
+                "score": 0.6095967888832092
+              },
+              {
+                "chunk_id": "fixed:PM-13:002",
+                "doc_id": "PM-13",
+                "score": 0.5139921307563782
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.5139339566230774
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.48779383301734924
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.4728626608848572
+              },
+              {
+                "chunk_id": "fixed:K:025",
+                "doc_id": "K",
+                "score": 0.43379199504852295
+              },
+              {
+                "chunk_id": "fixed:K:024",
+                "doc_id": "K",
+                "score": 0.4286663234233856
+              },
+              {
+                "chunk_id": "fixed:PM-13:001",
+                "doc_id": "PM-13",
+                "score": 0.4282424747943878
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P3"
+            ],
+            "query": "P3 긴급 공지 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:043",
+                "doc_id": "K",
+                "score": 0.8781158924102783
+              },
+              {
+                "chunk_id": "fixed:RB-04:002",
+                "doc_id": "RB-04",
+                "score": 0.7734009027481079
+              },
+              {
+                "chunk_id": "fixed:RB-04:001",
+                "doc_id": "RB-04",
+                "score": 0.7612572908401489
+              },
+              {
+                "chunk_id": "fixed:RB-05:002",
+                "doc_id": "RB-05",
+                "score": 0.7116418480873108
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.6882346868515015
+              },
+              {
+                "chunk_id": "fixed:PM-10:003",
+                "doc_id": "PM-10",
+                "score": 0.6810863614082336
+              },
+              {
+                "chunk_id": "fixed:PM-08:003",
+                "doc_id": "PM-08",
+                "score": 0.6731646060943604
+              },
+              {
+                "chunk_id": "fixed:PM-25:003",
+                "doc_id": "PM-25",
+                "score": 0.6688358783721924
+              },
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.6681697368621826
+              },
+              {
+                "chunk_id": "fixed:PM-22:003",
+                "doc_id": "PM-22",
+                "score": 0.6640453934669495
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P4"
+            ],
+            "query": "P4 긴급 점검 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:043",
+                "doc_id": "K",
+                "score": 0.8817198872566223
+              },
+              {
+                "chunk_id": "fixed:RB-05:001",
+                "doc_id": "RB-05",
+                "score": 0.8322836756706238
+              },
+              {
+                "chunk_id": "fixed:RB-05:002",
+                "doc_id": "RB-05",
+                "score": 0.8178049325942993
+              },
+              {
+                "chunk_id": "fixed:PM-08:003",
+                "doc_id": "PM-08",
+                "score": 0.6709524393081665
+              },
+              {
+                "chunk_id": "fixed:PM-10:003",
+                "doc_id": "PM-10",
+                "score": 0.6665967106819153
+              },
+              {
+                "chunk_id": "fixed:PM-13:002",
+                "doc_id": "PM-13",
+                "score": 0.6545265913009644
+              },
+              {
+                "chunk_id": "fixed:PM-10:002",
+                "doc_id": "PM-10",
+                "score": 0.6530694365501404
+              },
+              {
+                "chunk_id": "fixed:PM-03:003",
+                "doc_id": "PM-03",
+                "score": 0.6507236957550049
+              },
+              {
+                "chunk_id": "fixed:PM-25:003",
+                "doc_id": "PM-25",
+                "score": 0.649416446685791
+              },
+              {
+                "chunk_id": "fixed:PM-09:003",
+                "doc_id": "PM-09",
+                "score": 0.6491991877555847
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedures",
+              "C14",
+              "SEV2"
+            ],
+            "query": "C14 어뷰징 (불법 프로그램, 악용) 원인 확정 뒤 여는 대응 절차와 조치, SEV2 등급 절차",
+            "chunks": [
+              {
+                "chunk_id": "fixed:PM-06:002",
+                "doc_id": "PM-06",
+                "score": 0.7292153835296631
+              },
+              {
+                "chunk_id": "fixed:PM-06:001",
+                "doc_id": "PM-06",
+                "score": 0.7222155928611755
+              },
+              {
+                "chunk_id": "fixed:PM-24:003",
+                "doc_id": "PM-24",
+                "score": 0.6978617310523987
+              },
+              {
+                "chunk_id": "fixed:PM-24:002",
+                "doc_id": "PM-24",
+                "score": 0.6700162291526794
+              },
+              {
+                "chunk_id": "fixed:K:031",
+                "doc_id": "K",
+                "score": 0.6552552580833435
+              },
+              {
+                "chunk_id": "fixed:PM-24:001",
+                "doc_id": "PM-24",
+                "score": 0.6515020132064819
+              },
+              {
+                "chunk_id": "fixed:PM-06:003",
+                "doc_id": "PM-06",
+                "score": 0.6280098557472229
+              },
+              {
+                "chunk_id": "fixed:RB-02:001",
+                "doc_id": "RB-02",
+                "score": 0.5895785093307495
+              },
+              {
+                "chunk_id": "fixed:RB-02:002",
+                "doc_id": "RB-02",
+                "score": 0.5528494715690613
+              },
+              {
+                "chunk_id": "fixed:K:050",
+                "doc_id": "K",
+                "score": 0.49276697635650635
+              }
+            ]
+          },
+          {
+            "question": [
+              "procedure",
+              "P10"
+            ],
+            "query": "P10 원인 수정과 반영 절차의 조치와 단계",
+            "chunks": [
+              {
+                "chunk_id": "fixed:K:042",
+                "doc_id": "K",
+                "score": 0.8911455869674683
+              },
+              {
+                "chunk_id": "fixed:RB-03:001",
+                "doc_id": "RB-03",
+                "score": 0.8718762993812561
+              },
+              {
+                "chunk_id": "fixed:RB-03:002",
+                "doc_id": "RB-03",
+                "score": 0.8444378972053528
+              },
+              {
+                "chunk_id": "fixed:RB-07:002",
+                "doc_id": "RB-07",
+                "score": 0.7601442337036133
+              },
+              {
+                "chunk_id": "fixed:PM-16:003",
+                "doc_id": "PM-16",
+                "score": 0.7005679607391357
+              },
+              {
+                "chunk_id": "fixed:PM-07:003",
+                "doc_id": "PM-07",
+                "score": 0.6917991042137146
+              },
+              {
+                "chunk_id": "fixed:K:045",
+                "doc_id": "K",
+                "score": 0.6912475824356079
+              },
+              {
+                "chunk_id": "fixed:PM-20:003",
+                "doc_id": "PM-20",
+                "score": 0.6887988448143005
+              },
+              {
+                "chunk_id": "fixed:PM-21:003",
+                "doc_id": "PM-21",
+                "score": 0.6824591755867004
+              },
+              {
+                "chunk_id": "fixed:PM-04:003",
+                "doc_id": "PM-04",
+                "score": 0.6771716475486755
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

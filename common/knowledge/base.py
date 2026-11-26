@@ -18,6 +18,13 @@ class KnowledgeUnavailable(Exception):
 class KnowledgeProvider(Protocol):
     name: str  # 구성 이름 (C, C-ext 등)
 
+    async def begin_incident(self, incident_id: str, reports: list[str]) -> dict[str, Any] | None:
+        """사건 하나의 진단(6단계)을 시작할 때 그 사건의 제보 원문을 받는다 (M5 PR 3).
+
+        문서 검색 구성(B)만 이것으로 검색하고 검색 기록을 돌려준다. 결과의 retrieved_docs가 된다.
+        사건과 상관없이 같은 지식을 쓰는 구성(A, C, C-ext)은 받기만 하고 None을 돌려준다.
+        """
+
     async def rank_causes(self, symptom_id: str, started_at: str) -> list[dict[str, Any]]:
         """원인 후보와 순위 (R4-1~3). 각 항목에 cause_id, name, score, rank, recent_changes가 있다."""
 

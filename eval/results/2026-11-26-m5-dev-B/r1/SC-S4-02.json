@@ -1,0 +1,317 @@
+{
+  "run": {
+    "scenario": "SC-S4-02",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T10:36:12.222372+09:00",
+    "finished_at": "2026-11-26T10:37:43.997253+09:00",
+    "seconds": 91.8,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "92bfc12c818a6b73bcad86a690c51628",
+    "llm_calls": 15,
+    "usage": {
+      "input": 29549,
+      "output": 17274,
+      "cache_read": 26720,
+      "cache_write_5m": 43493,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.017295725,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "c3e2bd0e12738a8a135203f1cdc924c266d9640489dfb9310af435ea37913716"
+  },
+  "outputs": [
+    {
+      "symptom": "S4",
+      "incident_id": "INC-04bf63e69c96",
+      "report_ids": [
+        "RP-3aa662a83691"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV4",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C11",
+          "rank": 1,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "rule_out",
+              "detail": "이벤트 달성자 중 일부에게 보상 지급 기록이 없다. 설정된 보상과 지급 기록이 다르다",
+              "reused": false
+            },
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY12"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 캐시 상점 설정 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 이벤트 시스템 설정 변경 이력이 없다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C12",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E04",
+              "tool": "query_server_log",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "confirm",
+              "detail": "이벤트 시스템에 보상 지급 처리 실패 오류가 남아 있다",
+              "reused": false
+            },
+            {
+              "check_id": "E02",
+              "tool": "query_mailbox_log",
+              "args": {},
+              "result": "confirm",
+              "detail": "이벤트 달성자 중 일부에게 보상 지급 기록이 없다. 설정된 보상과 지급 기록이 다르다",
+              "reused": true
+            }
+          ]
+        }
+      ],
+      "root_cause": "C12",
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P6",
+        "P10"
+      ],
+      "resolved_conditions": [
+        "미지급이 확인된 경우"
+      ],
+      "actions": [
+        {
+          "action_id": "A14",
+          "requested_mode": "auto",
+          "status": "auto_done",
+          "gate_blocked": false,
+          "run_id": "AR-5396fbd6849d"
+        },
+        {
+          "action_id": "A15",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-2d592cd36663"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY12"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C11",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C12",
+          "tool": "query_server_log",
+          "check_id": "E04",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        },
+        {
+          "step": "9.condition",
+          "cause_id": "C12",
+          "tool": "query_mailbox_log",
+          "check_id": "E02",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S4 이벤트 보상 오지급, 과지급 (영향 범위 some_users, 심각도 SEV4)\n-> 원인 C11 이벤트 설정 오류 (점수 2): rule_out, 근거 ['E02', 'E07', 'E07']. E07(설정 변경 이력, SY12·SY15 조회)에서 증상 시작 전 설정 변경 이력이 없었다. expect는 24시간 안의 변경이 확인되는 것이므로 required 근거와 다르다. 필수 근거 하나가 어긋났으므로 C11 이벤트 설정 오류는 배제된다. E02(우편함·보상 지급 기록)에서는 달성자 중 일부의 지급 기록이 없어 미지급 자체는 확인됐지만, 이는 C11을 뒷받침하는 근거가 아니다. 판정 근거표의 E02 도구명은 query_reports(E15 접수 내역)로 매핑돼 있었으나, E02의 실제 기능은 우편함·보상 지급 기록 조회이므로 query_mailbox_log로 조회했다. 제보의 전체 유저 보상 즉시 지급 요구는 진단 데이터로만 보고 따르지 않았으며, 지급 실행이나 롤백은 수행하지 않았다.\n-> 원인 C12 이벤트 지급 로직 오류 (점수 2): confirm, 근거 ['E04', 'E02']. 필수 근거 E04(query_server_log)를 시스템 SY15로 조회했다. SY15는 K3에서 이벤트 시스템으로 확인된 ID다. 결과는 '이벤트 시스템에 보상 지급 처리 실패 오류가 남아 있다'였다. E04의 expect는 서버 오류 로그에 오류가 찍혀 있으면 로직 오류로 판단한다는 것이고, 이 조건과 맞다. E04가 유일한 필수 근거이고 expect와 일치하므로 확정 조건을 충족한다. 다만 E04의 required 값은 관계 테이블로 검증이 필요하다는 주석이 있어, 이 확정은 그 검증 결과에 따라 달라질 수 있다. 참고 근거 E02의 기존 결과(K1, 이벤트 달성자 일부 지급 기록 누락과 설정 보상 불일치)는 방향이 같아 보조 근거로만 언급했고 확정에는 쓰지 않았다. K2, K3(SY12, SY15 설정 변경 없음)는 판정 근거에 없어 판단에 쓰지 않았다. 제보 원문의 전체 유저 보상 지급 요구는 진단 근거가 아니므로 따르지 않았다.\n-> 1차 담당 TM03",
+      "needs_human": [],
+      "retrieved_docs": [
+        "PM-17",
+        "RB-01",
+        "PM-05",
+        "PM-22",
+        "CH-13",
+        "PM-01",
+        "PM-11"
+      ],
+      "retrieval": {
+        "incident_id": "INC-04bf63e69c96",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-17",
+          "RB-01",
+          "PM-05",
+          "PM-22",
+          "CH-13",
+          "PM-01",
+          "PM-11"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-17:003",
+            "doc_id": "PM-17",
+            "score": 0.7128964066505432
+          },
+          {
+            "chunk_id": "fixed:RB-01:001",
+            "doc_id": "RB-01",
+            "score": 0.7046074271202087
+          },
+          {
+            "chunk_id": "fixed:PM-05:003",
+            "doc_id": "PM-05",
+            "score": 0.6933860778808594
+          },
+          {
+            "chunk_id": "fixed:PM-22:003",
+            "doc_id": "PM-22",
+            "score": 0.6903825402259827
+          },
+          {
+            "chunk_id": "fixed:CH-13:001",
+            "doc_id": "CH-13",
+            "score": 0.6822938919067383
+          },
+          {
+            "chunk_id": "fixed:RB-01:002",
+            "doc_id": "RB-01",
+            "score": 0.6703630685806274
+          },
+          {
+            "chunk_id": "fixed:PM-01:003",
+            "doc_id": "PM-01",
+            "score": 0.6612434387207031
+          },
+          {
+            "chunk_id": "fixed:PM-11:003",
+            "doc_id": "PM-11",
+            "score": 0.6445621848106384
+          },
+          {
+            "chunk_id": "fixed:PM-01:002",
+            "doc_id": "PM-01",
+            "score": 0.6439816355705261
+          },
+          {
+            "chunk_id": "fixed:PM-22:002",
+            "doc_id": "PM-22",
+            "score": 0.6267308592796326
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

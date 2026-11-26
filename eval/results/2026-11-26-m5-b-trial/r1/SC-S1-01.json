@@ -1,0 +1,277 @@
+{
+  "run": {
+    "scenario": "SC-S1-01",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T10:26:07.629552+09:00",
+    "finished_at": "2026-11-26T10:26:59.037059+09:00",
+    "seconds": 51.4,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "4f5449e063674dc71268ce43fc3437dd",
+    "llm_calls": 13,
+    "usage": {
+      "input": 22137,
+      "output": 7195,
+      "cache_read": 17880,
+      "cache_write_5m": 34899,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.010352375,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "30ebd2cfd2606931254749aaf94a6cff85bb4673",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "a74bb3f6c325958bf46bba26ae12cf6472e7820637f323ea62d34a00c20b125c"
+  },
+  "outputs": [
+    {
+      "symptom": "S1",
+      "incident_id": "INC-aad76bbfb230",
+      "report_ids": [
+        "RP-97c58040cc57"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C02",
+          "rank": 1,
+          "score": 3,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "inconclusive",
+              "detail": "해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C01",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E01",
+              "tool": "query_payment_record",
+              "args": {},
+              "result": "rule_out",
+              "detail": "해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다",
+              "reused": true
+            }
+          ]
+        },
+        {
+          "cause_id": "C03",
+          "rank": 3,
+          "score": 1,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY12"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 캐시 상점 설정 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E07",
+              "tool": "query_config_change",
+              "args": {
+                "system": "SY15"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 이벤트 시스템 설정 변경 이력이 없다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C02",
+          "tool": "query_payment_record",
+          "check_id": "E01",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C03",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY12"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C03",
+          "tool": "query_config_change",
+          "check_id": "E07",
+          "args": {
+            "system": "SY15"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S1 결제 후 아이템 미지급 (영향 범위 some_users, 심각도 SEV3)\n-> 원인 C02 우편함 지급 누락 (점수 3): inconclusive, 근거 ['E01']. E01(결제 기록 조회)을 실행한 결과 해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있어, E01의 기대 결과(결제 승인 기록이 있다)와 일치했다. 다만 이 결과는 결제가 실제로 승인되었다는 사실만 보여 주며, 우편함 지급 누락 자체를 가리키지는 않는다. 판정 근거 목록에서 E02 이후 항목이 잘려 있어 required 값과 기대 결과를 확인할 수 없으므로, 확정(confirm)이나 배제(rule_out)를 내릴 수 없다. 우편함·보상 지급 기록(E02 도구)과 나머지 판정 근거의 전체 목록이 확보되어야 판정할 수 있다.\n-> 원인 C01 결제 승인, 기록 오류 (점수 2): rule_out, 근거 ['E01']. 필수 판정 근거 E01은 기존 조회 결과 K1을 재사용했다. K1에 따르면 해당 유저의 결제 승인 기록이 19:44에 정상으로 남아 있다. E01의 기대값은 승인 기록 없음 또는 승인 오류 잔존이므로 기대값과 다르다. 필수 근거 하나라도 불일치하면 배제이므로 C01 결제 승인, 기록 오류는 배제한다. 다만 K1은 결제 승인 기록만 확인한 결과이고 우편함 미지급 자체는 다른 원인일 수 있으므로, 우편함과 보상 지급 쪽은 별도로 확인이 필요하다.\n-> 원인 C03 상품 설정 오류 (점수 1): rule_out, 근거 ['E07', 'E07']. E07(설정 변경 이력 조회, 이벤트·상품)은 required=true인 확정 조건이다. 조회 인자에 system 값이 없어 허용 값인 SY12(캐시 상점)와 SY15(이벤트 시스템)를 각각 조회했다. 두 결과 모두 증상 시작(2026-12-07T20:14) 전에 설정 변경 이력이 없다고 나왔다. 기대값은 '증상 시작 전에 해당 상품의 설정 변경 이력이 남아 있다'이므로 하나라도 어긋나면 배제되는 조건에 해당하고, 캐시 상점 설정(SY12) 이력이 없어 C03 상품 설정 오류 가설은 배제된다. K1(결제 승인 19:44 정상)은 결제 시점 사실만 확인하며 이 판정에는 쓰지 않았다. 우편함 및 보상 지급 기록(E02)은 이 단계의 판정 근거가 아니므로 확인하지 않았다.\n-> 1차 담당 TM03",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: ['C02']"
+      ],
+      "retrieved_docs": [
+        "CH-01",
+        "PM-01",
+        "PM-12",
+        "PM-22",
+        "K"
+      ],
+      "retrieval": {
+        "incident_id": "INC-aad76bbfb230",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "CH-01",
+          "PM-01",
+          "PM-12",
+          "PM-22",
+          "K"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:CH-01:001",
+            "doc_id": "CH-01",
+            "score": 0.7995666861534119
+          },
+          {
+            "chunk_id": "fixed:PM-01:001",
+            "doc_id": "PM-01",
+            "score": 0.7845925688743591
+          },
+          {
+            "chunk_id": "fixed:PM-12:001",
+            "doc_id": "PM-12",
+            "score": 0.7664262652397156
+          },
+          {
+            "chunk_id": "fixed:CH-01:003",
+            "doc_id": "CH-01",
+            "score": 0.743910014629364
+          },
+          {
+            "chunk_id": "fixed:PM-22:002",
+            "doc_id": "PM-22",
+            "score": 0.7169783711433411
+          },
+          {
+            "chunk_id": "fixed:K:017",
+            "doc_id": "K",
+            "score": 0.7160847187042236
+          },
+          {
+            "chunk_id": "fixed:PM-22:001",
+            "doc_id": "PM-22",
+            "score": 0.7152631878852844
+          },
+          {
+            "chunk_id": "fixed:PM-12:002",
+            "doc_id": "PM-12",
+            "score": 0.702502965927124
+          },
+          {
+            "chunk_id": "fixed:PM-12:003",
+            "doc_id": "PM-12",
+            "score": 0.6447429656982422
+          },
+          {
+            "chunk_id": "fixed:K:022",
+            "doc_id": "K",
+            "score": 0.6416568160057068
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

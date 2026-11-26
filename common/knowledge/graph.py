@@ -24,6 +24,10 @@ class GraphKnowledge:
     async def _call(self, tool: str, **args: Any) -> Any:
         return await call_tool_data(self.client, self.tracer, server=SERVER, name=tool, args=args)
 
+    async def begin_incident(self, incident_id: str, reports: list[str]) -> dict | None:
+        """그래프는 사건과 상관없이 같은 지식을 준다."""
+        return None
+
     async def rank_causes(self, symptom_id: str, started_at: str) -> list[dict[str, Any]]:
         return await self._call("rank_causes", symptom_id=symptom_id, started_at=started_at)
 

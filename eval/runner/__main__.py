@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 from agents.diagnosis.prompts import PROMPT_VERSION
-from agents.diagnosis.run import EXT_CONFIGS, KNOWLEDGE, run_scenario
+from agents.diagnosis.run import EXT_CONFIGS, KNOWLEDGE, SEARCH_CONFIGS, _b_settings, run_scenario
 from common.models import LLM, load_model_config, make_anthropic_client
 from common.tracing import Tracer
 from eval.runner.runner import (
@@ -85,6 +85,12 @@ def prepare(args: argparse.Namespace):
     if args.cext_from:
         check_cext(args, out)
         expected["cext_from"] = Path(args.cext_from).as_posix()
+    if args.config in SEARCH_CONFIGS:
+        # 검색 설정이 다른 결과가 한 폴더에 섞이지 않게 이어 돌리기 조건에 넣는다 (M5 PR 3)
+        try:
+            expected["search_settings"] = _b_settings().as_dict()
+        except ValueError as exc:
+            raise RunnerError(str(exc)) from exc
     todo = plan(paths, out=out, reps=args.reps, resume=args.resume, expected=expected)
     return out, git, todo, seed
 
@@ -143,6 +149,18 @@ async def main_async(args: argparse.Namespace) -> int:
     with get_driver(uri) as driver:
         if not ext:
             check_loaded_seed(driver, args.org, seed)
+        index_info = None
+        if args.config in SEARCH_CONFIGS:
+            # 검색 색인이 지금 시드와 문서로 만든 것인지 LLM을 부르기 전에 본다
+            from common.retrieval.chunking import all_chunks
+            from common.retrieval.index import IndexError_, check_index
+            from eval.corpus.check import load_plan
+
+            try:
+                meta = check_index(driver, all_chunks(load_seed(args.org), load_plan()))
+            except IndexError_ as exc:
+                raise RunnerError(str(exc)) from exc
+            index_info = {"corpus_hash": meta["corpus_hash"], "model": meta["model"]}
         tracer = Tracer.from_env()
         llm = LLM(load_model_config(args.org), tracer, make_anthropic_client())
         try:
@@ -157,6 +175,9 @@ async def main_async(args: argparse.Namespace) -> int:
                 async def run_one(scenario: dict, path: Path, info=graph_info) -> dict:
                     result = await run_scenario(scenario, path, config=args.config, org=args.org, tracer=tracer,
                                                 llm=llm, driver=driver, neo4j_uri=uri)
+                    if index_info:
+                        # 검색 색인: 조각 목록 해시와 임베딩 모델 (채점기가 지금 문서로 같은 해시가 나오는지 본다)
+                        result["run"]["retrieval_index"] = index_info
                     if info:
                         # 실행에 쓴 그래프: 추출 결과 반복, 그래프 해시, 빌더 버전, 채운 기본값 수 (채점기가 해시를 다시 본다)
                         result["run"] |= {"cext_from": Path(args.cext_from).as_posix(), "knowledge_graph": info}

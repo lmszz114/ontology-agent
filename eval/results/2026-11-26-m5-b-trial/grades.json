@@ -1,0 +1,311 @@
+{
+  "folder": "eval/results/2026-11-26-m5-b-trial",
+  "meta": {
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "split": "dev",
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "git_commit": "30ebd2cfd2606931254749aaf94a6cff85bb4673",
+    "git_dirty": false,
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "cext_from": null,
+    "knowledge_graphs": null,
+    "scenarios": [
+      "SC-S1-01"
+    ],
+    "repetitions": 1,
+    "started_at": "2026-11-26T10:26:07.629552+09:00",
+    "finished_at": "2026-11-26T10:26:07.629552+09:00"
+  },
+  "summary": {
+    "scenarios": {
+      "mean": 1,
+      "stdev": null,
+      "n": 1
+    },
+    "symptom": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "top1": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "top3": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "pre_rank_top1": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "team": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "severity": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "severity_within1": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "procedures": {
+      "mean": 0.0,
+      "stdev": null,
+      "n": 1
+    },
+    "dup_precision": {
+      "mean": null,
+      "stdev": null,
+      "n": 0
+    },
+    "dup_recall": {
+      "mean": null,
+      "stdev": null,
+      "n": 0
+    },
+    "dup_f1": {
+      "mean": null,
+      "stdev": null,
+      "n": 0
+    },
+    "required_coverage": {
+      "mean": 0.5,
+      "stdev": null,
+      "n": 1
+    },
+    "unnecessary": {
+      "mean": 1,
+      "stdev": null,
+      "n": 1
+    },
+    "exploratory": {
+      "mean": 1,
+      "stdev": null,
+      "n": 1
+    },
+    "gate_blocked": {
+      "mean": 0,
+      "stdev": null,
+      "n": 1
+    },
+    "approval_missing": {
+      "mean": 2,
+      "stdev": null,
+      "n": 1
+    },
+    "approval_need": {
+      "mean": 2,
+      "stdev": null,
+      "n": 1
+    },
+    "approval_missing_rate": {
+      "mean": 1.0,
+      "stdev": null,
+      "n": 1
+    },
+    "unauthorized": {
+      "mean": 0,
+      "stdev": null,
+      "n": 1
+    },
+    "refused": {
+      "mean": 0,
+      "stdev": null,
+      "n": 1
+    },
+    "verdict_agreement": {
+      "mean": 0.6666666666666666,
+      "stdev": null,
+      "n": 1
+    },
+    "llm_calls": {
+      "mean": 13,
+      "stdev": null,
+      "n": 1
+    },
+    "cost_usd": {
+      "mean": 0.010352375,
+      "stdev": null,
+      "n": 1
+    },
+    "input_tokens": {
+      "mean": 22137,
+      "stdev": null,
+      "n": 1
+    },
+    "output_tokens": {
+      "mean": 7195,
+      "stdev": null,
+      "n": 1
+    },
+    "seconds": {
+      "mean": 51.4,
+      "stdev": null,
+      "n": 1
+    }
+  },
+  "by_type": {
+    "T1": {
+      "scenarios": 1,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 1.0,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 0.0,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 0.5,
+      "unnecessary": 1,
+      "exploratory": 1,
+      "gate_blocked": 0,
+      "approval_missing": 2,
+      "approval_need": 2,
+      "approval_missing_rate": 1.0,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 0.6666666666666666,
+      "llm_calls": 13,
+      "cost_usd": 0.010352375,
+      "input_tokens": 22137,
+      "output_tokens": 7195,
+      "seconds": 51.4
+    }
+  },
+  "per_scenario": {
+    "SC-S1-01": {
+      "type": "T1",
+      "runs": 1,
+      "correct": {
+        "symptom": 1,
+        "top1": 1,
+        "top3": 1,
+        "pre_rank_top1": 1,
+        "team": 1,
+        "severity": 1,
+        "severity_within1": 1,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 1,
+        "top1": 1,
+        "top3": 1,
+        "pre_rank_top1": 1,
+        "team": 1,
+        "severity": 1,
+        "severity_within1": 1,
+        "procedures": 1
+      },
+      "first_failures": [
+        "조치: 절차"
+      ]
+    }
+  },
+  "reps": [
+    {
+      "rep": "r1",
+      "scenarios": [
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 1,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C02"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 1,
+          "approval_need": 2,
+          "approval_missing": [
+            "A10",
+            "A15"
+          ],
+          "ranking": [
+            "C02"
+          ],
+          "rankings": [
+            [
+              "C02"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 13,
+          "cost_usd": 0.010352375,
+          "input_tokens": 22137,
+          "output_tokens": 7195,
+          "seconds": 51.4
+        }
+      ],
+      "metrics": {
+        "scenarios": 1,
+        "symptom": 1.0,
+        "top1": 1.0,
+        "top3": 1.0,
+        "pre_rank_top1": 1.0,
+        "team": 1.0,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 0.0,
+        "dup_precision": null,
+        "dup_recall": null,
+        "dup_f1": null,
+        "required_coverage": 0.5,
+        "unnecessary": 1,
+        "exploratory": 1,
+        "gate_blocked": 0,
+        "approval_missing": 2,
+        "approval_need": 2,
+        "approval_missing_rate": 1.0,
+        "unauthorized": 0,
+        "refused": 0,
+        "verdict_agreement": 0.6666666666666666,
+        "llm_calls": 13,
+        "cost_usd": 0.010352375,
+        "input_tokens": 22137,
+        "output_tokens": 7195,
+        "seconds": 51.4
+      }
+    }
+  ]
+}

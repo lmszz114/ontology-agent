@@ -1,0 +1,286 @@
+{
+  "run": {
+    "scenario": "SC-S2-02",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T11:01:04.331957+09:00",
+    "finished_at": "2026-11-26T11:01:55.000125+09:00",
+    "seconds": 50.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "ac533b05a78f9c5f80675bbefb51869d",
+    "llm_calls": 16,
+    "usage": {
+      "input": 28115,
+      "output": 8953,
+      "cache_read": 36584,
+      "cache_write_5m": 36347,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.012197215,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "492beb4d3ac1e356b1b4e52789c77bc1d42cee66545dd5f5fb6a290ef9d9f285"
+  },
+  "outputs": [
+    {
+      "symptom": "S2",
+      "incident_id": "INC-9c855e9d0efb",
+      "report_ids": [
+        "RP-8694c4a82f56"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C05",
+          "rank": 1,
+          "score": 4,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "inconclusive",
+              "detail": "다른 타이틀의 로그인 성공률은 평소와 같다. 이 타이틀만 실패한다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C04",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "rule_out",
+              "detail": "다른 타이틀의 로그인 성공률은 평소와 같다. 이 타이틀만 실패한다",
+              "reused": true
+            }
+          ]
+        },
+        {
+          "cause_id": "C06",
+          "rank": 3,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY05"
+              },
+              "result": "rule_out",
+              "detail": "서버 인프라의 자원, 네트워크 지표가 정상 범위다",
+              "reused": false
+            },
+            {
+              "check_id": "E09",
+              "tool": "query_resource_metrics",
+              "args": {
+                "system": "SY11"
+              },
+              "result": "rule_out",
+              "detail": "게임 DB의 자원, 네트워크 지표가 정상 범위다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": {
+        "cause_id": "C05",
+        "check_id": "E04",
+        "args": {},
+        "by": "TM03"
+      },
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C05",
+          "tool": "check_cross_title_login",
+          "check_id": "E03",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C06",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY05"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C06",
+          "tool": "query_resource_metrics",
+          "check_id": "E09",
+          "args": {
+            "system": "SY11"
+          },
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S2 로그인 불가, 접속 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C05 게임 로그인 서버 장애 (점수 4): inconclusive, 근거 ['E03']. 필수 판정 근거 E04(query_server_log)를 조회하려 했지만 로그인 서버의 system ID가 판정 근거 args에 없고 주어진 목록에도 허용 ID가 없어 호출할 수 없었다. 도구 설명의 예시(SY10)는 실제 로그인 서버 ID라는 근거가 없으므로 추측해서 사용하지 않았다. E03(다른 타이틀 로그인 상태 확인)은 조회했고, 다른 타이틀 로그인 성공률은 평소와 같으며 이 타이틀만 실패했다. 이는 expect와 일치한다. 그러나 E04가 확인되지 않아 C05 게임 로그인 서버 장애를 확정할 수 없다. 배제할 근거도 없다. 로그인 서버의 정확한 system ID를 제공받으면 E04를 조회해 다시 판정할 수 있다.\n-> 원인 C04 공통 계정 인증 장애 (점수 2): rule_out, 근거 ['E03']. C04의 확정 조건 E03(required=true)은 다른 타이틀에서도 로그인이 실패해야 공통 계정 인증 장애로 본다. 이미 조회한 K1에 따르면 다른 타이틀의 로그인 성공률은 평소와 같고 이 타이틀만 실패한다. 기대값과 다르므로 공통 계정 인증 장애인 C04는 배제된다. 제보에 있는 전 월드 로그인 문의는 이 타이틀 안에서의 현상으로 보이며, 이 판정은 C04 가설에 대한 것이고 원인 자체를 확정하는 것은 아니다. E03은 이미 K1으로 확인되었으므로 다시 호출하지 않았다.\n-> 원인 C06 서버 인프라 장애 (점수 2): rule_out, 근거 ['E09', 'E09']. E09 판정 근거(required=true)는 인프라 자원 지표가 한계에 가깝거나 넘은 상태이고 네트워크 지표도 이상을 보이는 것이었다. E09 허용 시스템 SY05(서버 인프라)와 SY11(게임 DB)을 조회한 결과 두 시스템 모두 자원, 네트워크 지표가 정상 범위였으므로 expect와 다르다. 확정 조건이 하나라도 어긋나므로 C06 서버 인프라 장애는 배제된다. 기존 조회 K1에서도 다른 타이틀의 로그인 성공률은 평소와 같고 이 타이틀만 실패한다고 나와, 전 월드 로그인 실패가 인프라 전체 장애라고 보기 어렵다는 점과 일치한다. 다만 계정 인증 서버의 시스템 ID가 조회 가능한 목록에 명시되어 있지 않아 인증 서버 자체를 직접 확인하지는 못했다는 한계가 있다.\n-> 1차 담당 TM03",
+      "needs_human": [
+        "원인이 확정되지 않았다. 상위 가설: ['C05']"
+      ],
+      "retrieved_docs": [
+        "PM-02",
+        "PM-23",
+        "CH-02",
+        "RB-05",
+        "PM-03",
+        "PM-13"
+      ],
+      "retrieval": {
+        "incident_id": "INC-9c855e9d0efb",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-02",
+          "PM-23",
+          "CH-02",
+          "RB-05",
+          "PM-03",
+          "PM-13"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-02:002",
+            "doc_id": "PM-02",
+            "score": 0.8470351099967957
+          },
+          {
+            "chunk_id": "fixed:PM-23:003",
+            "doc_id": "PM-23",
+            "score": 0.8234630227088928
+          },
+          {
+            "chunk_id": "fixed:CH-02:001",
+            "doc_id": "CH-02",
+            "score": 0.8212460279464722
+          },
+          {
+            "chunk_id": "fixed:PM-23:002",
+            "doc_id": "PM-23",
+            "score": 0.8091800212860107
+          },
+          {
+            "chunk_id": "fixed:PM-02:001",
+            "doc_id": "PM-02",
+            "score": 0.8030083179473877
+          },
+          {
+            "chunk_id": "fixed:RB-05:001",
+            "doc_id": "RB-05",
+            "score": 0.7707725763320923
+          },
+          {
+            "chunk_id": "fixed:CH-02:002",
+            "doc_id": "CH-02",
+            "score": 0.7676466107368469
+          },
+          {
+            "chunk_id": "fixed:PM-03:002",
+            "doc_id": "PM-03",
+            "score": 0.764432430267334
+          },
+          {
+            "chunk_id": "fixed:PM-13:001",
+            "doc_id": "PM-13",
+            "score": 0.7466336488723755
+          },
+          {
+            "chunk_id": "fixed:PM-23:001",
+            "doc_id": "PM-23",
+            "score": 0.7465962767601013
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}
