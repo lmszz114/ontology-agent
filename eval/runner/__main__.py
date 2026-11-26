@@ -20,6 +20,8 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 from agents.diagnosis.prompts import PROMPT_VERSION
 from agents.diagnosis.run import EXT_CONFIGS, KNOWLEDGE, SEARCH_CONFIGS, _b_settings, prompt_uses, run_scenario
 from common.models import LLM, load_model_config, make_anthropic_client
@@ -34,6 +36,7 @@ from eval.runner.runner import (
     plan,
     run_all,
 )
+from eval.labels import scenario_org
 from eval.validate import load_scenarios
 from ontology import cext
 from ontology.db import get_driver
@@ -70,6 +73,7 @@ def prepare(args: argparse.Namespace):
         paths = sorted((ROOT / "eval" / "scenarios" / args.split).glob("*.yaml"))
         load_scenarios(args.split)  # 형식이 틀린 파일이 있으면 여기서 멈춘다
     check_dev_only(paths)
+    check_orgs(paths, args.org)
     out = Path(args.out)
     check_out_dir(out)
     if args.resume and args.allow_dirty:
@@ -99,6 +103,17 @@ def prepare(args: argparse.Namespace):
             raise RunnerError(str(exc)) from exc
     todo = plan(paths, out=out, reps=args.reps, resume=args.resume, expected=expected)
     return out, git, todo, seed
+
+
+def check_orgs(paths: list[Path], org: str) -> None:
+    """시나리오마다 적힌 조직 설정(org, 없으면 가상 회사 A)으로만 돌린다 (M6).
+
+    다른 조직으로 돌리면 채널이 없거나 1차 처리 팀이 달라 정답 라벨과 맞지 않는 실행이 된다
+    """
+    orgs = {p: scenario_org(yaml.safe_load(p.read_text(encoding="utf-8"))) for p in paths}
+    other = sorted(f"{p.name}({o})" for p, o in orgs.items() if o != org)
+    if other:
+        raise RunnerError(f"--org {org}와 조직 설정이 다른 시나리오다. 시나리오의 org로 돌린다: {other}")
 
 
 def check_cext(args: argparse.Namespace, out: Path | None = None) -> None:

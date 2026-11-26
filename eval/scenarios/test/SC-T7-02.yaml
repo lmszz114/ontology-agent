@@ -1,0 +1,80 @@
+# T7 조직 설정 변경: SC-S2-05을 가상 회사 B(org-b) 설정으로 다시 쓴 시나리오. 공통 계정 인증 장애(C04)가 사내 메신저와 자체 접수 시스템으로 들어온다. 같은 요청자가 두 번 접수한다
+# B에는 공식 커뮤니티가 없어 커뮤니티 제보를 자체 접수 시스템 문의로 바꿨다. 사건의 첫 제보는 사내 메신저(CH03)라 1차 처리
+# 팀이 A의 개발PM팀(TM05)이 아니라 게임서비스팀(TM07)이다. 그 밖의 정답 라벨과 환경은 원래 시나리오와 같다 (2026-11-26, 사용자 확정)
+id: SC-T7-02
+type: T7
+boundary: null
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1, org-b) 후보 중 선택
+  (eval/scenarios/generation/2026-11-26-t7-selection.yaml). 사내 메신저 제보는 원래 시나리오 문장을
+  썼다. 정답 라벨과 환경은 원래 시나리오에서 옮겼다 (2026-11-26)
+reports:
+- channel: CH03
+  reporter: E5003
+  at: 2027-01-24T09:02+09:00
+  text: 9시쯤부터 로그인 인증 실패했다는 문의가 계속 들어오고 있어요. 저희 게임 말고 다른 게임 하시는 분들 문의도 섞여 있는데, 한번 확인
+    부탁드립니다.
+- channel: CH02
+  reporter: U5001
+  at: 2027-01-24T09:04+09:00
+  text: 아침 9시경 로그인을 시도했으나 계정 인증 과정에서 여러 번 실패했습니다. 동일한 계정으로 이용하는 다른 게임에서도 같은 증상이 나타나
+    함께 문의드립니다.
+- channel: CH02
+  reporter: U5002
+  at: 2027-01-24T09:05+09:00
+  text: 안녕하세요, 로그인할 때 아이디와 비밀번호를 정확히 입력했는데도 '인증에 실패했습니다'라는 메시지만 나옵니다. 혹시나 해서 비밀번호를
+    새로 바꿔 봤는데 마찬가지로 안 됩니다. 확인 부탁드립니다.
+- channel: CH02
+  reporter: U5001
+  at: 2027-01-24T09:09+09:00
+  text: 몇 분 전에 로그인 인증 실패 건으로 문의를 접수했는데 아직 답변이 없어서 다시 남깁니다. 지금도 같은 상태로 로그인이 되지 않습니다.
+    확인 부탁드립니다.
+environment:
+  checks:
+  - check: E03
+    observations:
+      other_titles: failing
+    detail: 같은 계정으로 다른 타이틀 로그인도 실패한다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 9시부터 모든 월드에서 로그인 실패 문의가 몰린다. 다른 타이틀 이용자 문의도 섞여 있다
+  changes: []
+expected:
+  symptom: S2
+  scope: all_service
+  incident_groups:
+  - - 0
+    - 1
+    - 2
+    - 3
+  severity: SEV1
+  root_cause: C04
+  ruled_out:
+  - C05
+  - C06
+  required_checks:
+  - E03
+  primary_team: TM09
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A15
+  forbidden_actions: *id001
+  first_handler: TM07
+org: org-b
+derived_from: SC-S2-05

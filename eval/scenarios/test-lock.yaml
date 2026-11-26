@@ -1,6 +1,6 @@
 # test 세트 정답 라벨 잠금 (eval/lock.py). 손으로 고치지 않는다
-locked_at: 2026-11-25T09:27+09:00
-note: 사용자 확정 (2026-11-25). 검토표 확인 뒤 잠금
+locked_at: 2026-11-26T15:02+09:00
+note: T7 3건 추가 (2026-11-26, 사용자 확정). 기존 test 32건은 바뀌지 않았다
 files:
   SC-OOS-02.yaml: 082737e6a87d5f7d7f9d5d890eeb660d4b8142f93074aa626d45eb3d086dd922
   SC-OOS-03.yaml: 2164d76ded4caa4134668c836ad42f853ea6051e8ae9b528f28d52f3441868dc
@@ -34,3 +34,6 @@ files:
   SC-S8-03.yaml: 5bac852fc378033504eabff695fef9975e10225430a2ab6028273d79af543234
   SC-S8-04.yaml: f9c8388edd4b4a1f211d4a3d9f5cd51502d47957efea5093a3fefffb5273a59b
   SC-S8-05.yaml: a967e348cebd4d02bcf39773de25799b039aadb5b258c36c9310cc64212ad20e
+  SC-T7-01.yaml: 18a8190d49fde069c9c9630c874741df74fe35ea6c34838093d47b4e8354abfc
+  SC-T7-02.yaml: c8da2acabd11cbb454733d9a77232efcc720098755d6ce3be88748df9f6a71f7
+  SC-T7-03.yaml: b4a3d485ec824c0e9c164128d557d990ac005d21ed4a22ba57f95f3f492f5ec5

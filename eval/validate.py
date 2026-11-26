@@ -11,6 +11,8 @@
 - 원인: 환경을 확정 조건에 대입했을 때 정답 원인만 확정되고 나머지 후보는 배제되는지
   (원인이 확정되지 않아야 정답인 사건은 모든 후보가 배제되는지)
 - 규칙으로 계산되는 라벨: 필수 판정 근거, 담당 팀, 심각도, 절차, 조치가 계산한 값과 같은지
+- 조직 설정: 시나리오는 적힌 조직(org, 없으면 가상 회사 A)의 시드로 검증한다. 1차 처리 팀 라벨(first_handler)은
+  사건의 가장 이른 제보 채널에서 그 조직의 역할 배정으로 계산한 팀과 같아야 한다 (T7, M6)
 
 라벨은 사건 단위로 본다 (eval/labels.py). 사건이 여럿이면 사건마다 위 검사를 한다
 """
@@ -29,7 +31,7 @@ from ontology.conditions import (
 from ontology.rules import rules_of
 from ontology.seed import load_seed, resolve_owner_teams
 from eval.lock import lock_errors
-from eval.labels import INCIDENT_FIELDS, is_multi, label_groups, label_incidents
+from eval.labels import DEFAULT_ORG, INCIDENT_FIELDS, is_multi, label_groups, label_incidents, scenario_org
 
 SCENARIO_DIR = Path(__file__).parent / "scenarios"
 SPLITS = ("dev", "test")
@@ -54,6 +56,17 @@ def load_scenarios(split: str) -> list[dict]:
         yaml.safe_load(path.read_text(encoding="utf-8"))
         for path in sorted((SCENARIO_DIR / split).glob("*.yaml"))
     ]
+
+
+def first_handler_team(seed: dict, scenario: dict, reports: list[int]) -> str | None:
+    """사건의 1차 처리 팀. 가장 이른 제보의 채널 -> 1차 처리 역할 -> 그 조직에서 역할을 맡은 팀 (R1-2).
+
+    에이전트는 제보를 시각 순으로 받고, 사건을 연 첫 제보의 채널로 1차 처리 역할을 조회한다 (graph.py 2단계).
+    시각이 같으면 앞 번호의 제보가 먼저다
+    """
+    first = min(reports, key=lambda i: (_aware(scenario["reports"][i]["at"]), i))
+    channel = next(c for c in seed["channels"] if c["id"] == scenario["reports"][first]["channel"])
+    return next((r["team"] for r in seed["role_assignments"] if r["role"] == channel["handled_first_by"]), None)
 
 
 def _aware(value) -> datetime | None:
@@ -210,6 +223,8 @@ def _label_shape_errors(labels: dict, where: str, allow_unconfirmed: bool) -> li
             continue
         kind = "문자열이거나 null" if allow_unconfirmed and name in UNCONFIRMED_LABELS else "문자열"
         errors.append(f"{where}.{name}은 {kind}이어야 한다")
+    if "first_handler" in labels and not isinstance(labels["first_handler"], str):
+        errors.append(f"{where}.first_handler는 문자열이어야 한다")
     # 목록의 원소 형식까지 본다. 뒤에서 정렬하고 집합으로 바꾸므로 형식이 섞이면 예외가 난다
     for name in LIST_LABELS:
         value = labels.get(name)
@@ -232,6 +247,10 @@ def _structure_errors(scenario) -> list[str]:
             errors.append(f"{sid}: {name}은 문자열이어야 한다")
     if scenario.get("boundary") is not None and not isinstance(scenario["boundary"], str):
         errors.append(f"{sid}: boundary는 문자열이거나 비어 있어야 한다")
+    # 조직(org)과 원래 시나리오(derived_from)는 T7에만 적는다. 없을 수 있다
+    for name in ("org", "derived_from"):
+        if name in scenario and not isinstance(scenario[name], str):
+            errors.append(f"{sid}: {name}은 문자열이어야 한다")
 
     def need(ok: bool, message: str) -> None:
         if not ok:
@@ -313,6 +332,13 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
     check(scenario.get("split") in SPLITS, "split은 dev 또는 test여야 한다")
     check(scenario.get("source") in SOURCES, f"source는 {sorted(SOURCES)} 중 하나여야 한다")
     check(bool(scenario.get("text_source")), "text_source(제보 문장을 만든 방법)가 없다")
+    # 조직 설정: 적힌 조직의 시드로 검증해야 한다. 다른 조직의 시드로 보면 채널과 역할 배정이 달라 틀린 기준이 된다
+    org = scenario_org(scenario)
+    check(org == seed["org"]["id"], f"이 시나리오는 {org} 설정으로 검증한다 (받은 시드 {seed['org']['id']})")
+    if scenario.get("type") == "T7":
+        # T7은 가상 회사 A와 다른 조직에서 1차 처리 팀이 바뀌는지 본다 (4단계 2-4)
+        check(org != DEFAULT_ORG, f"T7은 {DEFAULT_ORG}가 아닌 조직 설정(org)을 적는다")
+        check(isinstance(scenario.get("derived_from"), str), "T7은 원래 시나리오(derived_from)를 적는다")
 
     # 제보
     reports = scenario["reports"]
@@ -332,6 +358,9 @@ def validate_scenario(seed: dict, scenario: dict) -> list[str]:
     # 사건마다 정답 원인만 확정되는지 가릴 수 없다
     symptoms = [incident["symptom"] for incident in incidents]
     check(len(set(symptoms)) == len(symptoms), f"사건끼리 증상이 겹친다: {symptoms}")
+    if scenario.get("type") == "T7":
+        check(bool(incidents) and all("first_handler" in i for i in incidents),
+              "T7은 사건마다 1차 처리 팀(first_handler)을 적는다")
 
     # 환경
     env = None
@@ -364,6 +393,10 @@ def _incident_errors(seed: dict, scenario: dict, env: Environment, expected: dic
         return ok
 
     environment = scenario["environment"]
+    if "first_handler" in expected:
+        team = first_handler_team(seed, scenario, expected["reports"])
+        check(expected["first_handler"] == team,
+              f"first_handler는 가장 이른 제보 채널의 1차 처리 역할을 맡은 팀 {team}여야 한다 (R1-2)")
     root = expected.get("root_cause")
     if root is not None:
         errors += _condition_errors(seed, expected, env)
@@ -454,7 +487,17 @@ def _incident_errors(seed: dict, scenario: dict, env: Environment, expected: dic
     return errors
 
 
-def validate_all(seed: dict) -> list[str]:
+def validate_all(seed: dict | None = None) -> list[str]:
+    """모든 시나리오를 검증한다. 시나리오마다 적힌 조직의 시드로 본다. seed를 주면 그 조직의 시나리오에 그 시드를 쓴다."""
+    seeds: dict[str, dict] = {seed["org"]["id"]: seed} if seed else {}
+
+    def seed_of(scenario) -> dict:
+        org = scenario_org(scenario) if isinstance(scenario, dict) and isinstance(scenario.get("org", ""), str) \
+            else DEFAULT_ORG
+        if org not in seeds:
+            seeds[org] = load_seed(org)
+        return seeds[org]
+
     # test 세트는 라벨을 잠근 뒤 바꾸지 않는다 (4단계 4-2, eval/lock.py)
     errors: list[str] = [f"test 잠금: {e}" for e in lock_errors()]
     seen: set[str] = set()
@@ -467,7 +510,7 @@ def validate_all(seed: dict) -> list[str]:
                 errors.append(f"{path.name}: 파일을 읽을 수 없다 ({type(exc).__name__})")
                 continue
             try:
-                errors.extend(validate_scenario(seed, scenario))
+                errors.extend(validate_scenario(seed_of(scenario), scenario))
             except Exception as exc:  # noqa: BLE001
                 # 모양 검사가 놓친 경우에도 한 파일 때문에 나머지 파일의 검사가 멈추지 않게 한다
                 name = scenario.get("id") if isinstance(scenario, dict) else None
@@ -486,7 +529,7 @@ def validate_all(seed: dict) -> list[str]:
 
 def main() -> int:
     """모든 시나리오를 검증하고 결과를 출력한다. 문제가 있으면 1을 돌려준다."""
-    problems = validate_all(load_seed("org-a"))
+    problems = validate_all()
     for line in problems:
         print(line)
     # 파일 수는 파일을 다시 읽지 않고 센다. 읽을 수 없는 파일이 있어도 요약까지 출력한다
