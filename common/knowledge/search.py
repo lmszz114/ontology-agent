@@ -63,14 +63,18 @@ class SearchKnowledge(TextKnowledge):
         self.searches: list[dict] = []
         self._base: list[dict] = []
         self._record: dict = {}
+        self.voyage_usage = {"calls": 0, "embed_tokens": 0, "rerank_tokens": 0}
 
     async def _search(self, query: str, where: str) -> list[dict]:
         try:
-            return await call_tool_data(self.docs, self.tracer, server=SERVER, name="search_docs",
-                                        args={"query": query} | self.settings.as_dict())
+            out = await call_tool_data(self.docs, self.tracer, server=SERVER, name="search_docs",
+                                       args={"query": query} | self.settings.as_dict())
         except ToolCallError as exc:
             self.errors.append(f"{where}: {exc}")
             raise KnowledgeUnavailable(f"문서 검색 실패: {exc}") from exc
+        for key in self.voyage_usage:  # 검색마다 쓴 Voyage 토큰을 실행 기록에 남긴다 (PR #35 리뷰)
+            self.voyage_usage[key] += out["usage"][key]
+        return out["results"]
 
     def _set_system(self, rows: list[dict]) -> None:
         chunks = "\n\n".join(f"[{i}] 문서 {r['doc_id']} ({r['chunk_id']})\n{r['text']}" for i, r in enumerate(rows, start=1))
@@ -80,10 +84,10 @@ class SearchKnowledge(TextKnowledge):
     async def begin_incident(self, incident_id: str, reports: list[str]) -> dict[str, Any]:
         query = "\n".join(reports)  # 검색 채점(eval/grader/retrieval)과 같은 검색어 (M5 사용자 결정)
         self.system, self._base = None, []
+        self._memo.clear()  # 검색보다 먼저 비운다. 검색이 실패해도 앞 사건의 답이 남지 않는다 (PR #35 리뷰)
         rows = await self._search(query, f"5.search.{incident_id}")
         self._base = rows
         self._set_system(rows)
-        self._memo.clear()  # 앞 사건의 검색 결과로 만든 답을 다시 쓰지 않는다
         docs: list[str] = []
         for r in rows:
             if r["doc_id"] not in docs:
@@ -101,6 +105,9 @@ class SearchKnowledge(TextKnowledge):
         extra = await self._search(query, f"{key[0]}.search")
         seen = {r["chunk_id"] for r in self._base}
         self._set_system(self._base + [r for r in extra if r["chunk_id"] not in seen])
+        for r in extra:  # 이 사건에서 검색해 온 문서 목록(retrieved_docs)에 질문 검색의 문서도 더한다 (PR #35 리뷰)
+            if r["doc_id"] not in self._record["docs"]:
+                self._record["docs"].append(r["doc_id"])
         self._record["extra"].append({"question": list(key), "query": query,
                                       "chunks": [{"chunk_id": r["chunk_id"], "doc_id": r["doc_id"], "score": r["score"]}
                                                  for r in extra]})

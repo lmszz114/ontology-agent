@@ -49,13 +49,16 @@ def loaded_index(driver: Driver) -> dict | None:
     return rec["m"] if rec else None
 
 
-def check_index(driver: Driver, chunks: list[Chunk]) -> dict:
+def check_index(driver: Driver, chunks: list[Chunk], model: str = EMBED_MODEL) -> dict:
     """적재된 색인이 지금 조각 목록과 같은지 본다. 다르면 멈춘다 (시드나 문서가 바뀌었는데 다시 적재하지 않음)."""
     meta = loaded_index(driver)
     if meta is None:
         raise IndexError_("검색 색인이 없다. python -m common.retrieval.index로 적재한다")
     if meta["corpus_hash"] != corpus_hash(chunks):
         raise IndexError_("검색 색인이 지금 시드, 문서와 다르다. 다시 적재한다")
+    if meta["model"] != model:
+        # 다른 모델로 만든 색인에 지금 모델의 검색어 벡터를 대면 순위가 틀린다 (PR #35 리뷰)
+        raise IndexError_(f"검색 색인의 임베딩 모델({meta['model']})이 지금 모델({model})과 다르다. 다시 적재한다")
     return meta
 
 

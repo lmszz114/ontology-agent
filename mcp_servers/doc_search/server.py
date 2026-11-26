@@ -16,16 +16,20 @@ def build_server(driver: Driver, embedder) -> MCPServer:
     server = MCPServer("doc-search", instructions="사내 기준 지식과 현장 문서(회고, 런북, 대화, 회의록)를 검색한다. 읽기 전용이다.")
 
     @server.tool()
-    def search_docs(query: str, k: int = 5, scheme: str = "paragraph", rerank: bool = False) -> list[dict]:
+    def search_docs(query: str, k: int = 5, scheme: str = "paragraph", rerank: bool = False) -> dict:
         """검색어와 가까운 문서 조각을 순위대로 돌려준다.
 
         k는 가져오는 조각 수(1~30), scheme은 조각 방식(paragraph, fixed), rerank는 리랭크 사용 여부다.
-        각 조각: chunk_id, doc_id(문서 id, 기준 지식은 K), text, score, rank.
+        results의 각 조각: chunk_id, doc_id(문서 id, 기준 지식은 K), text, score, rank.
+        usage는 이 호출에서 쓴 Voyage 토큰이다(캐시에 있던 임베딩은 0). 실행 기록에 남긴다.
         """
+        before = (embedder.usage.embed_tokens, embedder.usage.rerank_tokens)
         try:
-            return search(driver, embedder, query, scheme=scheme, k=k, rerank=rerank)
+            rows = search(driver, embedder, query, scheme=scheme, k=k, rerank=rerank)
         except SearchError as exc:
             raise ToolError(str(exc)) from exc
+        return {"results": rows, "usage": {"calls": 1, "embed_tokens": embedder.usage.embed_tokens - before[0],
+                                           "rerank_tokens": embedder.usage.rerank_tokens - before[1]}}
 
     return server
 

@@ -150,6 +150,8 @@ def test_check_index_stops_on_a_different_corpus(indexed):
     from common.retrieval.index import IndexError_, check_index
 
     driver, chunks, _ = indexed
+    with pytest.raises(IndexError_, match="임베딩 모델"):
+        check_index(driver, chunks, model="voyage-4-lite")
     with pytest.raises(IndexError_, match="다르다"):
         check_index(driver, chunks[:-1])
     with driver.session() as s:
@@ -169,6 +171,46 @@ def test_search_docs_tool_reports_bad_input(indexed):
     driver, _, fake = indexed
     server = build_server(driver, fake)
     out = asyncio.run(server.call_tool("search_docs", {"query": "로그인이 안 돼요", "k": 2, "scheme": "fixed"}))
-    assert out
+    text = str(out)
+    assert '"results"' in text and '"usage"' in text  # 조각 목록과 이 호출의 Voyage 사용량을 함께 돌려준다
     with pytest.raises(ToolError, match="조각 방식"):
         asyncio.run(server.call_tool("search_docs", {"query": "로그인", "scheme": "sentence"}))
+
+
+def test_cache_drops_a_cut_last_line_but_stops_on_a_broken_middle_line(tmp_path):
+    path = tmp_path / f"{V.EMBED_MODEL}.jsonl"
+    good = json.dumps({"key": "a", "embedding": [1.0]})
+    path.write_text(good + "\n" + '{"key": "b", "embe', encoding="utf-8")
+    v = V.Voyage(cache_dir=tmp_path)
+    assert v._cache == {"a": [1.0]} and path.read_text(encoding="utf-8") == good + "\n"
+    path.write_text('{"key": "b", "embe\n' + good + "\n", encoding="utf-8")
+    with pytest.raises(V.VoyageError, match="1번째 줄"):
+        V.Voyage(cache_dir=tmp_path)
+
+
+def test_rerank_ties_follow_chunk_id(monkeypatch):
+    from common.retrieval import search as Smod
+
+    class Tie(FakeVoyage):
+        def rerank(self, query, documents, top_k):
+            assert top_k == len(documents)  # 후보 전체의 점수를 받는다
+            return [(i, 0.5) for i in range(len(documents))]
+
+    rows = [{"chunk_id": c, "doc_id": "X", "text": c, "score": 0.9} for c in ("f:X:003", "f:X:001", "f:X:002")]
+
+    class Session:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def execute_read(self, fn):
+            return [dict(r) for r in rows]
+
+    class Driver:
+        def session(self):
+            return Session()
+
+    out = Smod.search(Driver(), Tie(), "q", scheme="fixed", k=2, rerank=True)
+    assert [r["chunk_id"] for r in out] == ["f:X:001", "f:X:002"]

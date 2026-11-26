@@ -35,8 +35,9 @@ def search(driver: Driver, embedder, query: str, *, scheme: str, k: int, rerank:
         rows = session.execute_read(lambda tx: tx.run(QUERY, vector=vector, scheme=scheme,
                                                       limit=POOL if rerank else k).data())
     if rerank:
-        ranked = embedder.rerank(query, [r["text"] for r in rows], k)
-        rows = [rows[i] | {"score": score} for i, score in ranked]
+        # 후보 전체의 점수를 받아 점수가 같으면 조각 id 순으로 둔 뒤 k개를 남긴다 (PR #35 리뷰)
+        ranked = embedder.rerank(query, [r["text"] for r in rows], len(rows))
+        rows = sorted((rows[i] | {"score": score} for i, score in ranked), key=lambda r: (-r["score"], r["chunk_id"]))
     return [r | {"rank": i} for i, r in enumerate(rows[:k], start=1)]
 
 

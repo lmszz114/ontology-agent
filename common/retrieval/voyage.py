@@ -48,9 +48,24 @@ class Voyage:
         self._cache_path = cache_dir / f"{EMBED_MODEL}.jsonl" if cache_dir else None
         self._cache: dict[str, list[float]] = {}
         if self._cache_path and self._cache_path.exists():
-            for line in self._cache_path.read_text(encoding="utf-8").splitlines():
-                row = json.loads(line)
+            self._load_cache()
+
+    def _load_cache(self) -> None:
+        """캐시를 읽는다. 쓰다가 끊겨 마지막 줄만 깨졌으면 그 줄을 잘라 내고, 중간 줄이 깨졌으면 멈춘다 (PR #35 리뷰)."""
+        text = self._cache_path.read_text(encoding="utf-8")
+        lines = text.split("\n")
+        offset = 0
+        for i, line in enumerate(lines):
+            if line:
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    if any(rest for rest in lines[i + 1:]):
+                        raise VoyageError(f"임베딩 캐시 {self._cache_path}의 {i + 1}번째 줄이 깨졌다") from exc
+                    self._cache_path.write_text(text[:offset], encoding="utf-8")
+                    return
                 self._cache[row["key"]] = row["embedding"]
+            offset += len(line) + 1
 
     def _post(self, path: str, body: dict) -> dict:
         errors = 0

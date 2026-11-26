@@ -9,7 +9,7 @@
   진단에서는 에이전트가 묶은 사건의 제보를 쓰므로, 묶음이 틀리면 검색어가 달라진다
 - 정답 문서: eval/corpus/relevant.py. 정답 문서가 없는 사건(원인 미확정, 범위 밖)은 뺀다
 - 설정: 조각 방식(paragraph, fixed) × 리랭크(없음, 있음) × top-k(3, 5, 10). top-k는 조각 수다.
-  같은 방식과 리랭크에서 k개 결과는 10개 결과의 앞부분과 같아서 10개로 한 번 검색하고 잘라 쓴다
+  리랭크는 10개로 한 번 검색하고 잘라 쓰고, 벡터 검색은 k마다 다시 검색한다
 - Recall@k: 사건의 정답 문서 중 상위 k개 조각의 문서에 들어온 비율의 평균
 - MRR: 조각 순서대로 본 문서 중 첫 정답 문서 순위(문서 단위)의 역수 평균. k개 안에 없으면 0
 - 옛날 문서 비율: 그 사건 원인의 옛날 정보 문서가 상위 k개에 들어온 사건의 비율
@@ -69,13 +69,16 @@ def evaluate(driver, embedder, qs: list[dict], chunk_docs: dict[str, list[str]],
     for q in qs:
         for scheme in SCHEMES:
             for rerank in reranks:
-                found = search(driver, embedder, q["query"], scheme=scheme, k=MAX_K, rerank=rerank)
+                # 리랭크는 같은 후보를 정렬하므로 k개가 10개의 앞부분과 같다. 벡터 검색은 근사 검색이라 LIMIT이 다르면
+                # 앞부분이 같다고 보장할 수 없어 k마다 다시 검색한다 (PR #35 리뷰, 검색어 임베딩은 캐시에서 읽는다)
+                once = search(driver, embedder, q["query"], scheme=scheme, k=MAX_K, rerank=True) if rerank else None
                 for k in TOP_KS:
-                    s = score(docs_of(found[:k]), q["relevant"], q["stale"])
+                    found = once[:k] if rerank else search(driver, embedder, q["query"], scheme=scheme, k=k)
+                    s = score(docs_of(found), q["relevant"], q["stale"])
                     key = f"{scheme}/{'rerank' if rerank else 'vector'}/k{k}"
                     configs.setdefault(key, []).append(s)
                     rows.append({"scenario": q["scenario"], "incident": q["incident"], "config": key,
-                                 "docs": docs_of(found[:k])} | s)
+                                 "docs": docs_of(found)} | s)
     rng = random.Random(SEED)
     summary = {}
     for key, scores in configs.items():

@@ -112,7 +112,7 @@ class TextKnowledge:
             result = self.llm.call(
                 task="diagnosis", name=f"knowledge.{self.name}.{name}" + (".retry" if attempt else ""),
                 system=self.system, messages=messages, output_schema=schema,
-                metadata={"config": self.name, "prompt_version": P.PROMPT_VERSION},
+                metadata={"config": self.name, "prompt_version": self.prompt_version},
             )
             self.results.append(result)
             try:

@@ -44,7 +44,7 @@ OUTPUT_FIELDS = ("symptom", "scope", "severity", "hypotheses", "root_cause", "pr
 # 한 폴더 안에서 섞이면 반복 집계가 같은 조건의 반복이 아니게 되는 값
 # git_dirty는 실행기(eval/runner)가 남긴다. 그 전 결과에는 없어서 없음(None)으로 읽는다
 SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", "git_commit", "git_dirty", "seed_hash",
-                  "cext_from")
+                  "cext_from", "search_settings")
 
 # 처음 틀린 단계를 찾는 순서 (4단계 5-5). 검색 단계는 구성 B를 붙일 때 더한다
 STAGES = (

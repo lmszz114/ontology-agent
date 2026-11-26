@@ -15,8 +15,11 @@ def _grams(text: str) -> list[str]:
 
 class FakeVoyage:
     def __init__(self):
+        from common.retrieval.voyage import Usage
+
         self.embedded: list[tuple[str, str]] = []
         self.reranked = 0
+        self.usage = Usage()
 
     def embed(self, texts, input_type):
         out = []

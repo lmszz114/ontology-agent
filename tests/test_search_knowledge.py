@@ -31,7 +31,7 @@ def provider(script, monkeypatch, rows=ROWS, fail=False):
         calls.append((server, name, args))
         if fail:
             raise ToolCallError("doc-search.search_docs 오류: 색인 없음")
-        return rows
+        return {"results": rows, "usage": {"calls": 1, "embed_tokens": 3, "rerank_tokens": 7}}
 
     monkeypatch.setattr(S, "call_tool_data", fake_call)
     llm = LLM(load_model_config("org-a"), MemoryTracer(), SimpleNamespace(messages=script))
@@ -66,9 +66,13 @@ def test_search_uses_report_text_and_settings_and_feeds_only_retrieved_chunks(mo
 
 def test_search_failure_is_reported_not_answered_from_nothing(monkeypatch):
     k, _ = provider(Script(), monkeypatch, fail=True)
+    k._memo[("procedure", "P1")] = {"procedure_id": "P1"}  # 앞 사건의 답이 남아 있어도 검색이 실패하면 쓰지 않는다
+
     with pytest.raises(KnowledgeUnavailable, match="문서 검색 실패"):
         asyncio.run(k.begin_incident("IN-1", ["로그인이 안 돼요"]))
-    assert k.errors and k.system is None
+    assert k.errors and k.system is None and not k._memo
+    with pytest.raises(KnowledgeUnavailable):
+        asyncio.run(k.procedure("P1"))
 
 
 def test_id_listing_has_names_but_no_relations():
@@ -116,7 +120,7 @@ def test_questions_add_their_own_code_made_search(monkeypatch):
 
     async def fake_call(client, tracer, *, server, name, args):
         calls.append((server, name, args))
-        return extra
+        return {"results": extra, "usage": {"calls": 1, "embed_tokens": 0, "rerank_tokens": 5}}
 
     monkeypatch.setattr(S, "call_tool_data", fake_call)
     with pytest.raises(KnowledgeUnavailable):
@@ -127,6 +131,8 @@ def test_questions_add_their_own_code_made_search(monkeypatch):
     # 사건 검색 결과에 질문 검색 결과를 더하고, 이미 있는 조각은 다시 넣지 않는다
     assert "C02 판정 근거 -> E02" in system and system.count("원인은 메일함 지급 누락이다.") == 1
     assert k._record["extra"][0]["question"] == ["checks", "C02"]
+    assert k._record["docs"] == ["PM-01", "K"]  # 질문 검색의 문서도 사건의 검색 문서 목록에 든다 (이미 있으면 그대로)
+    assert k.voyage_usage == {"calls": 2, "embed_tokens": 3, "rerank_tokens": 12}
     before = len(calls)
     with pytest.raises(KnowledgeUnavailable):
         asyncio.run(k.get_checks("C02"))  # 이미 물은 질문(실패도 기억한다)은 다시 검색하지 않는다

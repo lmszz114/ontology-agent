@@ -156,6 +156,8 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
             "knowledge_prompt_version": getattr(knowledge, "prompt_version", None),
             # 구성 B: 검색 설정. 색인 확인(조각 목록 해시)은 실행기가 남긴다
             "search_settings": knowledge.settings.as_dict() if config in SEARCH_CONFIGS else None,
+            # 구성 B: 검색에 쓴 Voyage 토큰. 무료 토큰 안이라 비용(cost_usd)에는 더하지 않는다 (5단계 11-2)
+            "voyage_usage": knowledge.voyage_usage if config in SEARCH_CONFIGS else None,
         },
         "outputs": state.get("outputs") or [],
         "unclassified": state.get("unclassified") or [],
