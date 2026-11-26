@@ -525,11 +525,14 @@ def build_graph(deps: Deps):
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
 
+        unreadable = None
         if problem:
             verdict = {"result": "inconclusive", "reason": problem, "used_checks": [], "reused_results": []}
         elif (data is None or _structure_errors(data, schema)
                 or data["result"] not in ("confirm", "rule_out", "inconclusive")
                 or not set(data["reused_results"]) <= prior_ids):
+            # 형식이 틀린 답은 불명확으로 두되, 정상적인 불명확 답과 구분해 출력 형식 오류로 사람에게 넘긴다 (PR #39 리뷰)
+            unreadable = f"판정 근거 단계({cause_id}) {OUTPUT_ERROR}: 답을 읽을 수 없다"
             verdict = {"result": "inconclusive", "reason": "판정 근거 단계의 답을 읽을 수 없다",
                        "used_checks": [], "reused_results": []}
         else:
@@ -572,8 +575,8 @@ def build_graph(deps: Deps):
         if verdict["result"] == "confirm":
             diag["confirmed"] = cause_id
         diag["hyp_index"] += 1
-        if problem:
-            return {"diag": diag, "incidents": _flag(state, diag["incident_id"], problem)}
+        if problem or unreadable:
+            return {"diag": diag, "incidents": _flag(state, diag["incident_id"], problem or unreadable)}
         return {"diag": diag}
 
     def after_check(state: State) -> str:

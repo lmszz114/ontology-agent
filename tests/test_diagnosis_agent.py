@@ -612,6 +612,10 @@ def test_unknown_reused_result_id_is_inconclusive(db, seed):
     model.check = lambda params: text({"result": "confirm", "used_checks": [], "reused_results": ["K99"], "reason": "x"})
     state, _ = run_agent(db, seed, scenario, model, verdicts={})
     assert state["outputs"][0]["hypotheses"][0]["result"] == "inconclusive"
+    # 형식이 틀린 답은 출력 형식 오류로 사람에게 넘긴다. 채점기가 이 사유를 센다 (PR #39 리뷰)
+    from agents.diagnosis.graph import OUTPUT_ERROR
+
+    assert any(OUTPUT_ERROR in reason for reason in state["outputs"][0]["needs_human"])
 
 
 def test_same_query_called_again_keeps_the_earlier_result(db, seed):
@@ -695,6 +699,10 @@ def test_required_check_retry_happens_once(db, seed):
     assert out["root_cause"] is None
     assert model.calls.count("check") == 2 * len(out["hypotheses"][:3])
     assert all(h["result"] == "inconclusive" for h in out["hypotheses"][:3])
+    # 형식에 맞는 불명확 답은 출력 형식 오류가 아니다
+    from agents.diagnosis.graph import OUTPUT_ERROR
+
+    assert not any(OUTPUT_ERROR in reason for reason in out["needs_human"])
 
 
 def test_confirm_without_required_checks_after_retry_is_inconclusive(db, seed):
