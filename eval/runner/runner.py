@@ -20,7 +20,8 @@ from common.files import write_text_atomic
 
 ROOT = Path(__file__).resolve().parents[2]
 # 이어서 돌릴 때 앞 결과와 같아야 하는 값. 다르면 같은 조건의 반복이 아니다
-RESUME_SAME = ("config", "org", "split", "prompt_version", "git_commit", "git_dirty", "seed_hash")
+# package: 배포 패키지 id와 버전 (M6). 그 전 결과에는 없어 이어 돌리지 않는다
+RESUME_SAME = ("config", "org", "split", "prompt_version", "git_commit", "git_dirty", "seed_hash", "package")
 
 
 class RunnerError(Exception):

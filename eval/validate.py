@@ -26,6 +26,7 @@ from common.writers.events import CHANGE_KINDS
 from ontology.conditions import (
     CONFIRM, ConditionError, Environment, allowed_values, evaluate_cause, procedure_conditions, required_checks,
 )
+from ontology.rules import rules_of
 from ontology.seed import load_seed, resolve_owner_teams
 from eval.lock import lock_errors
 from eval.labels import INCIDENT_FIELDS, is_multi, label_groups, label_incidents
@@ -35,13 +36,6 @@ SPLITS = ("dev", "test")
 TYPES = {"T1", "T2", "T3", "T4", "T5", "T6", "T7"}
 SOURCES = {"설계", "경험"}
 
-# 접수와 분류(P1)는 모든 사건에서 연다
-INTAKE_PROCEDURE = "P1"
-# 원인 수정과 반영(P10)은 원인이 확정되면 항상 연다 (R7)
-FIX_PROCEDURE = "P10"
-URGENT_NOTICE, URGENT_MAINTENANCE = "P3", "P4"
-# 등급이 상향된 사건은 에스컬레이션(P2)을 연다 (R3)
-ESCALATION_PROCEDURE = "P2"
 
 # 변경 이력의 종류마다 그 변경이 보여야 하는 판정 근거와 관측 값 (3단계 6장).
 # 시스템 인자가 있는 근거는 변경된 시스템으로 조회한 결과를 본다
@@ -52,7 +46,6 @@ CHANGE_EVIDENCE = {
     "event_config": ("E07", "changed", {"yes"}, "system"),
     "product_config": ("E07", "changed", {"yes"}, "system"),
 }
-URGENT_LEVELS = {"SEV1", "SEV2"}
 
 
 def load_scenarios(split: str) -> list[dict]:
@@ -175,21 +168,19 @@ def expected_procedures(seed: dict, labels: dict) -> set[str]:
       조건이 붙어 있으면(미지급이면 P6, 과지급이면 P7) 시나리오의 resolved_conditions에 그 조건이 있을 때만 연다
     """
     expected = label_incidents(labels["expected"])[0] if "expected" in labels else labels
-    severity = next(s for s in seed["severities"] if s["id"] == expected["severity"])
+    rules = rules_of(seed)
     human_only = {p["id"] for p in seed["procedures"] if p.get("human_only")}
 
-    procedures = set(severity["triggers"])
+    procedures = rules.severity_procedures(expected["severity"])
     if expected.get("escalated"):
-        procedures.add(ESCALATION_PROCEDURE)
-    if expected["severity"] in URGENT_LEVELS:
-        procedures.add(URGENT_MAINTENANCE)
+        procedures.add(rules.escalation)
     if expected.get("root_cause") is None:
         return procedures
-    procedures.add(FIX_PROCEDURE)
+    procedures.add(rules.fix)
     cause = next(c for c in seed["causes"] if c["id"] == expected["root_cause"])
     for ref in cause["resolved_by"]:
         procedure, condition = ref["procedure"], ref.get("condition")
-        if procedure in (URGENT_NOTICE, URGENT_MAINTENANCE) or procedure in human_only:
+        if procedure in rules.by_severity or procedure in human_only:
             continue
         if condition is None or condition in expected.get("resolved_conditions", []):
             procedures.add(procedure)
@@ -449,7 +440,7 @@ def _incident_errors(seed: dict, scenario: dict, env: Environment, expected: dic
     in_scope = {
         action_id
         for procedure in seed["procedures"]
-        if procedure["id"] in procedures | {INTAKE_PROCEDURE}
+        if procedure["id"] in procedures | {rules_of(seed).intake}
         for action_id in procedure["actions"]
     }
     low = sorted(a for a in in_scope if actions[a]["risk"] == "low")

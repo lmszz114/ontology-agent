@@ -30,6 +30,7 @@ from mcp_servers.ontology_query.server import build_server as build_onto_server
 from ontology.apply_schema import apply_schema
 from ontology.conditions import Environment
 from ontology.load import load_static
+from ontology.rules import rules_of
 from ontology.seed import load_seed
 from tests.memory_tracer import MemoryTracer
 
@@ -175,6 +176,7 @@ def run_agent(db, seed, scenario: dict, model: RuleModel, verdicts: dict, condit
                             for t in listed.tools],
                 tool_checks=queries.get_evidence_tools(db),
                 symptoms=queries.get_symptom_types(db), systems=queries.get_systems(db),
+                rules=rules_of(seed),
             )
             return await build_graph(deps).ainvoke(initial_state(scenario["reports"]),
                                                    config={"recursion_limit": 200}), tracer

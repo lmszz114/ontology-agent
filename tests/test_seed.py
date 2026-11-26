@@ -106,7 +106,7 @@ def test_references_exist(seed):
         assert a.get("uses_system") is None or a["uses_system"] in systems
     for sev in seed["severities"]:
         assert all(p in procedures for p in sev["triggers"])
-    assert seed["escalation_procedure"] in procedures
+    assert set(seed["rules"]["rule_procedures"].values()) <= procedures
 
 
 def test_allowed_values(seed):
@@ -187,7 +187,7 @@ def test_no_unused_nodes(seed):
 
     used_procedures = {x["procedure"] for c in seed["causes"] for x in c["resolved_by"]}
     used_procedures |= {p for sev in seed["severities"] for p in sev["triggers"]}
-    used_procedures |= {seed["escalation_procedure"], "P1", "P9"}  # 접수와 사후 리뷰는 모든 사건 공통
+    used_procedures |= set(seed["rules"]["rule_procedures"].values()) | {"P9"}  # 규칙 절차와 사후 리뷰
     assert used_procedures == set(ids(seed["procedures"]))
 
 
@@ -422,3 +422,32 @@ def test_unconditional_procedure_rejects_condition_check(seed):
     _resolved(broken, "C14", "P7").update(check="E02")
     with pytest.raises(ConditionError, match="조건이 없는 절차"):
         validate_cause_conditions(broken)
+
+
+def test_rules_reject_unknown_and_human_only_procedures(seed):
+    """규칙이 여는 절차는 시드에 있어야 하고 사람만 여는 절차(롤백)일 수 없다 (M6)."""
+    import copy
+
+    import pytest
+
+    from ontology.rules import validate_rules
+
+    bad = copy.deepcopy(seed)
+    bad["rules"]["rule_procedures"]["fix"] = "P99"
+    with pytest.raises(ValueError, match="정의되지 않은 절차"):
+        validate_rules(bad)
+    bad["rules"]["rule_procedures"]["fix"] = "P5"
+    with pytest.raises(ValueError, match="사람만 여는"):
+        validate_rules(bad)
+    bad = copy.deepcopy(seed)
+    bad["rules"]["rule_procedures"]["intake"] = bad["rules"]["rule_procedures"]["fix"]
+    with pytest.raises(ValueError, match="같은 절차"):
+        validate_rules(bad)
+    bad = copy.deepcopy(seed)
+    bad["severities"][0]["triggers"] = [*bad["severities"][0]["triggers"], bad["rules"]["rule_procedures"]["fix"]]
+    with pytest.raises(ValueError, match="triggers에 규칙 절차"):
+        validate_rules(bad)
+    bad = copy.deepcopy(seed)
+    bad["rules"]["urgent_levels"] = ["SEV9"]
+    with pytest.raises(ValueError, match="등급"):
+        validate_rules(bad)

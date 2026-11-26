@@ -6,5 +6,4 @@ severities:
   - {id: SEV3, criteria: "일부 유저, 일부 기능 영향", triggers: []}
   - {id: SEV4, criteria: "경미한 오류, 우회 가능", triggers: []}
 
-# 등급이 상향되면 여는 절차 (R3). 특정 등급이 아니라 상향이라는 사건에 걸린다.
-escalation_procedure: P2
+# 등급이 상향되면 여는 절차(R3)는 rules.yaml에 있다

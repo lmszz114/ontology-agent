@@ -21,8 +21,9 @@ import sys
 from pathlib import Path
 
 from agents.diagnosis.prompts import PROMPT_VERSION
-from agents.diagnosis.run import EXT_CONFIGS, KNOWLEDGE, SEARCH_CONFIGS, _b_settings, run_scenario
+from agents.diagnosis.run import EXT_CONFIGS, KNOWLEDGE, SEARCH_CONFIGS, _b_settings, prompt_uses, run_scenario
 from common.models import LLM, load_model_config, make_anthropic_client
+from common.packages import PackageError, load_package
 from common.tracing import Tracer
 from eval.runner.runner import (
     ROOT,
@@ -79,9 +80,14 @@ def prepare(args: argparse.Namespace):
         # 커밋하지 않은 변경으로 돌리면 결과의 커밋으로 코드를 재현할 수 없다
         raise RunnerError("커밋하지 않은 변경이 있다. 커밋하고 돌리거나 --allow-dirty를 준다:\n  "
                           + "\n  ".join(git.changed))
-    seed = seed_hash(load_seed(args.org))
+    # 배포 패키지: 이 실행이 쓰는 프롬프트 버전이 패키지에 적힌 것과 같아야 한다 (5단계 3장, M6)
+    try:
+        package = load_package(args.org, uses=prompt_uses(args.config))
+    except (PackageError, ValueError) as exc:
+        raise RunnerError(f"배포 패키지를 쓸 수 없다: {exc}") from exc
+    seed = seed_hash(package.seed)
     expected = {"config": args.config, "org": args.org, "split": "dev", "prompt_version": PROMPT_VERSION,
-                "git_commit": git.commit, "git_dirty": git.dirty, "seed_hash": seed}
+                "git_commit": git.commit, "git_dirty": git.dirty, "seed_hash": seed, "package": package.record()}
     if args.cext_from:
         check_cext(args, out)
         expected["cext_from"] = Path(args.cext_from).as_posix()
@@ -140,6 +146,7 @@ def check_loaded_seed(driver, org: str, expected_hash: str) -> None:
 
 async def main_async(args: argparse.Namespace) -> int:
     out, git, todo, seed = prepare(args)
+    package_record = load_package(args.org, uses=prompt_uses(args.config)).record()  # prepare에서 이미 확인했다
     print(f"구성 {args.config}, 반복 {args.reps}, 실행 {len(todo)}건, 커밋 {git.commit[:7]}"
           + (" (커밋하지 않은 변경 있음)" if git.dirty else ""))
     if not todo:
@@ -175,6 +182,7 @@ async def main_async(args: argparse.Namespace) -> int:
                 async def run_one(scenario: dict, path: Path, info=graph_info) -> dict:
                     result = await run_scenario(scenario, path, config=args.config, org=args.org, tracer=tracer,
                                                 llm=llm, driver=driver, neo4j_uri=uri)
+                    result["run"]["package"] = package_record
                     if index_info:
                         # 검색 색인: 조각 목록 해시와 임베딩 모델 (채점기가 지금 문서로 같은 해시가 나오는지 본다)
                         result["run"]["retrieval_index"] = index_info

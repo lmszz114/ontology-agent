@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 
 from ontology.conditions import validate_cause_conditions
+from ontology.rules import validate_rules
 
 ROOT = Path(__file__).parent.parent
 SEED_DIR = Path(__file__).parent / "seed"
@@ -28,6 +29,8 @@ SEED_FILES = {
     "actions.yaml": "actions",
     "severities.yaml": "severities",
 }
+# 판단 규칙이 여는 절차 (R1, R3, R7). 그래프에 넣지 않는다
+RULES_FILE = "rules.yaml"
 
 
 PROVENANCE_FILE = "provenance.yaml"
@@ -43,8 +46,7 @@ def load_seed(org: str = "org-a", seed_dir: Path = SEED_DIR) -> dict:
     for filename, key in SEED_FILES.items():
         data = _read(seed_dir / filename)
         seed[key] = data[key]
-        if key == "severities":
-            seed["escalation_procedure"] = data["escalation_procedure"]
+    seed["rules"] = _read(seed_dir / RULES_FILE)
 
     # 반영된 지식의 출처. 비어 있으면 넣지 않아 시드 해시가 바뀌지 않는다 (M4 PR 5)
     provenance = (_read(seed_dir / PROVENANCE_FILE) or {}).get("provenance") if (seed_dir / PROVENANCE_FILE).exists() else None
@@ -82,6 +84,21 @@ def validate_seed(seed: dict) -> None:
 
     for channel in seed["channels"]:
         require(channel.get("source_system"), systems, f"{channel['id']}.source_system")
+    # 채널의 1차 처리 역할은 어떤 팀이 맡아야 한다. 없으면 접수 분류(R1-2)가 팀을 찾지 못한다 (M6, 조직 설정 검증)
+    roles = {r["id"] for r in seed["roles"]}
+    assigned = {}
+    for ra in seed["role_assignments"]:
+        # 역할과 팀은 둘 다 꼭 있어야 한다. require는 빈 값을 넘기므로 따로 막는다 (PR #37 리뷰)
+        if ra.get("role") is None or ra.get("team") is None:
+            raise ValueError(f"역할 배정에 역할이나 팀이 비어 있다: {ra}")
+        require(ra["role"], roles, f"역할 배정 {ra['role']}")
+        require(ra["team"], teams, f"역할 배정 {ra['role']}.team")
+        if assigned.setdefault(ra["role"], ra["team"]) != ra["team"]:
+            raise ValueError(f"역할 {ra['role']}을 두 팀이 맡는다: {assigned[ra['role']]}, {ra['team']}")
+    for channel in seed["channels"]:
+        require(channel["handled_first_by"], roles, f"{channel['id']}.handled_first_by")
+        if channel["handled_first_by"] not in assigned:
+            raise ValueError(f"{channel['id']}의 1차 처리 역할 {channel['handled_first_by']}을 맡은 팀이 없다")
     for check in seed["evidence_checks"]:
         for key in ("judged_by_team", "performed_by_team"):
             require(check.get(key), teams, f"{check['id']}.{key}")
@@ -105,6 +122,7 @@ def validate_seed(seed: dict) -> None:
                 if holders.setdefault(slot, owner["team"]) != owner["team"]:
                     raise ValueError(f"{system['id']}의 {slot} 담당이 둘이다: {holders[slot]}, {owner['team']}")
     validate_cause_conditions(seed)
+    validate_rules(seed)
 
 
 def resolve_owner_teams(seed: dict, cause_id: str) -> list[str]:

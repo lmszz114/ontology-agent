@@ -32,6 +32,7 @@ from common.models.config import USAGE_FIELDS
 from common.tracing import Tracer
 from common.writers import events
 from mcp_servers.ontology_query import queries
+from ontology.rules import rules_of
 from ontology.seed import load_seed
 
 ROOT = Path(__file__).parent.parent.parent
@@ -72,6 +73,18 @@ KNOWLEDGE: dict[str, Callable[[KnowledgeContext], KnowledgeProvider]] = {
 EXT_CONFIGS = {"C-ext"}
 # 문서 검색 서버를 띄우는 구성
 SEARCH_CONFIGS = {"B"}
+
+
+def prompt_uses(config: str) -> dict[str, str]:
+    """이 구성으로 진단할 때 쓰는 프롬프트와 그 코드 버전. 배포 패키지에 적힌 버전과 같아야 돈다 (M6)."""
+    from common.knowledge import text_prompts
+
+    uses = {"diagnosis": PROMPT_VERSION}
+    if config == "A":
+        uses["knowledge-a"] = text_prompts.PROMPT_VERSION
+    elif config in SEARCH_CONFIGS:
+        uses["knowledge-b"] = text_prompts.PROMPT_VERSION_B
+    return uses
 
 
 def _b_settings():
@@ -130,6 +143,7 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
             driver=driver, llm=llm, tracer=tracer, knowledge=knowledge, llm_results=results,
             mock_client=mock, mock_tools=mock_tools, tool_checks=queries.get_evidence_tools(driver),
             symptoms=queries.get_symptom_types(driver), systems=queries.get_systems(driver),
+            rules=rules_of(load_seed(org)),
         )
         graph = build_graph(deps)
         started = datetime.now(KST)

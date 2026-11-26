@@ -25,6 +25,7 @@ from ontology.conditions import (
     evaluate_cause,
     required_checks,
 )
+from ontology.rules import rules_of
 from ontology.seed import load_seed, seed_hash
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,8 +33,6 @@ SCENARIO_DIR = Path(__file__).resolve().parents[1] / "scenarios"
 # 승인 요청이 실제로 기록된 상태. 게이트가 거부한(refused) 요청은 승인 대기 기록이 없어 요청으로 세지 않는다
 REQUESTED_STATUSES = ("pending_approval", "approved", "done")
 
-# 접수(P1)는 모든 사건에서 열어 라벨에 넣지 않는다 (4단계 5-1 절차 일치율)
-INTAKE_PROCEDURE = "P1"
 # 판정 근거 단계의 조회만 센다. 1단계 접수 내역 조회(E15)는 코드가 모든 제보에서 부른다
 CHECK_STEP = "7.check"
 
@@ -43,8 +42,9 @@ OUTPUT_FIELDS = ("symptom", "scope", "severity", "hypotheses", "root_cause", "pr
                  "actions", "tool_calls")
 # 한 폴더 안에서 섞이면 반복 집계가 같은 조건의 반복이 아니게 되는 값
 # git_dirty는 실행기(eval/runner)가 남긴다. 그 전 결과에는 없어서 없음(None)으로 읽는다
+# package(배포 패키지 id와 버전)는 M6부터 남긴다. 그 전 결과는 없음으로 같다
 SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", "git_commit", "git_dirty", "seed_hash",
-                  "cext_from", "search_settings")
+                  "cext_from", "search_settings", "package")
 
 # 처음 틀린 단계를 찾는 순서 (4단계 5-5). 검색 단계는 구성 B를 붙일 때 더한다
 STAGES = (
@@ -258,7 +258,7 @@ def match_incidents(labels: list[dict], indexes: list[list[int]]) -> list[int | 
 INCIDENT_KEYS = ("severity", "severity_within1", "top1", "top3", "pre_rank_top1", "team", "procedures")
 
 
-def _grade_incident(label: dict, out: dict | None, causes: dict) -> dict:
+def _grade_incident(label: dict, out: dict | None, causes: dict, intake: str) -> dict:
     """정답 사건 하나와 짝지은 결과 사건의 채점.
 
     원인이 확정되지 않아야 정답인 사건(root_cause null)은 결과도 원인을 확정하지 않아야 Top-1, Top-3이 맞고,
@@ -303,7 +303,8 @@ def _grade_incident(label: dict, out: dict | None, causes: dict) -> dict:
         top3=top3,
         pre_rank_top1=pre_rank_top1,
         team=out["primary_team"] == label["primary_team"],
-        procedures=set(out["procedures"]) - {INTAKE_PROCEDURE} == set(label["procedures"]),
+        # 접수(P1, 시드 rules.yaml)는 모든 사건에서 열어 라벨에 넣지 않는다 (4단계 5-1 절차 일치율)
+        procedures=set(out["procedures"]) - {intake} == set(label["procedures"]),
         approval_missing=sorted(set(need) - requested),
     )
     return g
@@ -372,7 +373,8 @@ def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
             if not any(_matches(ref, call["check_id"], call["args"]) for ref in refs):
                 g["unnecessary"] += 1
 
-    per_incident = [_grade_incident(label, out, causes) for label, out in zip(labels, pairs_out)]
+    intake = rules_of(seed).intake
+    per_incident = [_grade_incident(label, out, causes, intake) for label, out in zip(labels, pairs_out)]
     for key in INCIDENT_KEYS:
         g[key] = _all([i[key] for i in per_incident])
     g["required"] = {"total": sum(i["required"]["total"] for i in per_incident),

@@ -30,6 +30,7 @@ from common.tool_calls import call_tool
 from common.tracing import Tracer
 from common.writers import events
 from mcp_servers.ontology_query import queries
+from ontology.rules import Rules
 
 KST = timezone(timedelta(hours=9))
 
@@ -40,9 +41,13 @@ MAX_HYPOTHESES = 3
 # 한 가설을 확인하며 도구를 부르는 왕복의 상한. 끝없는 도구 호출을 막는다
 MAX_TOOL_ROUNDS = 8
 
-URGENT_LEVELS = {"SEV1", "SEV2"}
-INTAKE_PROCEDURE, ESCALATION_PROCEDURE = "P1", "P2"
-URGENT_NOTICE, URGENT_MAINTENANCE, FIX_PROCEDURE = "P3", "P4", "P10"
+
+
+def _number(procedure_id: str) -> int:
+    """절차 ID의 번호 (P10이 P2 뒤에 오게)."""
+    return int(procedure_id[1:])
+
+
 MERGE_REPLY_ACTION = "A04"  # 처리 중 회신. 같은 사건으로 묶은 제보에 보낸다 (R2 표)
 SCOPE_CHECK = "E15"  # 접수 내역 조회. 영향 범위 추정의 근거 (3단계 6장, R3)
 CAUSE_FIX_ACTION = "A15"
@@ -63,6 +68,7 @@ class Deps:
     tool_checks: dict[str, str]            # 도구 이름 -> 판정 근거 ID
     symptoms: list[dict[str, Any]]
     systems: list[dict[str, Any]]
+    rules: Rules                           # 판단 규칙이 여는 절차와 긴급 등급 (시드 rules.yaml, M6)
     now: Callable[[], datetime] = lambda: datetime.now(KST)
     llm_results: list[LLMResult] = field(default_factory=list)
 
@@ -694,13 +700,13 @@ def build_graph(deps: Deps):
         # 후보에 들어오든 항상 여는 절차로 둔다. 절차 조회에 실패해도 원인 쪽 목록으로 들어오면 필수가 유지된다
         # 접수(P1)는 모든 사건, 등급이 상향되면 에스컬레이션(P2, R3), 긴급 공지(P3)는 등급에 걸린 절차(R3 TRIGGERS),
         # 긴급 점검(P4)도 SEV1, SEV2면 연다(R7). 원인이 확정되면 원인 수정(P10)을 연다
-        required = {INTAKE_PROCEDURE}
+        rules = deps.rules
+        required = {rules.intake}
         if incident.get("escalated"):
-            required.add(ESCALATION_PROCEDURE)
-        if sev in URGENT_LEVELS:
-            required |= {URGENT_NOTICE, URGENT_MAINTENANCE}
+            required.add(rules.escalation)
+        required |= rules.severity_procedures(sev)
         if confirmed:
-            required.add(FIX_PROCEDURE)
+            required.add(rules.fix)
 
         # 조건마다 그 조건을 판단할 판정 근거. 지식 공급자가 절차와 함께 준다 (M3 점검)
         condition_checks: dict[str, dict] = {}
@@ -716,21 +722,20 @@ def build_graph(deps: Deps):
                 if proc.get("condition_check"):
                     condition_checks.setdefault(extra["condition"], proc["condition_check"])
 
-        for procedure_id in (INTAKE_PROCEDURE, ESCALATION_PROCEDURE, URGENT_NOTICE, URGENT_MAINTENANCE):
-            if procedure_id in required:
-                add(await known(procedure_id))
+        for procedure_id in sorted(required - {rules.fix}, key=_number):
+            add(await known(procedure_id))
         if confirmed:
             try:
                 found = await deps.knowledge.cause_procedures(confirmed, sev)
             except KnowledgeUnavailable as exc:
                 found = {"resolved_by": [], "triggered_by_severity": []}
                 unavailable.append(f"{confirmed}가 여는 절차를 받지 못했다: {exc}")
-            add(await known(FIX_PROCEDURE))
+            add(await known(rules.fix))
             for proc in found["resolved_by"]:
                 # 원인에 조건 없이 연결된 절차(보상, 회수, 확률 표기 정정 등)는 연다는 규칙이라 코드가 정한다
                 # (4단계 3-4, M3 점검). 긴급 공지와 긴급 점검은 등급 규칙(R3, R7)을, 롤백은 사람 결정을 따른다
                 if (not proc.get("condition") and not proc.get("human_only")
-                        and proc["procedure_id"] not in (URGENT_NOTICE, URGENT_MAINTENANCE)):
+                        and proc["procedure_id"] not in rules.by_severity):
                     required.add(proc["procedure_id"])
                 add(proc, condition=proc.get("condition"))
             for proc in found.get("triggered_by_severity", []):
@@ -844,7 +849,7 @@ def build_graph(deps: Deps):
     async def approval_gate(state: State) -> State:
         diag = dict(state["diag"])
         incident = state["incidents"][diag["incident_id"]]
-        urgent = incident["severity"] in URGENT_LEVELS
+        urgent = incident["severity"] in deps.rules.urgent_levels
         runs = []
         for request in diag["procedure_choice"]["actions"]:
             condition = FIX_TIMING[urgent] if request["action_id"] == CAUSE_FIX_ACTION else None
