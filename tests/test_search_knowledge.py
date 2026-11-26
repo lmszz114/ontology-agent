@@ -105,3 +105,29 @@ def test_grader_requires_search_records_for_b():
         check_basis({"run": bad}, SEED)
     good = bad | {"retrieval_index": {"corpus_hash": corpus_hash(all_chunks(SEED, load_plan())), "model": "voyage-4"}}
     check_basis({"run": good}, SEED)
+
+
+def test_questions_add_their_own_code_made_search(monkeypatch):
+    script = Script("{}", "{}")  # 답의 모양은 이 테스트의 관심이 아니다. 두 번 틀리면 지식을 받지 못한 것으로 끝난다
+    k, calls = provider(script, monkeypatch, rows=ROWS)
+    asyncio.run(k.begin_incident("IN-1", ["아이템이 안 와요"]))
+    extra = [{"rank": 1, "doc_id": "K", "chunk_id": "fixed:K:020", "text": "C02 판정 근거 -> E02 (required=True)", "score": 0.9},
+             ROWS[0]]
+
+    async def fake_call(client, tracer, *, server, name, args):
+        calls.append((server, name, args))
+        return extra
+
+    monkeypatch.setattr(S, "call_tool_data", fake_call)
+    with pytest.raises(KnowledgeUnavailable):
+        asyncio.run(k.get_checks("C02"))
+    query = calls[-1][2]["query"]
+    assert query.startswith("C02 우편함 지급 누락") and "판정 근거" in query and calls[-1][2]["k"] == 5
+    system = script.params[0]["system"][0]["text"]
+    # 사건 검색 결과에 질문 검색 결과를 더하고, 이미 있는 조각은 다시 넣지 않는다
+    assert "C02 판정 근거 -> E02" in system and system.count("원인은 메일함 지급 누락이다.") == 1
+    assert k._record["extra"][0]["question"] == ["checks", "C02"]
+    before = len(calls)
+    with pytest.raises(KnowledgeUnavailable):
+        asyncio.run(k.get_checks("C02"))  # 이미 물은 질문(실패도 기억한다)은 다시 검색하지 않는다
+    assert len(calls) == before and len(script.params) == 2

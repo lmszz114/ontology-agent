@@ -1,7 +1,10 @@
 """구성 B 지식 공급자: 문서 검색 (설계 4단계 2-2, 5단계 4-2).
 
-사건마다 그 사건의 제보 원문으로 문서 검색(search_docs MCP)을 한 번 하고, 검색해 온 조각만 근거로
+사건마다 그 사건의 제보 원문으로 문서 검색(search_docs MCP)을 하고, 검색해 온 조각만 근거로
 구성 A와 같은 질문(원인 순위, 판정 근거, 담당 팀, 절차)에 LLM이 답한다. 규칙 설명은 구성 A와 같다.
+판정 근거, 담당 팀, 절차를 물을 때는 코드가 정한 검색어(원인이나 절차의 ID와 이름 + 묻는 것)로 한 번 더 검색해
+그 질문의 조각을 더한다 (M5 사용자 결정). 제보 원문 검색 한 번만으로는 원인의 확정 조건이 거의 들어오지 않았다
+(dev 첫 실행 2026-11-26, 사건 42개 중 확정 18개).
 답은 정의된 ID로 내야 하므로 ID와 이름 목록을 함께 준다. 관계는 넣지 않는다.
 
 검색 설정(조각 방식, 리랭크, 가져오는 개수)은 dev 검색 비교로 고른다 (4단계 2-5, M5 PR 2).
@@ -58,29 +61,70 @@ class SearchKnowledge(TextKnowledge):
         self.ids_text = id_listing(seed)
         self.system = None  # 사건마다 검색 결과로 만든다. 검색 전에 질문이 오면 막는다
         self.searches: list[dict] = []
+        self._base: list[dict] = []
+        self._record: dict = {}
+
+    async def _search(self, query: str, where: str) -> list[dict]:
+        try:
+            return await call_tool_data(self.docs, self.tracer, server=SERVER, name="search_docs",
+                                        args={"query": query} | self.settings.as_dict())
+        except ToolCallError as exc:
+            self.errors.append(f"{where}: {exc}")
+            raise KnowledgeUnavailable(f"문서 검색 실패: {exc}") from exc
+
+    def _set_system(self, rows: list[dict]) -> None:
+        chunks = "\n\n".join(f"[{i}] 문서 {r['doc_id']} ({r['chunk_id']})\n{r['text']}" for i, r in enumerate(rows, start=1))
+        self.system = [{"type": "text", "cache_control": {"type": "ephemeral"},
+                        "text": P.SYSTEM_B + "\n" + self.ids_text + "\n\n# 검색 결과\n\n" + (chunks or "(없음)")}]
 
     async def begin_incident(self, incident_id: str, reports: list[str]) -> dict[str, Any]:
         query = "\n".join(reports)  # 검색 채점(eval/grader/retrieval)과 같은 검색어 (M5 사용자 결정)
-        try:
-            rows = await call_tool_data(self.docs, self.tracer, server=SERVER, name="search_docs",
-                                        args={"query": query} | self.settings.as_dict())
-        except ToolCallError as exc:
-            self.system = None
-            self.errors.append(f"5.search.{incident_id}: {exc}")
-            raise KnowledgeUnavailable(f"문서 검색 실패: {exc}") from exc
-        chunks = "\n\n".join(f"[{r['rank']}] 문서 {r['doc_id']} ({r['chunk_id']})\n{r['text']}" for r in rows)
-        # 검색 결과가 사건마다 달라서 캐시는 한 사건의 질문들 사이에서만 쓰인다
-        self.system = [{"type": "text", "cache_control": {"type": "ephemeral"},
-                        "text": P.SYSTEM_B + "\n" + self.ids_text + "\n\n# 검색 결과\n\n" + (chunks or "(없음)")}]
+        self.system, self._base = None, []
+        rows = await self._search(query, f"5.search.{incident_id}")
+        self._base = rows
+        self._set_system(rows)
         self._memo.clear()  # 앞 사건의 검색 결과로 만든 답을 다시 쓰지 않는다
         docs: list[str] = []
         for r in rows:
             if r["doc_id"] not in docs:
                 docs.append(r["doc_id"])
-        record = {"incident_id": incident_id, "settings": self.settings.as_dict(), "docs": docs,
-                  "chunks": [{"chunk_id": r["chunk_id"], "doc_id": r["doc_id"], "score": r["score"]} for r in rows]}
-        self.searches.append(record)
-        return record
+        self._record = {"incident_id": incident_id, "settings": self.settings.as_dict(), "docs": docs,
+                        "chunks": [{"chunk_id": r["chunk_id"], "doc_id": r["doc_id"], "score": r["score"]} for r in rows],
+                        "extra": []}
+        self.searches.append(self._record)
+        return self._record
+
+    async def _with_question_search(self, key: tuple, query: str):
+        """질문마다 코드가 정한 검색어로 한 번 더 검색해 사건 검색 결과에 더한다. 이미 답한 질문은 검색하지 않는다."""
+        if self.system is None or key in self._memo:
+            return
+        extra = await self._search(query, f"{key[0]}.search")
+        seen = {r["chunk_id"] for r in self._base}
+        self._set_system(self._base + [r for r in extra if r["chunk_id"] not in seen])
+        self._record["extra"].append({"question": list(key), "query": query,
+                                      "chunks": [{"chunk_id": r["chunk_id"], "doc_id": r["doc_id"], "score": r["score"]}
+                                                 for r in extra]})
+
+    async def get_checks(self, cause_id: str) -> list[dict[str, Any]]:
+        name = self.ids.causes.get(cause_id, "")
+        await self._with_question_search(("checks", cause_id), f"{cause_id} {name} 원인을 확인하는 판정 근거와 확정 조건")
+        return await super().get_checks(cause_id)
+
+    async def owner_team(self, cause_id: str) -> dict[str, Any]:
+        name = self.ids.causes.get(cause_id, "")
+        await self._with_question_search(("owner", cause_id), f"{cause_id} {name} 원인의 위치 시스템과 담당 팀")
+        return await super().owner_team(cause_id)
+
+    async def cause_procedures(self, cause_id: str, severity_id: str) -> dict[str, Any]:
+        name = self.ids.causes.get(cause_id, "")
+        await self._with_question_search(("procedures", cause_id, severity_id),
+                                         f"{cause_id} {name} 원인 확정 뒤 여는 대응 절차와 조치, {severity_id} 등급 절차")
+        return await super().cause_procedures(cause_id, severity_id)
+
+    async def procedure(self, procedure_id: str) -> dict[str, Any]:
+        name = self.ids.procedures.get(procedure_id, "")
+        await self._with_question_search(("procedure", procedure_id), f"{procedure_id} {name} 절차의 조치와 단계")
+        return await super().procedure(procedure_id)
 
     def _ask(self, *args, **kwargs):
         if self.system is None:
