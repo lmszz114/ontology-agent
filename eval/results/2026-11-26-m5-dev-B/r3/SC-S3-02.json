@@ -1,0 +1,523 @@
+{
+  "run": {
+    "scenario": "SC-S3-02",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T11:02:47.303140+09:00",
+    "finished_at": "2026-11-26T11:04:20.066836+09:00",
+    "seconds": 92.8,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "b6c9d0387e0cdfa991740123b2fffee5",
+    "llm_calls": 44,
+    "usage": {
+      "input": 95744,
+      "output": 13099,
+      "cache_read": 0,
+      "cache_write_5m": 33963,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.020369275,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "c09f70308e58fa1102edd6bcd339dce455a0a5d87a9888036b2922f91caf096d"
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-3cbabd1d405d",
+      "report_ids": [
+        "RP-60defbe6f66c",
+        "RP-407c58a9209e",
+        "RP-b4d6cd057ed7",
+        "RP-e8358450c50b",
+        "RP-28ac9fd673f1",
+        "RP-3abae38d5228",
+        "RP-09ddf3126de1",
+        "RP-2d14884723c2",
+        "RP-fde09a72b6c7",
+        "RP-54f07bf8dc34",
+        "RP-95b877c6e3e1",
+        "RP-8219ccd34263",
+        "RP-6994af51aed0",
+        "RP-038535e22149",
+        "RP-d753943fc93c",
+        "RP-8c510a4e14c2",
+        "RP-68b19c3a51f3",
+        "RP-2918ef8238ac",
+        "RP-8a8815efd6ac",
+        "RP-1c515e16f98d"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "scope": "one_world",
+      "severity": "SEV3",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C08",
+          "rank": 1,
+          "score": 4,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        }
+      ],
+      "root_cause": null,
+      "primary_team": null,
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1"
+      ],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [
+        {
+          "report_id": "RP-407c58a9209e",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-065334046ab5"
+        },
+        {
+          "report_id": "RP-b4d6cd057ed7",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a66407a581e4"
+        },
+        {
+          "report_id": "RP-e8358450c50b",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-2e93d5cc62b3"
+        },
+        {
+          "report_id": "RP-28ac9fd673f1",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-44e08dba55eb"
+        },
+        {
+          "report_id": "RP-3abae38d5228",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-216a78699966"
+        },
+        {
+          "report_id": "RP-09ddf3126de1",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-8825ce354221"
+        },
+        {
+          "report_id": "RP-2d14884723c2",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-efd73cdcd6a6"
+        },
+        {
+          "report_id": "RP-fde09a72b6c7",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-281a7b806ee4"
+        },
+        {
+          "report_id": "RP-54f07bf8dc34",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-6c61b786b28e"
+        },
+        {
+          "report_id": "RP-95b877c6e3e1",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b7c1e3b332c2"
+        },
+        {
+          "report_id": "RP-8219ccd34263",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a2e190c00418"
+        },
+        {
+          "report_id": "RP-6994af51aed0",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-1fb470c086ab"
+        },
+        {
+          "report_id": "RP-038535e22149",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-817eabd66995"
+        },
+        {
+          "report_id": "RP-d753943fc93c",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-bd2433d2afbd"
+        },
+        {
+          "report_id": "RP-8c510a4e14c2",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-a425817aaba6"
+        },
+        {
+          "report_id": "RP-68b19c3a51f3",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-0810f9c41bac"
+        },
+        {
+          "report_id": "RP-2918ef8238ac",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-73ca9d73a364"
+        },
+        {
+          "report_id": "RP-8a8815efd6ac",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-aa81d71fa97b"
+        },
+        {
+          "report_id": "RP-1c515e16f98d",
+          "channel": "CH01",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-cc370ec7b2d8"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 one_world, 심각도 SEV3)\n-> 원인 C08 서버 적용 로직 오류 (점수 4): inconclusive, 근거 []. C08의 확정 조건(필수 판정 근거)을 받지 못했다",
+      "needs_human": [
+        "C08의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "원인이 확정되지 않았다. 상위 가설: ['C08']"
+      ],
+      "retrieved_docs": [
+        "PM-14",
+        "PM-17",
+        "PM-15",
+        "PM-18",
+        "CH-13",
+        "PM-05",
+        "K"
+      ],
+      "retrieval": {
+        "incident_id": "INC-3cbabd1d405d",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-14",
+          "PM-17",
+          "PM-15",
+          "PM-18",
+          "CH-13",
+          "PM-05",
+          "K"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-14:002",
+            "doc_id": "PM-14",
+            "score": 0.8245880603790283
+          },
+          {
+            "chunk_id": "fixed:PM-14:001",
+            "doc_id": "PM-14",
+            "score": 0.7429370880126953
+          },
+          {
+            "chunk_id": "fixed:PM-17:002",
+            "doc_id": "PM-17",
+            "score": 0.6807384490966797
+          },
+          {
+            "chunk_id": "fixed:PM-14:003",
+            "doc_id": "PM-14",
+            "score": 0.6776334047317505
+          },
+          {
+            "chunk_id": "fixed:PM-15:002",
+            "doc_id": "PM-15",
+            "score": 0.6576882004737854
+          },
+          {
+            "chunk_id": "fixed:PM-17:003",
+            "doc_id": "PM-17",
+            "score": 0.6373962759971619
+          },
+          {
+            "chunk_id": "fixed:PM-18:003",
+            "doc_id": "PM-18",
+            "score": 0.6175323724746704
+          },
+          {
+            "chunk_id": "fixed:CH-13:001",
+            "doc_id": "CH-13",
+            "score": 0.6140944361686707
+          },
+          {
+            "chunk_id": "fixed:PM-05:002",
+            "doc_id": "PM-05",
+            "score": 0.6085224151611328
+          },
+          {
+            "chunk_id": "fixed:K:030",
+            "doc_id": "K",
+            "score": 0.6018957495689392
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

@@ -1,0 +1,234 @@
+{
+  "run": {
+    "scenario": "SC-S5-01",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T10:52:01.581829+09:00",
+    "finished_at": "2026-11-26T10:52:51.553727+09:00",
+    "seconds": 50.0,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "d9eb1c7cb53a5d6c64e901a9ada26f54",
+    "llm_calls": 13,
+    "usage": {
+      "input": 11796,
+      "output": 8034,
+      "cache_read": 35116,
+      "cache_write_5m": 45253,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.011204385,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "cfec9a9b9e22376759b168e1946f7781f60232be9e6a6c7695cfdc2aa3951dc4"
+  },
+  "outputs": [
+    {
+      "symptom": "S5",
+      "incident_id": "INC-36256efb3b15",
+      "report_ids": [
+        "RP-f2e52a8aed94"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "some_users",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C13",
+          "rank": 1,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        },
+        {
+          "cause_id": "C14",
+          "rank": 2,
+          "score": 2,
+          "status": "confirmed",
+          "result": "confirm",
+          "findings": [
+            {
+              "check_id": "E11",
+              "tool": "query_account_activity",
+              "args": {},
+              "result": "confirm",
+              "detail": "최근 3시간 거래량의 대부분이 신규 계정 12개에서 나왔다",
+              "reused": false
+            }
+          ]
+        }
+      ],
+      "root_cause": "C14",
+      "primary_team": "TM11",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4",
+        "P7",
+        "P10"
+      ],
+      "resolved_conditions": [],
+      "actions": [
+        {
+          "action_id": "A11",
+          "requested_mode": "approval",
+          "status": "pending_approval",
+          "gate_blocked": false,
+          "run_id": "AR-c51b84cd6a25"
+        }
+      ],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C14",
+          "tool": "query_account_activity",
+          "check_id": "E11",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S5 아이템 복사, 재화 비정상 증식 (영향 범위 some_users, 심각도 SEV2)\n-> 원인 C13 복사 버그 (점수 2): inconclusive, 근거 []. C13의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 원인 C14 어뷰징 (불법 프로그램, 악용) (점수 2): confirm, 근거 ['E11']. E11(query_account_activity)을 조회한 결과 최근 3시간 거래량의 대부분이 신규 계정 12개에서 나온 것으로 확인되었다. 필수 근거 E11의 기대값인 '소수 계정에 거래와 행동이 집중'과 일치하므로 확정 조건을 충족한다. 다만 12개 계정을 '소수'로 본 해석과, 집중 원인이 불법 프로그램인지까지는 이 조회만으로 구분되지 않는다는 점은 참고로 남긴다.\n-> 1차 담당 TM11",
+      "needs_human": [
+        "C13의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "상위 가설 ['C13']가 불명확인 채로 C14가 확정됐다"
+      ],
+      "retrieved_docs": [
+        "PM-06",
+        "K",
+        "PM-18",
+        "CH-09",
+        "PM-24",
+        "RB-02"
+      ],
+      "retrieval": {
+        "incident_id": "INC-36256efb3b15",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-06",
+          "K",
+          "PM-18",
+          "CH-09",
+          "PM-24",
+          "RB-02"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-06:001",
+            "doc_id": "PM-06",
+            "score": 0.7983676791191101
+          },
+          {
+            "chunk_id": "fixed:K:020",
+            "doc_id": "K",
+            "score": 0.7479954957962036
+          },
+          {
+            "chunk_id": "fixed:K:019",
+            "doc_id": "K",
+            "score": 0.6897580027580261
+          },
+          {
+            "chunk_id": "fixed:PM-18:002",
+            "doc_id": "PM-18",
+            "score": 0.6394820809364319
+          },
+          {
+            "chunk_id": "fixed:CH-09:001",
+            "doc_id": "CH-09",
+            "score": 0.5987399816513062
+          },
+          {
+            "chunk_id": "fixed:PM-18:001",
+            "doc_id": "PM-18",
+            "score": 0.5909545421600342
+          },
+          {
+            "chunk_id": "fixed:PM-24:001",
+            "doc_id": "PM-24",
+            "score": 0.5237568616867065
+          },
+          {
+            "chunk_id": "fixed:PM-06:002",
+            "doc_id": "PM-06",
+            "score": 0.49802666902542114
+          },
+          {
+            "chunk_id": "fixed:RB-02:001",
+            "doc_id": "RB-02",
+            "score": 0.4783027768135071
+          },
+          {
+            "chunk_id": "fixed:PM-24:003",
+            "doc_id": "PM-24",
+            "score": 0.47208383679389954
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

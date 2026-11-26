@@ -1,0 +1,246 @@
+{
+  "run": {
+    "scenario": "SC-S2-02",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T10:32:02.321386+09:00",
+    "finished_at": "2026-11-26T10:33:00.775530+09:00",
+    "seconds": 58.5,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "6ca2560c5ccca90c8d2f80868fe9a944",
+    "llm_calls": 15,
+    "usage": {
+      "input": 20832,
+      "output": 9490,
+      "cache_read": 45852,
+      "cache_write_5m": 36347,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.011830095,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "492beb4d3ac1e356b1b4e52789c77bc1d42cee66545dd5f5fb6a290ef9d9f285"
+  },
+  "outputs": [
+    {
+      "symptom": "S2",
+      "incident_id": "INC-bc49222cfc69",
+      "report_ids": [
+        "RP-ba02f4a75451"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV1",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH03",
+        "channel_name": "사내 메신저, 메일",
+        "role_id": "RL03",
+        "role_name": "접수 분류 담당",
+        "team_id": "TM05",
+        "team_name": "개발PM팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C05",
+          "rank": 1,
+          "score": 4,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "inconclusive",
+              "detail": "다른 타이틀의 로그인 성공률은 평소와 같다. 이 타이틀만 실패한다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C04",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E03",
+              "tool": "check_cross_title_login",
+              "args": {},
+              "result": "rule_out",
+              "detail": "다른 타이틀의 로그인 성공률은 평소와 같다. 이 타이틀만 실패한다",
+              "reused": true
+            }
+          ]
+        },
+        {
+          "cause_id": "C06",
+          "rank": 3,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM03",
+      "collaborators": [],
+      "next_check": {
+        "cause_id": "C05",
+        "check_id": "E04",
+        "args": {},
+        "by": "TM03"
+      },
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C05",
+          "tool": "check_cross_title_login",
+          "check_id": "E03",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S2 로그인 불가, 접속 장애 (영향 범위 all_service, 심각도 SEV1)\n-> 원인 C05 게임 로그인 서버 장애 (점수 4): inconclusive, 근거 ['E03']. 필수 판정 근거 E04(서버 오류 로그 조회)는 system 인자가 필요하지만, 판정 근거의 args가 비어 있고 게임 로그인 서버의 시스템 ID가 주어지지 않았다. 도구 설명의 예시(SY10)는 실제 로그인 서버 ID가 아니므로 임의로 사용하지 않았다. 이미 조회한 결과 중 E04에 해당하는 결과도 없다. E03은 다른 타이틀 로그인 성공률이 평소와 같고 이 타이틀만 실패해 기대값과 일치하지만, E04가 미확인이므로 확정(confirm)도 배제(rule_out)도 할 수 없다. 부족한 정보: 게임 로그인 서버의 시스템 ID를 전달해 주면 E04를 조회해 판정할 수 있다.\n-> 원인 C04 공통 계정 인증 장애 (점수 2): rule_out, 근거 ['E03']. 판정 근거 E03(required: true)의 expect는 다른 타이틀에서도 로그인이 실패하면 공통 계정 인증 장애 가능성이 높다는 것이다. 이미 조회한 K1 결과는 다른 타이틀의 로그인 성공률이 평소와 같고 이 타이틀만 실패한다는 내용이라 expect와 다르다. 필수 근거 하나가 expect와 달라 C04 공통 계정 인증 장애는 배제된다. 다만 E03의 required 값은 문서 기본 순서를 근거로 한 추정이므로, 실제 판정 기준으로 확정되었는지는 담당 팀의 검토가 필요하다. 이번 결과는 증상이 이 타이틀 범위에 국한됨을 보여주므로 타이틀 고유 원인(클라이언트 버전, 서버 배포, 설정 변경 등)을 별도로 확인할 필요가 있다.\n-> 원인 C06 서버 인프라 장애 (점수 2): inconclusive, 근거 []. C06의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 1차 담당 TM03",
+      "needs_human": [
+        "C06의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "원인이 확정되지 않았다. 상위 가설: ['C05', 'C06']"
+      ],
+      "retrieved_docs": [
+        "PM-02",
+        "PM-23",
+        "CH-02",
+        "RB-05",
+        "PM-03",
+        "PM-13"
+      ],
+      "retrieval": {
+        "incident_id": "INC-bc49222cfc69",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "PM-02",
+          "PM-23",
+          "CH-02",
+          "RB-05",
+          "PM-03",
+          "PM-13"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:PM-02:002",
+            "doc_id": "PM-02",
+            "score": 0.8470351099967957
+          },
+          {
+            "chunk_id": "fixed:PM-23:003",
+            "doc_id": "PM-23",
+            "score": 0.8234630227088928
+          },
+          {
+            "chunk_id": "fixed:CH-02:001",
+            "doc_id": "CH-02",
+            "score": 0.8212460279464722
+          },
+          {
+            "chunk_id": "fixed:PM-23:002",
+            "doc_id": "PM-23",
+            "score": 0.8091800212860107
+          },
+          {
+            "chunk_id": "fixed:PM-02:001",
+            "doc_id": "PM-02",
+            "score": 0.8030083179473877
+          },
+          {
+            "chunk_id": "fixed:RB-05:001",
+            "doc_id": "RB-05",
+            "score": 0.7707725763320923
+          },
+          {
+            "chunk_id": "fixed:CH-02:002",
+            "doc_id": "CH-02",
+            "score": 0.7676466107368469
+          },
+          {
+            "chunk_id": "fixed:PM-03:002",
+            "doc_id": "PM-03",
+            "score": 0.764432430267334
+          },
+          {
+            "chunk_id": "fixed:PM-13:001",
+            "doc_id": "PM-13",
+            "score": 0.7466336488723755
+          },
+          {
+            "chunk_id": "fixed:PM-23:001",
+            "doc_id": "PM-23",
+            "score": 0.7465962767601013
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

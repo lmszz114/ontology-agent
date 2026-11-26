@@ -1,0 +1,310 @@
+{
+  "run": {
+    "scenario": "SC-S6-02",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T11:07:29.589838+09:00",
+    "finished_at": "2026-11-26T11:08:32.908933+09:00",
+    "seconds": 63.3,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "35537858780a5e3a80a6b5b8214f4c6f",
+    "llm_calls": 18,
+    "usage": {
+      "input": 23606,
+      "output": 10868,
+      "cache_read": 45367,
+      "cache_write_5m": 35959,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.012743145,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "306905b4305aba82261485a88750562692203285acf6bf8e1e851ff2367ca001"
+  },
+  "outputs": [
+    {
+      "symptom": "S6",
+      "incident_id": "INC-39f98da8b5eb",
+      "report_ids": [
+        "RP-2f6eafab177a",
+        "RP-cf62fadacb1e",
+        "RP-6048e6f82838",
+        "RP-69744d773305"
+      ],
+      "report_indexes": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C15",
+          "rank": 1,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        },
+        {
+          "cause_id": "C16",
+          "rank": 2,
+          "score": 2,
+          "status": "ruled_out",
+          "result": "rule_out",
+          "findings": [
+            {
+              "check_id": "E05",
+              "tool": "query_table_change",
+              "args": {
+                "area": "probability"
+              },
+              "result": "rule_out",
+              "detail": "증상 시작 전에 게임 데이터 테이블 확률 영역의 변경 이력이 없다",
+              "reused": false
+            },
+            {
+              "check_id": "E08",
+              "tool": "compare_probability",
+              "args": {},
+              "result": "rule_out",
+              "detail": "공개 페이지의 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%다",
+              "reused": false
+            }
+          ]
+        },
+        {
+          "cause_id": "C17",
+          "rank": 3,
+          "score": 1,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM06",
+      "collaborators": [
+        {
+          "team_id": "TM03",
+          "why": "확정 전 상위 가설 담당"
+        }
+      ],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [
+        {
+          "report_id": "RP-cf62fadacb1e",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-f06f8fc6d439"
+        },
+        {
+          "report_id": "RP-6048e6f82838",
+          "channel": "CH02",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-b4c3aea58fd2"
+        },
+        {
+          "report_id": "RP-69744d773305",
+          "channel": "CH03",
+          "action_id": "A04",
+          "status": "auto_done",
+          "run_id": "AR-88e8d52207a3"
+        }
+      ],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C16",
+          "tool": "query_table_change",
+          "check_id": "E05",
+          "args": {
+            "area": "probability"
+          },
+          "is_error": false
+        },
+        {
+          "step": "7.check",
+          "cause_id": "C16",
+          "tool": "compare_probability",
+          "check_id": "E08",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S6 확률형 아이템 확률 표기 불일치 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C15 공개 페이지 표기 오류 (점수 2): inconclusive, 근거 []. C15의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 원인 C16 확률 테이블 값 오류 (점수 2): rule_out, 근거 ['E05', 'E08']. required=true 판정 근거 2개 중 E05가 expect와 다르다. E05 expect는 증상 시작 전 확률 테이블 확률 영역의 변경 이력이 있어야 하는데, 조회 결과는 증상 시작 전 확률 영역 변경 이력이 없다였다. E08은 expect와 일치했다. 공개 최고 등급 확률은 3.0%, 확률 테이블은 0.3%, 최근 실제 결과는 0.3%로, 공개 수치와 테이블 수치가 다르고 실제 결과가 테이블 수치 방향과 같았다. 그러나 확정 조건은 모두 expect대로 나와야 하므로 C16 확률 테이블 값 오류는 배제된다. 참고로 실제 결과가 테이블과 일치하므로 문제는 테이블 값이 아니라 공개 페이지 표기 쪽일 가능성이 있으며, 이는 이 가설의 판정이 아니라 다음 단계에서 따로 확인할 사항이다.\n-> 원인 C17 확률 모듈 로직 오류 (점수 1): inconclusive, 근거 []. C17의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 1차 담당 TM06",
+      "needs_human": [
+        "C15의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "C17의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "원인이 확정되지 않았다. 상위 가설: ['C15', 'C17']"
+      ],
+      "retrieved_docs": [
+        "CH-10",
+        "PM-19",
+        "PM-07",
+        "RB-07",
+        "PM-20",
+        "CH-14"
+      ],
+      "retrieval": {
+        "incident_id": "INC-39f98da8b5eb",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "CH-10",
+          "PM-19",
+          "PM-07",
+          "RB-07",
+          "PM-20",
+          "CH-14"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:CH-10:001",
+            "doc_id": "CH-10",
+            "score": 0.8726902008056641
+          },
+          {
+            "chunk_id": "fixed:PM-19:002",
+            "doc_id": "PM-19",
+            "score": 0.8386253118515015
+          },
+          {
+            "chunk_id": "fixed:PM-19:003",
+            "doc_id": "PM-19",
+            "score": 0.8249067068099976
+          },
+          {
+            "chunk_id": "fixed:PM-19:001",
+            "doc_id": "PM-19",
+            "score": 0.8230251669883728
+          },
+          {
+            "chunk_id": "fixed:PM-07:001",
+            "doc_id": "PM-07",
+            "score": 0.8148841261863708
+          },
+          {
+            "chunk_id": "fixed:PM-07:002",
+            "doc_id": "PM-07",
+            "score": 0.7995228171348572
+          },
+          {
+            "chunk_id": "fixed:RB-07:001",
+            "doc_id": "RB-07",
+            "score": 0.7931039333343506
+          },
+          {
+            "chunk_id": "fixed:PM-20:003",
+            "doc_id": "PM-20",
+            "score": 0.7705922722816467
+          },
+          {
+            "chunk_id": "fixed:CH-14:001",
+            "doc_id": "CH-14",
+            "score": 0.763120710849762
+          },
+          {
+            "chunk_id": "fixed:PM-20:001",
+            "doc_id": "PM-20",
+            "score": 0.7583261132240295
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

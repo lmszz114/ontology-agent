@@ -1,0 +1,210 @@
+{
+  "run": {
+    "scenario": "SC-S3-01",
+    "split": "dev",
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T10:47:29.178678+09:00",
+    "finished_at": "2026-11-26T10:48:10.830681+09:00",
+    "seconds": 41.7,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "27c5dd112a4f196729d0a8ccfca05d13",
+    "llm_calls": 10,
+    "usage": {
+      "input": 4379,
+      "output": 7181,
+      "cache_read": 36026,
+      "cache_write_5m": 35823,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.008866535,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": "knowledge-b-v1",
+    "search_settings": {
+      "scheme": "fixed",
+      "rerank": true,
+      "k": 10
+    },
+    "retrieval_index": {
+      "corpus_hash": "9faf0c45fe22fd6a475c9926bc558b20b7ad81ebfa12a9f6062b0249fa2ae0f7",
+      "model": "voyage-4"
+    },
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "scenario_hash": "db0ea034c2e68be594fa4aaa0ea8fa1afdcba5a0bf97ebf2baa06e0e3038d5f1"
+  },
+  "outputs": [
+    {
+      "symptom": "S3",
+      "incident_id": "INC-342ab209336b",
+      "report_ids": [
+        "RP-1e6ebf63e5d6"
+      ],
+      "report_indexes": [
+        0
+      ],
+      "scope": "all_service",
+      "severity": "SEV2",
+      "escalated": false,
+      "first_handler": {
+        "channel_id": "CH02",
+        "channel_name": "1:1 문의, 장애 접수 시스템",
+        "role_id": "RL02",
+        "role_name": "CS 상담",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "hypotheses": [
+        {
+          "cause_id": "C07",
+          "rank": 1,
+          "score": 5,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        },
+        {
+          "cause_id": "C08",
+          "rank": 2,
+          "score": 2,
+          "status": "candidate",
+          "result": "inconclusive",
+          "findings": []
+        }
+      ],
+      "root_cause": null,
+      "primary_team": "TM01",
+      "collaborators": [],
+      "next_check": null,
+      "procedures": [
+        "P1",
+        "P3",
+        "P4"
+      ],
+      "resolved_conditions": [],
+      "actions": [],
+      "merge_replies": [],
+      "tool_calls": [
+        {
+          "step": "1.intake",
+          "cause_id": null,
+          "tool": "query_reports",
+          "check_id": "E15",
+          "args": {},
+          "is_error": false
+        }
+      ],
+      "explanation": "증상 S3 업데이트 후 콘텐츠 오류 (영향 범위 all_service, 심각도 SEV2)\n-> 원인 C07 콘텐츠 테이블 값 오류 (점수 5): inconclusive, 근거 []. C07의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 원인 C08 서버 적용 로직 오류 (점수 2): inconclusive, 근거 []. C08의 확정 조건(필수 판정 근거)을 받지 못했다\n-> 1차 담당 TM01",
+      "needs_human": [
+        "C07의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "C08의 확정 조건(필수 판정 근거)을 받지 못했다",
+        "원인이 확정되지 않았다. 상위 가설: ['C07', 'C08']"
+      ],
+      "retrieved_docs": [
+        "K",
+        "PM-04",
+        "PM-03",
+        "PM-23",
+        "PM-10",
+        "CH-03",
+        "CH-08"
+      ],
+      "retrieval": {
+        "incident_id": "INC-342ab209336b",
+        "settings": {
+          "scheme": "fixed",
+          "rerank": true,
+          "k": 10
+        },
+        "docs": [
+          "K",
+          "PM-04",
+          "PM-03",
+          "PM-23",
+          "PM-10",
+          "CH-03",
+          "CH-08"
+        ],
+        "chunks": [
+          {
+            "chunk_id": "fixed:K:018",
+            "doc_id": "K",
+            "score": 0.7196339964866638
+          },
+          {
+            "chunk_id": "fixed:PM-04:001",
+            "doc_id": "PM-04",
+            "score": 0.5848474502563477
+          },
+          {
+            "chunk_id": "fixed:PM-04:002",
+            "doc_id": "PM-04",
+            "score": 0.5766494870185852
+          },
+          {
+            "chunk_id": "fixed:PM-03:002",
+            "doc_id": "PM-03",
+            "score": 0.5592967867851257
+          },
+          {
+            "chunk_id": "fixed:PM-23:002",
+            "doc_id": "PM-23",
+            "score": 0.5561042428016663
+          },
+          {
+            "chunk_id": "fixed:PM-10:002",
+            "doc_id": "PM-10",
+            "score": 0.5489542484283447
+          },
+          {
+            "chunk_id": "fixed:PM-23:003",
+            "doc_id": "PM-23",
+            "score": 0.5415127873420715
+          },
+          {
+            "chunk_id": "fixed:CH-03:001",
+            "doc_id": "CH-03",
+            "score": 0.5232324004173279
+          },
+          {
+            "chunk_id": "fixed:CH-08:001",
+            "doc_id": "CH-08",
+            "score": 0.5130184888839722
+          },
+          {
+            "chunk_id": "fixed:PM-03:001",
+            "doc_id": "PM-03",
+            "score": 0.49491387605667114
+          }
+        ]
+      }
+    }
+  ],
+  "unclassified": []
+}

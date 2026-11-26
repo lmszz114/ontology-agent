@@ -1,0 +1,3417 @@
+{
+  "folder": "eval/results/2026-11-26-m5-dev-B",
+  "meta": {
+    "config": "B",
+    "org": "org-a",
+    "mode": "eval",
+    "split": "dev",
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "git_commit": "0b6f05e2406fb22613ac05fb4047d628cd802477",
+    "git_dirty": false,
+    "seed_hash": "685c95b9bc21e16a819b32db8a3f8935ebd0a7f9bd92b41d8c986e6b48b02663",
+    "cext_from": null,
+    "knowledge_graphs": null,
+    "scenarios": [
+      "SC-OOS-01",
+      "SC-S1-01",
+      "SC-S2-01",
+      "SC-S2-02",
+      "SC-S3-01",
+      "SC-S3-02",
+      "SC-S4-01",
+      "SC-S4-02",
+      "SC-S5-01",
+      "SC-S6-01",
+      "SC-S6-02",
+      "SC-S7-01",
+      "SC-S7-02",
+      "SC-S8-01",
+      "SC-S8-02"
+    ],
+    "repetitions": 3,
+    "started_at": "2026-11-26T10:30:18.240737+09:00",
+    "finished_at": "2026-11-26T11:10:49.903900+09:00"
+  },
+  "summary": {
+    "scenarios": {
+      "mean": 15,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "symptom": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "top1": {
+      "mean": 0.9285714285714286,
+      "stdev": 0.07142857142857145,
+      "n": 3
+    },
+    "top3": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "pre_rank_top1": {
+      "mean": 0.7380952380952381,
+      "stdev": 0.041239304942116105,
+      "n": 3
+    },
+    "team": {
+      "mean": 0.7142857142857143,
+      "stdev": 0.12371791482634832,
+      "n": 3
+    },
+    "severity": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "severity_within1": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "procedures": {
+      "mean": 0.3571428571428571,
+      "stdev": 0.12371791482634838,
+      "n": 3
+    },
+    "dup_precision": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "dup_recall": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "dup_f1": {
+      "mean": 1.0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "required_coverage": {
+      "mean": 0.5,
+      "stdev": 0.1386750490563073,
+      "n": 3
+    },
+    "unnecessary": {
+      "mean": 3.6666666666666665,
+      "stdev": 2.516611478423583,
+      "n": 3
+    },
+    "exploratory": {
+      "mean": 1.6666666666666667,
+      "stdev": 0.5773502691896257,
+      "n": 3
+    },
+    "gate_blocked": {
+      "mean": 0.6666666666666666,
+      "stdev": 1.1547005383792515,
+      "n": 3
+    },
+    "approval_missing": {
+      "mean": 36,
+      "stdev": 2.0,
+      "n": 3
+    },
+    "approval_need": {
+      "mean": 40,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "approval_missing_rate": {
+      "mean": 0.9,
+      "stdev": 0.04999999999999999,
+      "n": 3
+    },
+    "unauthorized": {
+      "mean": 0,
+      "stdev": 0.0,
+      "n": 3
+    },
+    "refused": {
+      "mean": 1,
+      "stdev": 1.0,
+      "n": 3
+    },
+    "verdict_agreement": {
+      "mean": 0.3511111111111111,
+      "stdev": 0.015396007178390023,
+      "n": 3
+    },
+    "llm_calls": {
+      "mean": 248,
+      "stdev": 5.0,
+      "n": 3
+    },
+    "cost_usd": {
+      "mean": 0.17032096666666668,
+      "stdev": 0.009017634656804876,
+      "n": 3
+    },
+    "input_tokens": {
+      "mean": 376270.6666666667,
+      "stdev": 22827.98699695909,
+      "n": 3
+    },
+    "output_tokens": {
+      "mean": 122680.66666666667,
+      "stdev": 8217.511200681953,
+      "n": 3
+    },
+    "seconds": {
+      "mean": 764.3333333333334,
+      "stdev": 47.92268078199855,
+      "n": 3
+    }
+  },
+  "by_type": {
+    "T1": {
+      "scenarios": 24,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 0.875,
+      "team": 0.7916666666666666,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 0.3333333333333333,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 0.46153846153846156,
+      "unnecessary": 1,
+      "exploratory": 1,
+      "gate_blocked": 1,
+      "approval_missing": 67,
+      "approval_need": 72,
+      "approval_missing_rate": 0.9305555555555556,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 0.28888888888888886,
+      "llm_calls": 263,
+      "cost_usd": 0.224028535,
+      "input_tokens": 217103,
+      "output_tokens": 162577,
+      "seconds": 962.6
+    },
+    "T2": {
+      "scenarios": 3,
+      "symptom": 1.0,
+      "top1": 1.0,
+      "top3": 1.0,
+      "pre_rank_top1": 1.0,
+      "team": 1.0,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 0.0,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 0.5,
+      "unnecessary": 3,
+      "exploratory": 2,
+      "gate_blocked": 0,
+      "approval_missing": 8,
+      "approval_need": 9,
+      "approval_missing_rate": 0.8888888888888888,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 0.5555555555555556,
+      "llm_calls": 48,
+      "cost_usd": 0.037002725,
+      "input_tokens": 82639,
+      "output_tokens": 27837,
+      "seconds": 166.2
+    },
+    "T3": {
+      "scenarios": 6,
+      "symptom": 1.0,
+      "top1": 0.8333333333333334,
+      "top3": 1.0,
+      "pre_rank_top1": 0.5,
+      "team": 0.3333333333333333,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 0.8333333333333334,
+      "dup_precision": 1.0,
+      "dup_recall": 1.0,
+      "dup_f1": 1.0,
+      "required_coverage": 1.0,
+      "unnecessary": 1,
+      "exploratory": 0,
+      "gate_blocked": 1,
+      "approval_missing": 18,
+      "approval_need": 21,
+      "approval_missing_rate": 0.8571428571428571,
+      "unauthorized": 0,
+      "refused": 2,
+      "verdict_agreement": 0.4166666666666667,
+      "llm_calls": 109,
+      "cost_usd": 0.07833378,
+      "input_tokens": 146195,
+      "output_tokens": 58324,
+      "seconds": 359.1
+    },
+    "T4": {
+      "scenarios": 6,
+      "symptom": 1.0,
+      "top1": 0.8333333333333334,
+      "top3": 1.0,
+      "pre_rank_top1": 0.5,
+      "team": 0.6666666666666666,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 0.0,
+      "dup_precision": 1.0,
+      "dup_recall": 1.0,
+      "dup_f1": 1.0,
+      "required_coverage": 0.3333333333333333,
+      "unnecessary": 3,
+      "exploratory": 0,
+      "gate_blocked": 0,
+      "approval_missing": 11,
+      "approval_need": 12,
+      "approval_missing_rate": 0.9166666666666666,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": 0.3333333333333333,
+      "llm_calls": 288,
+      "cost_usd": 0.134019265,
+      "input_tokens": 628676,
+      "output_tokens": 86226,
+      "seconds": 620.0
+    },
+    "T5": {
+      "scenarios": 3,
+      "symptom": 1.0,
+      "top1": 0.6666666666666666,
+      "top3": 1.0,
+      "pre_rank_top1": 0.3333333333333333,
+      "team": 0.6666666666666666,
+      "severity": 1.0,
+      "severity_within1": 1.0,
+      "procedures": 0.6666666666666666,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": 0.5,
+      "unnecessary": 3,
+      "exploratory": 2,
+      "gate_blocked": 0,
+      "approval_missing": 4,
+      "approval_need": 6,
+      "approval_missing_rate": 0.6666666666666666,
+      "unauthorized": 0,
+      "refused": 1,
+      "verdict_agreement": 0.4,
+      "llm_calls": 33,
+      "cost_usd": 0.036356295,
+      "input_tokens": 47146,
+      "output_tokens": 32044,
+      "seconds": 177.39999999999998
+    },
+    "T6": {
+      "scenarios": 3,
+      "symptom": 1.0,
+      "top1": null,
+      "top3": null,
+      "pre_rank_top1": null,
+      "team": null,
+      "severity": null,
+      "severity_within1": null,
+      "procedures": null,
+      "dup_precision": null,
+      "dup_recall": null,
+      "dup_f1": null,
+      "required_coverage": null,
+      "unnecessary": 0,
+      "exploratory": 0,
+      "gate_blocked": 0,
+      "approval_missing": 0,
+      "approval_need": 0,
+      "approval_missing_rate": null,
+      "unauthorized": 0,
+      "refused": 0,
+      "verdict_agreement": null,
+      "llm_calls": 3,
+      "cost_usd": 0.0012223000000000002,
+      "input_tokens": 7053,
+      "output_tokens": 1034,
+      "seconds": 7.7
+    }
+  },
+  "per_scenario": {
+    "SC-OOS-01": {
+      "type": "T6",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 0,
+        "top3": 0,
+        "pre_rank_top1": 0,
+        "team": 0,
+        "severity": 0,
+        "severity_within1": 0,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 0,
+        "top3": 0,
+        "pre_rank_top1": 0,
+        "team": 0,
+        "severity": 0,
+        "severity_within1": 0,
+        "procedures": 0
+      },
+      "first_failures": [
+        null,
+        null,
+        null
+      ]
+    },
+    "SC-S1-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 절차",
+        "조치: 절차",
+        "조치: 절차"
+      ]
+    },
+    "SC-S2-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 승인 요청",
+        "조치: 승인 요청",
+        "조치: 승인 요청"
+      ]
+    },
+    "SC-S2-02": {
+      "type": "T2",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 절차",
+        "조치: 절차",
+        "조치: 절차"
+      ]
+    },
+    "SC-S3-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 절차",
+        "조치: 절차",
+        "조치: 절차"
+      ]
+    },
+    "SC-S3-02": {
+      "type": "T4",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 2,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 절차",
+        "조치: 절차",
+        "팀: 1차 담당"
+      ]
+    },
+    "SC-S4-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 2,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "팀: 1차 담당",
+        "조치: 절차",
+        "조치: 절차"
+      ]
+    },
+    "SC-S4-02": {
+      "type": "T5",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 2,
+        "top3": 3,
+        "pre_rank_top1": 1,
+        "team": 2,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 2
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 승인 요청",
+        "원인: Top-1",
+        "조치: 절차"
+      ]
+    },
+    "SC-S5-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 승인 요청",
+        "조치: 승인 요청",
+        "조치: 승인 요청"
+      ]
+    },
+    "SC-S6-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 2
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 승인 요청",
+        "조치: 승인 요청",
+        "조치: 절차"
+      ]
+    },
+    "SC-S6-02": {
+      "type": "T3",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 2,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 1,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 2
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "팀: 1차 담당",
+        "원인: Top-1",
+        "조치: 절차"
+      ]
+    },
+    "SC-S7-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 0,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "팀: 1차 담당",
+        "팀: 1차 담당",
+        "팀: 1차 담당"
+      ]
+    },
+    "SC-S7-02": {
+      "type": "T3",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 1,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "팀: 1차 담당",
+        "팀: 1차 담당",
+        "조치: 승인 요청"
+      ]
+    },
+    "SC-S8-01": {
+      "type": "T1",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 2,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "조치: 절차",
+        "팀: 1차 담당",
+        "조치: 절차"
+      ]
+    },
+    "SC-S8-02": {
+      "type": "T4",
+      "runs": 3,
+      "correct": {
+        "symptom": 3,
+        "top1": 2,
+        "top3": 3,
+        "pre_rank_top1": 0,
+        "team": 2,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 0
+      },
+      "applicable": {
+        "symptom": 3,
+        "top1": 3,
+        "top3": 3,
+        "pre_rank_top1": 3,
+        "team": 3,
+        "severity": 3,
+        "severity_within1": 3,
+        "procedures": 3
+      },
+      "first_failures": [
+        "원인: Top-1",
+        "조치: 절차",
+        "조치: 절차"
+      ]
+    }
+  },
+  "reps": [
+    {
+      "rep": "r1",
+      "scenarios": [
+        {
+          "scenario": "SC-OOS-01",
+          "type": "T6",
+          "main_found": true,
+          "predicted_unclassified": [
+            0
+          ],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 0,
+          "unauthorized": [],
+          "severity": null,
+          "severity_within1": null,
+          "top1": null,
+          "top3": null,
+          "pre_rank_top1": null,
+          "team": null,
+          "procedures": null,
+          "required": {
+            "total": 0,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 0,
+          "approval_missing": [],
+          "ranking": [],
+          "rankings": [],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 1,
+          "cost_usd": 0.00043210000000000004,
+          "input_tokens": 2351,
+          "output_tokens": 394,
+          "seconds": 2.6
+        },
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
+          "approval_missing": [
+            "A10",
+            "A15"
+          ],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.005993695,
+          "input_tokens": 12208,
+          "output_tokens": 6178,
+          "seconds": 40.0
+        },
+        {
+          "scenario": "SC-S2-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C04",
+            "C05"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 12,
+          "cost_usd": 0.010529215,
+          "input_tokens": 11395,
+          "output_tokens": 7138,
+          "seconds": 45.1
+        },
+        {
+          "scenario": "SC-S2-02",
+          "type": "T2",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C05",
+            "C06"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C05",
+            "C06"
+          ],
+          "rankings": [
+            [
+              "C05",
+              "C06"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 15,
+          "cost_usd": 0.011830095,
+          "input_tokens": 20832,
+          "output_tokens": 9490,
+          "seconds": 58.5
+        },
+        {
+          "scenario": "SC-S3-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C07",
+            "C08"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C07",
+            "C08"
+          ],
+          "rankings": [
+            [
+              "C07",
+              "C08"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.008031435,
+          "input_tokens": 4288,
+          "output_tokens": 5529,
+          "seconds": 35.9
+        },
+        {
+          "scenario": "SC-S3-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C08"
+          ],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 3,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C08"
+          ],
+          "rankings": [
+            [
+              "C08"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 44,
+          "cost_usd": 0.020299475,
+          "input_tokens": 95801,
+          "output_tokens": 12948,
+          "seconds": 94.2
+        },
+        {
+          "scenario": "SC-S4-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C11",
+            "C12"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 1,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A11",
+            "A15"
+          ],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 10,
+          "cost_usd": 0.008604414999999999,
+          "input_tokens": 4273,
+          "output_tokens": 6638,
+          "seconds": 40.1
+        },
+        {
+          "scenario": "SC-S4-02",
+          "type": "T5",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 1,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 1,
+          "approval_need": 2,
+          "approval_missing": [
+            "A10"
+          ],
+          "ranking": [
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C12"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 15,
+          "cost_usd": 0.017295725,
+          "input_tokens": 29549,
+          "output_tokens": 17274,
+          "seconds": 91.8
+        },
+        {
+          "scenario": "SC-S5-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C13"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A15"
+          ],
+          "ranking": [
+            "C14",
+            "C13"
+          ],
+          "rankings": [
+            [
+              "C14",
+              "C13"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 13,
+          "cost_usd": 0.011276285,
+          "input_tokens": 11985,
+          "output_tokens": 8140,
+          "seconds": 48.2
+        },
+        {
+          "scenario": "SC-S6-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 12,
+          "cost_usd": 0.01235683,
+          "input_tokens": 12894,
+          "output_tokens": 10031,
+          "seconds": 54.2
+        },
+        {
+          "scenario": "SC-S6-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C15",
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C16",
+              "C17"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 17,
+          "cost_usd": 0.013561614999999999,
+          "input_tokens": 24177,
+          "output_tokens": 10201,
+          "seconds": 60.6
+        },
+        {
+          "scenario": "SC-S7-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C14",
+            "C18",
+            "C19"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 11,
+          "cost_usd": 0.007623045,
+          "input_tokens": 4319,
+          "output_tokens": 5011,
+          "seconds": 32.2
+        },
+        {
+          "scenario": "SC-S7-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [
+            2
+          ],
+          "pairs": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [
+            "A15"
+          ],
+          "verdict_mismatch": [
+            "C18"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": false,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A15"
+          ],
+          "ranking": [
+            "C19",
+            "C18",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C18",
+              "C14"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 18,
+          "cost_usd": 0.011325585,
+          "input_tokens": 22638,
+          "output_tokens": 6507,
+          "seconds": 47.7
+        },
+        {
+          "scenario": "SC-S8-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C20",
+            "C21"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 11,
+          "cost_usd": 0.009385255,
+          "input_tokens": 16457,
+          "output_tokens": 6412,
+          "seconds": 37.9
+        },
+        {
+          "scenario": "SC-S8-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C20",
+            "C21"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": false,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 3,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "원인: Top-1",
+          "llm_calls": 49,
+          "cost_usd": 0.021391475,
+          "input_tokens": 95036,
+          "output_tokens": 14326,
+          "seconds": 103.5
+        }
+      ],
+      "metrics": {
+        "scenarios": 15,
+        "symptom": 1.0,
+        "top1": 0.9285714285714286,
+        "top3": 1.0,
+        "pre_rank_top1": 0.7142857142857143,
+        "team": 0.6428571428571429,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 0.42857142857142855,
+        "dup_precision": 1.0,
+        "dup_recall": 1.0,
+        "dup_f1": 1.0,
+        "required_coverage": 0.5384615384615384,
+        "unnecessary": 1,
+        "exploratory": 1,
+        "gate_blocked": 0,
+        "approval_missing": 34,
+        "approval_need": 40,
+        "approval_missing_rate": 0.85,
+        "unauthorized": 0,
+        "refused": 1,
+        "verdict_agreement": 0.36,
+        "llm_calls": 248,
+        "cost_usd": 0.169936245,
+        "input_tokens": 368203,
+        "output_tokens": 126217,
+        "seconds": 792.5
+      }
+    },
+    {
+      "rep": "r2",
+      "scenarios": [
+        {
+          "scenario": "SC-OOS-01",
+          "type": "T6",
+          "main_found": true,
+          "predicted_unclassified": [
+            0
+          ],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 0,
+          "unauthorized": [],
+          "severity": null,
+          "severity_within1": null,
+          "top1": null,
+          "top3": null,
+          "pre_rank_top1": null,
+          "team": null,
+          "procedures": null,
+          "required": {
+            "total": 0,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 0,
+          "approval_missing": [],
+          "ranking": [],
+          "rankings": [],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 1,
+          "cost_usd": 0.00040710000000000003,
+          "input_tokens": 2351,
+          "output_tokens": 344,
+          "seconds": 3.0
+        },
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 2,
+          "approval_missing": [
+            "A10",
+            "A15"
+          ],
+          "ranking": [
+            "C02",
+            "C01",
+            "C03"
+          ],
+          "rankings": [
+            [
+              "C02",
+              "C01",
+              "C03"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.01004438,
+          "input_tokens": 12091,
+          "output_tokens": 6276,
+          "seconds": 35.7
+        },
+        {
+          "scenario": "SC-S2-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C04",
+            "C05"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 12,
+          "cost_usd": 0.010421715,
+          "input_tokens": 11460,
+          "output_tokens": 6910,
+          "seconds": 41.2
+        },
+        {
+          "scenario": "SC-S2-02",
+          "type": "T2",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 2,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C05"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 1,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A15"
+          ],
+          "ranking": [
+            "C05"
+          ],
+          "rankings": [
+            [
+              "C05"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 17,
+          "cost_usd": 0.012975415,
+          "input_tokens": 33692,
+          "output_tokens": 9394,
+          "seconds": 57.0
+        },
+        {
+          "scenario": "SC-S3-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C07",
+            "C08"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C07",
+            "C08"
+          ],
+          "rankings": [
+            [
+              "C07",
+              "C08"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.008866535,
+          "input_tokens": 4379,
+          "output_tokens": 7181,
+          "seconds": 41.7
+        },
+        {
+          "scenario": "SC-S3-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 3,
+            "covered": 3
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C08"
+          ],
+          "rankings": [
+            [
+              "C08"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 49,
+          "cost_usd": 0.02592719,
+          "input_tokens": 113430,
+          "output_tokens": 18071,
+          "seconds": 120.9
+        },
+        {
+          "scenario": "SC-S4-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C11",
+            "C12"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 1,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A11",
+            "A15"
+          ],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.008676915,
+          "input_tokens": 4273,
+          "output_tokens": 6783,
+          "seconds": 38.9
+        },
+        {
+          "scenario": "SC-S4-02",
+          "type": "T5",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 2,
+          "gate_blocked": 0,
+          "refused": [
+            "A15"
+          ],
+          "verdict_mismatch": [
+            "C11"
+          ],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": false,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": false,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 1,
+          "approval_need": 2,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "원인: Top-1",
+          "llm_calls": 10,
+          "cost_usd": 0.011380514999999999,
+          "input_tokens": 13569,
+          "output_tokens": 9007,
+          "seconds": 49.8
+        },
+        {
+          "scenario": "SC-S5-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C13"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C14",
+            "C13"
+          ],
+          "rankings": [
+            [
+              "C14",
+              "C13"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 13,
+          "cost_usd": 0.011204385,
+          "input_tokens": 11796,
+          "output_tokens": 8034,
+          "seconds": 50.0
+        },
+        {
+          "scenario": "SC-S6-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 1,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A12",
+            "A15"
+          ],
+          "ranking": [
+            "C16",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C17"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 12,
+          "cost_usd": 0.01155313,
+          "input_tokens": 12742,
+          "output_tokens": 8454,
+          "seconds": 46.3
+        },
+        {
+          "scenario": "SC-S6-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 1,
+          "refused": [],
+          "verdict_mismatch": [
+            "C15",
+            "C16"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": false,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": true,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A12",
+            "A15"
+          ],
+          "ranking": [
+            "C16",
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C16",
+              "C15",
+              "C17"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "원인: Top-1",
+          "llm_calls": 19,
+          "cost_usd": 0.015151765,
+          "input_tokens": 26748,
+          "output_tokens": 12683,
+          "seconds": 72.3
+        },
+        {
+          "scenario": "SC-S7-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C14",
+            "C18",
+            "C19"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 11,
+          "cost_usd": 0.007745545,
+          "input_tokens": 4319,
+          "output_tokens": 5256,
+          "seconds": 31.9
+        },
+        {
+          "scenario": "SC-S7-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [
+            2
+          ],
+          "pairs": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [
+            "A15"
+          ],
+          "verdict_mismatch": [
+            "C18"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": false,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C19",
+            "C18",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C18",
+              "C14"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 19,
+          "cost_usd": 0.013560485,
+          "input_tokens": 25967,
+          "output_tokens": 10311,
+          "seconds": 62.6
+        },
+        {
+          "scenario": "SC-S8-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C20",
+            "C21"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 8,
+          "cost_usd": 0.007399855,
+          "input_tokens": 4003,
+          "output_tokens": 4932,
+          "seconds": 28.5
+        },
+        {
+          "scenario": "SC-S8-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 2,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C21"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 3,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A15"
+          ],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 52,
+          "cost_usd": 0.024209875000000002,
+          "input_tokens": 121217,
+          "output_tokens": 14902,
+          "seconds": 111.7
+        }
+      ],
+      "metrics": {
+        "scenarios": 15,
+        "symptom": 1.0,
+        "top1": 0.8571428571428571,
+        "top3": 1.0,
+        "pre_rank_top1": 0.7142857142857143,
+        "team": 0.6428571428571429,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 0.42857142857142855,
+        "dup_precision": 1.0,
+        "dup_recall": 1.0,
+        "dup_f1": 1.0,
+        "required_coverage": 0.6153846153846154,
+        "unnecessary": 6,
+        "exploratory": 2,
+        "gate_blocked": 2,
+        "approval_missing": 36,
+        "approval_need": 40,
+        "approval_missing_rate": 0.9,
+        "unauthorized": 0,
+        "refused": 2,
+        "verdict_agreement": 0.36,
+        "llm_calls": 253,
+        "cost_usd": 0.179524805,
+        "input_tokens": 402037,
+        "output_tokens": 128538,
+        "seconds": 791.5
+      }
+    },
+    {
+      "rep": "r3",
+      "scenarios": [
+        {
+          "scenario": "SC-OOS-01",
+          "type": "T6",
+          "main_found": true,
+          "predicted_unclassified": [
+            0
+          ],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 0,
+          "unauthorized": [],
+          "severity": null,
+          "severity_within1": null,
+          "top1": null,
+          "top3": null,
+          "pre_rank_top1": null,
+          "team": null,
+          "procedures": null,
+          "required": {
+            "total": 0,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 0,
+          "approval_missing": [],
+          "ranking": [],
+          "rankings": [],
+          "approval": true,
+          "unauthorized_ok": true,
+          "first_failure": null,
+          "llm_calls": 1,
+          "cost_usd": 0.00038310000000000004,
+          "input_tokens": 2351,
+          "output_tokens": 296,
+          "seconds": 2.1
+        },
+        {
+          "scenario": "SC-S1-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 1,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C02"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 1,
+          "approval_need": 2,
+          "approval_missing": [
+            "A10",
+            "A15"
+          ],
+          "ranking": [
+            "C02"
+          ],
+          "rankings": [
+            [
+              "C02"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 13,
+          "cost_usd": 0.010558475,
+          "input_tokens": 22148,
+          "output_tokens": 7605,
+          "seconds": 44.6
+        },
+        {
+          "scenario": "SC-S2-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C04",
+            "C05"
+          ],
+          "rankings": [
+            [
+              "C04",
+              "C05"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 12,
+          "cost_usd": 0.010237015,
+          "input_tokens": 11583,
+          "output_tokens": 6516,
+          "seconds": 39.7
+        },
+        {
+          "scenario": "SC-S2-02",
+          "type": "T2",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 1,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C05"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 1,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C05"
+          ],
+          "rankings": [
+            [
+              "C05"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 16,
+          "cost_usd": 0.012197215,
+          "input_tokens": 28115,
+          "output_tokens": 8953,
+          "seconds": 50.7
+        },
+        {
+          "scenario": "SC-S3-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C07",
+            "C08"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C07",
+            "C08"
+          ],
+          "rankings": [
+            [
+              "C07",
+              "C08"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.008930135,
+          "input_tokens": 4365,
+          "output_tokens": 7311,
+          "seconds": 41.3
+        },
+        {
+          "scenario": "SC-S3-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C08"
+          ],
+          "verdict_judged": 1,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 3,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C08"
+          ],
+          "rankings": [
+            [
+              "C08"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 44,
+          "cost_usd": 0.020369275,
+          "input_tokens": 95744,
+          "output_tokens": 13099,
+          "seconds": 92.8
+        },
+        {
+          "scenario": "SC-S4-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C11",
+            "C12"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 1,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A11",
+            "A15"
+          ],
+          "ranking": [
+            "C11",
+            "C12"
+          ],
+          "rankings": [
+            [
+              "C11",
+              "C12"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 10,
+          "cost_usd": 0.008490415,
+          "input_tokens": 4273,
+          "output_tokens": 6410,
+          "seconds": 35.7
+        },
+        {
+          "scenario": "SC-S4-02",
+          "type": "T5",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C11",
+            "C12"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 2,
+          "approval_missing": [
+            "A10",
+            "A15"
+          ],
+          "ranking": [
+            "C12",
+            "C11"
+          ],
+          "rankings": [
+            [
+              "C12",
+              "C11"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 8,
+          "cost_usd": 0.007680055,
+          "input_tokens": 4028,
+          "output_tokens": 5763,
+          "seconds": 35.8
+        },
+        {
+          "scenario": "SC-S5-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C13"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A11",
+            "A15"
+          ],
+          "ranking": [
+            "C14",
+            "C13"
+          ],
+          "rankings": [
+            [
+              "C14",
+              "C13"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 13,
+          "cost_usd": 0.010985885,
+          "input_tokens": 11986,
+          "output_tokens": 7559,
+          "seconds": 45.4
+        },
+        {
+          "scenario": "SC-S6-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C16"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A12",
+            "A15"
+          ],
+          "ranking": [
+            "C16"
+          ],
+          "rankings": [
+            [
+              "C16"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 11,
+          "cost_usd": 0.009882575000000001,
+          "input_tokens": 11544,
+          "output_tokens": 7913,
+          "seconds": 45.4
+        },
+        {
+          "scenario": "SC-S6-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C15",
+            "C17"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 2
+          },
+          "exploratory": 0,
+          "approval_need": 4,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A12",
+            "A15"
+          ],
+          "ranking": [
+            "C15",
+            "C17"
+          ],
+          "rankings": [
+            [
+              "C15",
+              "C17"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 18,
+          "cost_usd": 0.012743145,
+          "input_tokens": 23606,
+          "output_tokens": 10868,
+          "seconds": 63.3
+        },
+        {
+          "scenario": "SC-S7-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C14",
+            "C18",
+            "C19"
+          ],
+          "verdict_judged": 3,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": false,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C18",
+            "C19",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C18",
+              "C19",
+              "C14"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "팀: 1차 담당",
+          "llm_calls": 11,
+          "cost_usd": 0.007756545,
+          "input_tokens": 4319,
+          "output_tokens": 5278,
+          "seconds": 33.0
+        },
+        {
+          "scenario": "SC-S7-02",
+          "type": "T3",
+          "main_found": true,
+          "predicted_unclassified": [
+            2
+          ],
+          "pairs": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 1,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C18"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": true,
+          "required": {
+            "total": 1,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08"
+          ],
+          "ranking": [
+            "C19",
+            "C18",
+            "C14"
+          ],
+          "rankings": [
+            [
+              "C19",
+              "C18",
+              "C14"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 승인 요청",
+          "llm_calls": 18,
+          "cost_usd": 0.011991185,
+          "input_tokens": 23059,
+          "output_tokens": 7754,
+          "seconds": 52.6
+        },
+        {
+          "scenario": "SC-S8-01",
+          "type": "T1",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 0,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C20",
+            "C21"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": true,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 2,
+            "covered": 0
+          },
+          "exploratory": 0,
+          "approval_need": 1,
+          "approval_missing": [
+            "A15"
+          ],
+          "ranking": [
+            "C20",
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C20",
+              "C21"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 8,
+          "cost_usd": 0.007474855,
+          "input_tokens": 4003,
+          "output_tokens": 5082,
+          "seconds": 29.7
+        },
+        {
+          "scenario": "SC-S8-02",
+          "type": "T4",
+          "main_found": true,
+          "predicted_unclassified": [],
+          "pairs": {
+            "tp": 190,
+            "fp": 0,
+            "fn": 0
+          },
+          "grouping": true,
+          "symptom": true,
+          "unnecessary": 1,
+          "gate_blocked": 0,
+          "refused": [],
+          "verdict_mismatch": [
+            "C21"
+          ],
+          "verdict_judged": 2,
+          "unauthorized": [],
+          "severity": true,
+          "severity_within1": true,
+          "top1": true,
+          "top3": true,
+          "pre_rank_top1": false,
+          "team": true,
+          "procedures": false,
+          "required": {
+            "total": 3,
+            "covered": 1
+          },
+          "exploratory": 0,
+          "approval_need": 3,
+          "approval_missing": [
+            "A07",
+            "A08",
+            "A15"
+          ],
+          "ranking": [
+            "C21"
+          ],
+          "rankings": [
+            [
+              "C21"
+            ]
+          ],
+          "approval": false,
+          "unauthorized_ok": true,
+          "first_failure": "조치: 절차",
+          "llm_calls": 50,
+          "cost_usd": 0.021821975,
+          "input_tokens": 107448,
+          "output_tokens": 12880,
+          "seconds": 96.9
+        }
+      ],
+      "metrics": {
+        "scenarios": 15,
+        "symptom": 1.0,
+        "top1": 1.0,
+        "top3": 1.0,
+        "pre_rank_top1": 0.7857142857142857,
+        "team": 0.8571428571428571,
+        "severity": 1.0,
+        "severity_within1": 1.0,
+        "procedures": 0.21428571428571427,
+        "dup_precision": 1.0,
+        "dup_recall": 1.0,
+        "dup_f1": 1.0,
+        "required_coverage": 0.34615384615384615,
+        "unnecessary": 4,
+        "exploratory": 2,
+        "gate_blocked": 0,
+        "approval_missing": 38,
+        "approval_need": 40,
+        "approval_missing_rate": 0.95,
+        "unauthorized": 0,
+        "refused": 0,
+        "verdict_agreement": 0.3333333333333333,
+        "llm_calls": 243,
+        "cost_usd": 0.16150185,
+        "input_tokens": 358572,
+        "output_tokens": 113287,
+        "seconds": 709.0
+      }
+    }
+  ]
+}
