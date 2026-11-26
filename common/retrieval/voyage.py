@@ -62,6 +62,7 @@ class Voyage:
             fcntl.flock(f, fcntl.LOCK_EX)
             try:
                 self._read_cache(f)
+                f.flush()  # 복구용 줄바꿈을 잠금을 풀기 전에 파일에 쓴다 (PR #36 리뷰)
             finally:
                 fcntl.flock(f, fcntl.LOCK_UN)
 

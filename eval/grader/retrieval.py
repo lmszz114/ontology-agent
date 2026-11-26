@@ -121,7 +121,8 @@ def main(argv=None) -> int:
     from ontology.seed import load_seed
 
     seed, plan = load_seed(args.org), load_plan()
-    scenarios = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted(Path("eval/scenarios/dev").glob("*.yaml"))]
+    scenario_paths = sorted(Path("eval/scenarios/dev").glob("*.yaml"))
+    scenarios = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in scenario_paths]
     qs = queries(scenarios, plan)
     # 벡터 검색은 k마다 다시 하고, 리랭크 검색은 한 번 하고 자른다 (evaluate와 같은 계산)
     vector_calls = len(qs) * len(SCHEMES) * len(TOP_KS)
@@ -139,7 +140,8 @@ def main(argv=None) -> int:
     out = Path(args.out)
     try:
         check_out_dir(out)
-        git = git_state(out)
+        # 읽은 시나리오 파일이 커밋과 같은지도 본다. 무시 규칙에 걸린 파일은 git status에 나오지 않는다 (PR #36 리뷰)
+        git = git_state(out, inputs=scenario_paths)
     except RunnerError as exc:
         print(f"채점할 수 없다: {exc}", file=sys.stderr)
         return 1
