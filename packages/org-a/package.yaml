@@ -1,0 +1,12 @@
+# 가상 회사 A의 배포 패키지 (설계 5단계 3장 배포 패키지 로더).
+# 조직 설정(org.yaml), 모델 설정(models.yaml)과 이 패키지가 쓰는 프롬프트 버전을 한 묶음으로 둔다.
+# 코드의 프롬프트 버전이 여기와 다르면 로더가 실행을 막는다. 프롬프트를 바꾸면 여기도 바꾸고 version을 올린다.
+# 버전마다 Git 태그(org-a/v1 ...)를 단다. 온톨로지 시드는 저장소에 하나이고 실행 기록에 시드 해시가 남는다
+package:
+  id: org-a
+  version: 1
+prompts:
+  diagnosis: diagnosis-v7
+  knowledge-a: knowledge-a-v2
+  knowledge-b: knowledge-b-v3
+  extraction: extraction-v1

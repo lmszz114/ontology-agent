@@ -20,6 +20,7 @@ from agents.extraction.prompts import PROMPT_VERSION
 from agents.extraction.rules import Knowledge
 from common.files import write_text_atomic
 from common.models import LLM, load_model_config, make_anthropic_client
+from common.packages import PackageError, load_package
 from common.tracing import Tracer
 from common.writers.extraction import ID_PATTERN, list_candidates, record_candidates
 from eval.corpus.check import PLAN_PATH, load_plan
@@ -31,7 +32,7 @@ from ontology.seed import load_seed, seed_hash
 
 KST = timezone(timedelta(hours=9))
 # 이어서 돌릴 때 앞 실행과 같아야 하는 값
-SAME = ("org", "split", "prompt_version", "git_commit", "git_dirty", "seed_hash", "plan_hash", "models")
+SAME = ("org", "split", "prompt_version", "git_commit", "git_dirty", "seed_hash", "plan_hash", "models", "package")
 
 
 def parse_args(argv=None) -> argparse.Namespace:
@@ -81,10 +82,15 @@ def prepare(args) -> tuple[Path, dict, list[dict]]:
     git = git_state(out, inputs=[PLAN_PATH, *(doc_path(d) for d in docs)])
     if git.dirty and not args.allow_dirty:
         raise RunnerError("커밋하지 않은 변경이 있다. 커밋하고 돌리거나 --allow-dirty를 준다:\n  " + "\n  ".join(git.changed))
-    config = load_model_config(args.org)
+    # 배포 패키지: 추출 프롬프트 버전이 패키지에 적힌 것과 같아야 한다 (5단계 3장, M6)
+    try:
+        package = load_package(args.org, uses={"extraction": PROMPT_VERSION})
+    except (PackageError, ValueError) as exc:
+        raise RunnerError(f"배포 패키지를 쓸 수 없다: {exc}") from exc
+    config = package.models
     meta = {"org": args.org, "split": "dev", "prompt_version": PROMPT_VERSION, "git_commit": git.commit,
-            "git_dirty": git.dirty, "seed_hash": seed_hash(load_seed(args.org)), "plan_hash": _hash(PLAN_PATH),
-            "models": {t: config.model_for(t) for t in ("extraction", "normalization")}}
+            "git_dirty": git.dirty, "seed_hash": seed_hash(package.seed), "plan_hash": _hash(PLAN_PATH),
+            "models": {t: config.model_for(t) for t in ("extraction", "normalization")}, "package": package.record()}
     run_file = out / "run.yaml"
     if run_file.exists():
         before = yaml.safe_load(run_file.read_text(encoding="utf-8"))

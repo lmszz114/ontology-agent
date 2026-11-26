@@ -75,6 +75,18 @@ EXT_CONFIGS = {"C-ext"}
 SEARCH_CONFIGS = {"B"}
 
 
+def prompt_uses(config: str) -> dict[str, str]:
+    """이 구성으로 진단할 때 쓰는 프롬프트와 그 코드 버전. 배포 패키지에 적힌 버전과 같아야 돈다 (M6)."""
+    from common.knowledge import text_prompts
+
+    uses = {"diagnosis": PROMPT_VERSION}
+    if config == "A":
+        uses["knowledge-a"] = text_prompts.PROMPT_VERSION
+    elif config in SEARCH_CONFIGS:
+        uses["knowledge-b"] = text_prompts.PROMPT_VERSION_B
+    return uses
+
+
 def _b_settings():
     from common.knowledge.search import B_SETTINGS
 

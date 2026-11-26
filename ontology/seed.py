@@ -84,6 +84,18 @@ def validate_seed(seed: dict) -> None:
 
     for channel in seed["channels"]:
         require(channel.get("source_system"), systems, f"{channel['id']}.source_system")
+    # 채널의 1차 처리 역할은 어떤 팀이 맡아야 한다. 없으면 접수 분류(R1-2)가 팀을 찾지 못한다 (M6, 조직 설정 검증)
+    roles = {r["id"] for r in seed["roles"]}
+    assigned = {}
+    for ra in seed["role_assignments"]:
+        require(ra["role"], roles, f"역할 배정 {ra['role']}")
+        require(ra["team"], teams, f"역할 배정 {ra['role']}.team")
+        if assigned.setdefault(ra["role"], ra["team"]) != ra["team"]:
+            raise ValueError(f"역할 {ra['role']}을 두 팀이 맡는다: {assigned[ra['role']]}, {ra['team']}")
+    for channel in seed["channels"]:
+        require(channel["handled_first_by"], roles, f"{channel['id']}.handled_first_by")
+        if channel["handled_first_by"] not in assigned:
+            raise ValueError(f"{channel['id']}의 1차 처리 역할 {channel['handled_first_by']}을 맡은 팀이 없다")
     for check in seed["evidence_checks"]:
         for key in ("judged_by_team", "performed_by_team"):
             require(check.get(key), teams, f"{check['id']}.{key}")
