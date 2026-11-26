@@ -175,6 +175,10 @@ def _structure_errors(data: Any, schema: dict) -> list[str]:
     return errors
 
 
+# LLM 출력이 형식 검증을 두 번 통과하지 못해 사람에게 넘긴 사유에 붙는 말. 채점기가 이 말로 출력 형식 오류를 센다
+OUTPUT_ERROR = "출력 검증 실패"
+
+
 def _flag(state: dict, incident_id: str, reason: str) -> dict:
     """사건에 사람 확인 사유를 하나 더한 incidents를 돌려준다 (상태를 직접 고치지 않는다)."""
     incidents = dict(state["incidents"])
@@ -248,7 +252,7 @@ def build_graph(deps: Deps):
         }
         if data is None:
             work |= {"symptom_id": None, "scope": None, "system_ids": [], "intake_reason": None}
-            work["needs_human"].append(f"접수 정리 출력 검증 실패: {errors}")
+            work["needs_human"].append(f"접수 정리 {OUTPUT_ERROR}: {errors}")
         else:
             symptom = None if data["symptom_id"] == "none" else data["symptom_id"]
             work |= {
@@ -324,7 +328,7 @@ def build_graph(deps: Deps):
         )
         if data is None:
             work |= {"decision": "ambiguous", "targets": ids}
-            work["needs_human"].append(f"중복 판정 출력 검증 실패: {errors}")
+            work["needs_human"].append(f"중복 판정 {OUTPUT_ERROR}: {errors}")
             return {"report": work}
         same = [j["incident_id"] for j in data["judgments"] if j["verdict"] == "same"]
         ambiguous = [j["incident_id"] for j in data["judgments"] if j["verdict"] == "ambiguous"]
@@ -634,7 +638,7 @@ def build_graph(deps: Deps):
                     if set(d.get("apply", [])) - set(ids) else [],
                 )
                 if data is None:
-                    needs_human.append(f"조건부 협업 판단 출력 검증 실패: {errors}")
+                    needs_human.append(f"조건부 협업 판단 {OUTPUT_ERROR}: {errors}")
                 else:
                     collaborators += [{"team_id": t, "why": "조건부 협업", "reason": data["reason"]} for t in data["apply"]]
             next_check = None
@@ -838,7 +842,7 @@ def build_graph(deps: Deps):
                 schema=schema, validate=validate,
             )
             if data is None:
-                needs_human.append(f"절차, 조치 선택 출력 검증 실패: {errors}")
+                needs_human.append(f"절차, 조치 선택 {OUTPUT_ERROR}: {errors}")
         if data is None:
             data = {"procedures": [], "resolved_conditions": [], "actions": [], "reason": None}
         diag |= {"procedure_choice": data, "candidate_procedures": sorted(candidates), "needs_human": needs_human,

@@ -14,8 +14,9 @@ from eval.validate import load_scenarios
 CONFIG = load_config()
 
 
-def _grades(top1=1.0, approval_missing=0, unauthorized=0, **meta) -> dict:
-    metrics = {"top1": top1, "approval_missing": approval_missing, "unauthorized": unauthorized, "cost_usd": 0.04}
+def _grades(top1=1.0, approval_missing=0, unauthorized=0, output_errors=0, **meta) -> dict:
+    metrics = {"top1": top1, "approval_missing": approval_missing, "unauthorized": unauthorized,
+               "output_errors": output_errors, "cost_usd": 0.04}
     return {"meta": {"config": "C", "org": "org-a", "split": "dev", "scenarios": list(CONFIG["scenarios"]),
                      "repetitions": 1, "git_commit": "abc1234def", "git_dirty": False, "models": ["claude-haiku-5-5"],
                      "started_at": "2026-11-26T16:00:00+09:00", "prompt_version": "diagnosis-v7", "seed_hash": "s"}
@@ -46,6 +47,8 @@ def test_scenarios_cover_every_symptom_and_type_except_t7():
     (_grades(top1=None), _config(), ["원인 Top-1"]),
     (_grades(approval_missing=1), _config(), ["승인 요청 누락"]),
     (_grades(unauthorized=2), _config(), ["무단 고위험 실행"]),
+    # Top-1 허용 폭 안이어도 출력 형식 오류가 있으면 실패다 (PR #39 리뷰)
+    (_grades(top1=0.9, output_errors=1), _config(), ["출력 형식 오류"]),
     (_grades(), copy.deepcopy(CONFIG) | {"baseline": None}, ["기준 값이 없다"]),
 ])
 def test_failures(grades, config, expected):
@@ -82,3 +85,19 @@ def test_write_baseline_keeps_comments_and_refuses_dirty(tmp_path):
     assert yaml.safe_load(text)["scenarios"] == CONFIG["scenarios"]
     with pytest.raises(RegressionError, match="커밋하지 않은"):
         write_baseline(_grades(git_dirty=True), path)
+
+
+@pytest.mark.parametrize("grades, message", [
+    (_grades(top1=None), "0과 1 사이의 수"),
+    (_grades(top1="1.0"), "0과 1 사이의 수"),
+    (_grades(output_errors=1), "통과 기준"),
+    (_grades(approval_missing=1), "통과 기준"),
+])
+def test_bad_result_is_not_written_as_baseline(tmp_path, grades, message):
+    """Top-1이 수가 아니거나 통과 기준을 넘지 못한 결과는 기준으로 쓰지 않고 파일도 그대로 둔다 (PR #39 리뷰)."""
+    path = tmp_path / "regression.yaml"
+    shutil.copy(regression.CONFIG_PATH, path)
+    before = path.read_text(encoding="utf-8")
+    with pytest.raises(RegressionError, match=message):
+        write_baseline(grades, path)
+    assert path.read_text(encoding="utf-8") == before

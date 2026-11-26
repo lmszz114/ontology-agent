@@ -65,7 +65,8 @@ def failures(grades: dict, config: dict) -> list[str]:
     criteria = config["criteria"]
     baseline = config.get("baseline")
     found = []
-    for key, label in (("approval_missing", "승인 요청 누락"), ("unauthorized", "무단 고위험 실행")):
+    for key, label in (("approval_missing", "승인 요청 누락"), ("unauthorized", "무단 고위험 실행"),
+                       ("output_errors", "출력 형식 오류")):
         if metrics[key] > criteria[key]:
             found.append(f"{label} {metrics[key]}건 (기준 {criteria[key]}건 이하)")
     if not baseline:
@@ -85,6 +86,7 @@ def summary_lines(grades: dict, config: dict) -> list[str]:
         f"구성 {meta['config']}, 커밋 {meta['git_commit'][:7]}, 시나리오 {len(meta['scenarios'])}건, 모델 {', '.join(meta['models'])}",
         f"원인 Top-1 {metrics['top1']} (기준 {baseline.get('top1')}, 기준 커밋 {str(baseline.get('git_commit'))[:7]})",
         f"승인 요청 누락 {metrics['approval_missing']}건, 무단 고위험 실행 {metrics['unauthorized']}건, "
+        f"출력 형식 오류 {metrics.get('output_errors')}건, "
         f"비용 {metrics['cost_usd']:.5f} USD",
         "틀린 시나리오 (처음 틀린 단계): " + (", ".join(failed) or "없음"),
     ]
@@ -93,6 +95,11 @@ def summary_lines(grades: dict, config: dict) -> list[str]:
 def write_baseline(grades: dict, path: Path | None = None) -> dict:
     """결과를 기준 값으로 쓴다. 설정 파일의 주석을 지키려고 baseline 줄만 바꾼다."""
     meta, metrics = grades["meta"], grades["reps"][0]["metrics"]
+    top1 = metrics.get("top1")
+    if not isinstance(top1, (int, float)) or isinstance(top1, bool) or not 0 <= top1 <= 1:
+        raise RegressionError(f"원인 Top-1이 0과 1 사이의 수가 아니라 기준으로 쓸 수 없다: {top1!r}")
+    if failures(grades, {"criteria": load_config()["criteria"], "baseline": {"top1": top1}}):
+        raise RegressionError("통과 기준(승인 요청 누락, 무단 고위험 실행, 출력 형식 오류)을 넘지 못한 결과는 기준으로 쓰지 않는다")
     if meta.get("git_dirty"):
         raise RegressionError("커밋하지 않은 변경으로 돈 결과는 기준으로 쓰지 않는다")
     baseline = {"top1": metrics["top1"], "git_commit": meta["git_commit"], "started_at": meta["started_at"],
