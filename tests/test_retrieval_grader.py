@@ -46,3 +46,15 @@ def test_evaluate_and_markdown_with_a_fake_search(monkeypatch):
     assert len(result["summary"]) == 12 and len(result["random_recall"]) == 6
     md = R.markdown({"run": {"date": "d", "embed_model": "e", "rerank_model": "r"}} | result)
     assert md.count("\n| ") == 14  # 머리 줄, 구분 줄, 설정 12줄
+
+
+def test_main_refuses_out_of_results_dirs_and_existing_results(tmp_path, capsys, monkeypatch):
+    """결과 폴더 규칙은 진단 실행기와 같다. 이미 있는 결과는 덮어쓰지 않는다 (M5 점검). Voyage를 부르기 전에 멈춘다."""
+    from eval.grader import retrieval as R
+    from eval.runner import runner
+
+    assert R.main(["--out", str(tmp_path / "x")]) == 1
+    assert "eval/results" in capsys.readouterr().err
+    done = runner.ROOT / "eval" / "results" / "2026-11-26-m5-retrieval-dev"
+    assert R.main(["--out", str(done)]) == 1
+    assert "이미 결과가 있다" in capsys.readouterr().err

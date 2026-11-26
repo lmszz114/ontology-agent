@@ -216,3 +216,30 @@ def test_rerank_ties_follow_chunk_id(monkeypatch):
 
     out = Smod.search(Driver(), Tie(), "q", scheme="fixed", k=2, rerank=True)
     assert [r["chunk_id"] for r in out] == ["f:X:001", "f:X:002"]
+
+
+def test_connection_errors_retry_then_report_and_rate_waits_are_per_request(tmp_path, monkeypatch):
+    """연결 오류는 몇 번 다시 보내고 VoyageError로 알린다. 속도 제한 대기는 요청마다 센다 (M5 점검)."""
+    monkeypatch.setattr(V.time, "sleep", lambda s: None)
+    state = {"n": 0}
+
+    def flaky(request):
+        state["n"] += 1
+        if state["n"] <= 2:
+            raise httpx.ConnectError("proxy reset", request=request)
+        return httpx.Response(200, json={"data": [{"index": 0, "embedding": [1.0]}], "usage": {"total_tokens": 1}})
+
+    assert _client(tmp_path, flaky).embed(["a"], "query") == [[1.0]] and state["n"] == 3
+
+    def down(request):
+        raise httpx.ReadTimeout("timeout", request=request)
+
+    with pytest.raises(V.VoyageError, match="연결 실패"):
+        _client(tmp_path, down).embed(["b"], "query")
+
+    v = _client(tmp_path, lambda r: httpx.Response(429, text="slow down"))
+    for text in ("c", "d"):  # 앞 요청이 대기를 다 써도 다음 요청은 다시 기다린다
+        with pytest.raises(V.VoyageError, match="속도 제한"):
+            v.embed([text], "query")
+    assert v.rate_waits == 2 * V.RATE_RETRIES
+

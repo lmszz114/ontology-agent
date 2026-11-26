@@ -116,11 +116,13 @@ def main(argv=None) -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--org", default="org-a")
     parser.add_argument("--no-rerank", action="store_true", help="리랭크 없는 설정만 채점한다")
+    parser.add_argument("--allow-dirty", action="store_true", help="커밋하지 않은 변경이 있어도 돌리고 git_dirty를 남긴다")
     args = parser.parse_args(argv)
     from ontology.seed import load_seed
 
     seed, plan = load_seed(args.org), load_plan()
-    scenarios = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in sorted(Path("eval/scenarios/dev").glob("*.yaml"))]
+    scenario_paths = sorted(Path("eval/scenarios/dev").glob("*.yaml"))
+    scenarios = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in scenario_paths]
     qs = queries(scenarios, plan)
     # 벡터 검색은 k마다 다시 하고, 리랭크 검색은 한 번 하고 자른다 (evaluate와 같은 계산)
     vector_calls = len(qs) * len(SCHEMES) * len(TOP_KS)
@@ -131,6 +133,25 @@ def main(argv=None) -> int:
     if not args.out:
         parser.error("--out이 필요하다")
     from datetime import datetime, timedelta, timezone
+
+    from eval.runner.runner import RunnerError, check_out_dir, git_state
+
+    # 진단 실행기와 같은 규칙: 결과는 eval/results 아래에 두고, 어느 커밋의 코드로 낸 숫자인지 남긴다 (M5 점검)
+    out = Path(args.out)
+    try:
+        check_out_dir(out)
+        # 읽은 시나리오 파일이 커밋과 같은지도 본다. 무시 규칙에 걸린 파일은 git status에 나오지 않는다 (PR #36 리뷰)
+        git = git_state(out, inputs=scenario_paths)
+    except RunnerError as exc:
+        print(f"채점할 수 없다: {exc}", file=sys.stderr)
+        return 1
+    if any((out / name).exists() for name in ("RETRIEVAL.yaml", "RETRIEVAL.md")):
+        print(f"채점할 수 없다: {out}에 이미 결과가 있다. 새 폴더를 준다", file=sys.stderr)
+        return 1
+    if git.dirty and not args.allow_dirty:
+        print("채점할 수 없다: 커밋하지 않은 변경이 있다 (--allow-dirty로 돌리면 git_dirty를 남긴다)\n  "
+              + "\n  ".join(git.changed), file=sys.stderr)
+        return 1
 
     from common.retrieval.index import check_index
     from common.retrieval.voyage import EMBED_MODEL, RERANK_MODEL, Voyage
@@ -146,8 +167,8 @@ def main(argv=None) -> int:
     result = {"run": {"date": now.date().isoformat(), "started_at": now.isoformat(), "split": "dev",
                       "embed_model": EMBED_MODEL, "rerank_model": RERANK_MODEL, "corpus_hash": meta["corpus_hash"],
                       "embed_tokens": voyage.usage.embed_tokens, "rerank_tokens": voyage.usage.rerank_tokens,
-                      "rate_waits": voyage.rate_waits, "rerank": not args.no_rerank}} | result
-    out = Path(args.out)
+                      "rate_waits": voyage.rate_waits, "rerank": not args.no_rerank,
+                      "git_commit": git.commit, "git_dirty": git.dirty}} | result
     out.mkdir(parents=True, exist_ok=True)
     write_text_atomic(out / "RETRIEVAL.yaml", yaml.safe_dump(result, allow_unicode=True, sort_keys=False))
     write_text_atomic(out / "RETRIEVAL.md", markdown(result))

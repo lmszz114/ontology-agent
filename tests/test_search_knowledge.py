@@ -54,7 +54,7 @@ def test_search_uses_report_text_and_settings_and_feeds_only_retrieved_chunks(mo
                                                      "scheme": "paragraph", "rerank": False, "k": 5})]
     assert record["docs"] == ["PM-01", "K"] and len(record["chunks"]) == 3 and record["settings"] == SETTINGS.as_dict()
     asyncio.run(k.rank_causes("S1", "2026-12-03T20:14:00+09:00"))
-    system = script.params[0]["system"][0]["text"]
+    system = "".join(b["text"] for b in script.params[0]["system"])
     assert system.startswith(P.SYSTEM_B) and "원인은 메일함 지급 누락이다." in system and "# ID 목록" in system
     # 기준 지식 전체가 아니라 검색한 조각만 넣는다. 관계(담당 시스템 등)는 검색 결과에 나온 것뿐이다
     assert "담당 시스템 ->" not in system
@@ -127,7 +127,7 @@ def test_questions_add_their_own_code_made_search(monkeypatch):
         asyncio.run(k.get_checks("C02"))
     query = calls[-1][2]["query"]
     assert query.startswith("C02 우편함 지급 누락") and "판정 근거" in query and calls[-1][2]["k"] == 5
-    system = script.params[0]["system"][0]["text"]
+    system = "".join(b["text"] for b in script.params[0]["system"])
     # 사건 검색 결과에 질문 검색 결과를 더하고, 이미 있는 조각은 다시 넣지 않는다
     assert "C02 판정 근거 -> E02" in system and system.count("원인은 메일함 지급 누락이다.") == 1
     assert k._record["extra"][0]["question"] == ["checks", "C02"]
@@ -137,3 +137,28 @@ def test_questions_add_their_own_code_made_search(monkeypatch):
     with pytest.raises(KnowledgeUnavailable):
         asyncio.run(k.get_checks("C02"))  # 이미 물은 질문(실패도 기억한다)은 다시 검색하지 않는다
     assert len(calls) == before and len(script.params) == 2
+
+
+def test_system_is_split_by_how_often_it_changes(monkeypatch):
+    """규칙과 ID 목록, 사건 검색 결과는 캐시하고 질문 검색 결과는 캐시 표시 뒤에 둔다 (M5 점검)."""
+    k, _ = provider(Script(), monkeypatch, rows=ROWS)
+    asyncio.run(k.begin_incident("IN-1", ["아이템이 안 와요"]))
+    rules, base = k.system
+    assert rules["text"].startswith(P.SYSTEM_B) and "# ID 목록" in rules["text"] and "# 검색 결과" not in rules["text"]
+    assert base["text"].startswith("# 검색 결과") and "[1] 문서 PM-01" in base["text"]
+    assert rules["cache_control"] == base["cache_control"] == {"type": "ephemeral"}
+    first_rules = rules["text"]
+
+    extra = [{"rank": 1, "doc_id": "K", "chunk_id": "fixed:K:020", "text": "C02 판정 근거 -> E02", "score": 0.9}, ROWS[0]]
+
+    async def fake_call(client, tracer, *, server, name, args):
+        return {"results": extra, "usage": {"calls": 1, "embed_tokens": 0, "rerank_tokens": 0}}
+
+    monkeypatch.setattr(S, "call_tool_data", fake_call)
+    asyncio.run(k._with_question_search(("checks", "C02"), "C02 판정 근거"))
+    rules2, base2, question = k.system
+    assert rules2 == rules and base2 == base and "cache_control" not in question
+    assert question["text"].startswith(f"[{len(ROWS) + 1}] 문서 K") and "PM-01" not in question["text"]
+    # 다음 사건에서도 규칙과 ID 목록 블록은 글자 그대로 같아 캐시를 다시 읽는다
+    asyncio.run(k.begin_incident("IN-2", ["또 안 와요"]))
+    assert k.system[0]["text"] == first_rules

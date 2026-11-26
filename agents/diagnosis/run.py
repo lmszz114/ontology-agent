@@ -35,9 +35,11 @@ from mcp_servers.ontology_query import queries
 from ontology.seed import load_seed
 
 ROOT = Path(__file__).parent.parent.parent
-# MCP 서버 프로세스에 넘기는 환경 변수. API 키 같은 비밀값은 넘기지 않는다
+# 모든 MCP 서버 프로세스에 넘기는 환경 변수. 비밀값 중 Neo4j 비밀번호(NEO4J_PASSWORD)가 들어 있다(Neo4j를 쓰지 않는
+# 모의 도구 서버도 받는다). API 키는 넘기지 않고, Voyage 키만 문서 검색 서버에 넘긴다(아래 SEARCH_ENV) (PR #36 리뷰)
 PASS_ENV = ("PATH", "HOME", "NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD", "LANG")
-# 문서 검색 서버는 Voyage를 부른다. 키는 프록시가 붙이므로(네트워크 시크릿) 프록시와 인증서 설정을 넘긴다
+# 문서 검색 서버는 Voyage를 부른다. 키는 보통 프록시가 붙이므로(네트워크 시크릿) 프록시와 인증서 설정을 넘긴다.
+# VOYAGE_API_KEY는 키를 환경 변수로 둔 곳(로컬 실행)에서만 있고, 그때는 이 서버 하나에만 넘긴다 (M5 점검)
 SEARCH_ENV = ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy", "SSL_CERT_FILE",
               "REQUESTS_CA_BUNDLE", "VOYAGE_API_KEY")
 
