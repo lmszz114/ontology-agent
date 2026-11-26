@@ -76,10 +76,23 @@ class SearchKnowledge(TextKnowledge):
             self.voyage_usage[key] += out["usage"][key]
         return out["results"]
 
-    def _set_system(self, rows: list[dict]) -> None:
-        chunks = "\n\n".join(f"[{i}] 문서 {r['doc_id']} ({r['chunk_id']})\n{r['text']}" for i, r in enumerate(rows, start=1))
-        self.system = [{"type": "text", "cache_control": {"type": "ephemeral"},
-                        "text": P.SYSTEM_B + "\n" + self.ids_text + "\n\n# 검색 결과\n\n" + (chunks or "(없음)")}]
+    @staticmethod
+    def _chunks_text(rows: list[dict], start: int) -> str:
+        return "\n\n".join(f"[{i}] 문서 {r['doc_id']} ({r['chunk_id']})\n{r['text']}" for i, r in enumerate(rows, start=start))
+
+    def _set_system(self, base: list[dict], extra: list[dict] = ()) -> None:
+        """시스템 프롬프트를 바뀌는 주기대로 나눠 캐시한다 (M5 점검).
+
+        규칙과 ID 목록은 실행 내내, 사건 검색 결과는 그 사건 안에서 같다. 질문 검색 결과는 질문마다 다르므로
+        캐시 표시 뒤에 둔다. 한 블록에 모두 넣고 캐시하면 질문마다 새 캐시를 쓰기만 하고 읽지 못한다
+        (dev B v2 3회: 캐시 쓰기 3,928,586토큰, 읽기 52,377토큰)
+        """
+        system = [{"type": "text", "text": P.SYSTEM_B + "\n" + self.ids_text, "cache_control": {"type": "ephemeral"}},
+                  {"type": "text", "text": "# 검색 결과\n\n" + (self._chunks_text(base, 1) or "(없음)"),
+                   "cache_control": {"type": "ephemeral"}}]
+        if extra:
+            system.append({"type": "text", "text": self._chunks_text(list(extra), len(base) + 1)})
+        self.system = system
 
     async def begin_incident(self, incident_id: str, reports: list[str]) -> dict[str, Any]:
         query = "\n".join(reports)  # 검색 채점(eval/grader/retrieval)과 같은 검색어 (M5 사용자 결정)
@@ -104,7 +117,7 @@ class SearchKnowledge(TextKnowledge):
             return
         extra = await self._search(query, f"{key[0]}.search")
         seen = {r["chunk_id"] for r in self._base}
-        self._set_system(self._base + [r for r in extra if r["chunk_id"] not in seen])
+        self._set_system(self._base, [r for r in extra if r["chunk_id"] not in seen])
         for r in extra:  # 이 사건에서 검색해 온 문서 목록(retrieved_docs)에 질문 검색의 문서도 더한다 (PR #35 리뷰)
             if r["doc_id"] not in self._record["docs"]:
                 self._record["docs"].append(r["doc_id"])
