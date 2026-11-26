@@ -219,8 +219,8 @@ def test_command_reports_success_for_the_real_scenarios(capsys):
     from eval import validate
 
     assert validate.main() == 0
-    # dev 15건(M2, M3 14건과 범위 밖 1건), test 32건(2026-11-25). T7 3건은 M6에서 더한다
-    assert capsys.readouterr().out.strip() == "시나리오 파일 47개, 문제 0건"
+    # dev 15건(M2, M3 14건과 범위 밖 1건), test 32건(2026-11-25)과 T7 3건(M6, 2026-11-26)
+    assert capsys.readouterr().out.strip() == "시나리오 파일 50개, 문제 0건"
 
 
 def test_escalated_scenario_is_one_level_higher(seed, scenarios):

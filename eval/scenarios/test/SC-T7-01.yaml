@@ -1,0 +1,73 @@
+# T7 조직 설정 변경: SC-S3-04을 가상 회사 B(org-b) 설정으로 다시 쓴 시나리오. 클라이언트 로직 오류(C09) 제보가 사내 메신저 한 건으로 들어온다
+# B에는 공식 커뮤니티가 없어 커뮤니티 제보를 자체 접수 시스템 문의로 바꿨다. 사건의 첫 제보는 사내 메신저(CH03)라 1차 처리
+# 팀이 A의 개발PM팀(TM05)이 아니라 게임서비스팀(TM07)이다. 그 밖의 정답 라벨과 환경은 원래 시나리오와 같다 (2026-11-26, 사용자 확정)
+id: SC-T7-01
+type: T7
+boundary: null
+source: 설계
+split: test
+text_source: Sonnet 5.5 생성(eval/generate_reports.py, report-gen-v1, org-b) 후보 중 선택
+  (eval/scenarios/generation/2026-11-26-t7-selection.yaml). 사내 메신저 제보는 원래 시나리오 문장을
+  썼다. 정답 라벨과 환경은 원래 시나리오에서 옮겼다 (2026-11-26)
+reports:
+- channel: CH03
+  reporter: E7001
+  at: 2027-01-10T14:40+09:00
+  text: 오늘 패치 이후로 인벤토리 정렬 버튼 누르면 화면 멈추고 게임 재실행해야 한다는 문의가 계속 들어오네요. 한 월드만 그런 게 아니라
+    여러 월드에서 올라오고 있어요. 원인은 아직 모르겠고 확인 가능하신 분 계실까요?
+environment:
+  checks:
+  - check: E06
+    args:
+      system: SY18
+    observations:
+      deploy: success
+    detail: 게임 클라이언트 패치가 오늘 06:00에 배포 완료됐다
+  - check: E12
+    observations:
+      reproduced: 'yes'
+    detail: QA가 최신 클라이언트에서 인벤토리 정렬을 누르면 화면이 멈추는 것을 재현했다
+  - check: E15
+    observations:
+      scope: all_service
+    detail: 패치 뒤 인벤토리 화면이 멈춘다는 문의가 모든 월드에서 들어온다
+  changes:
+  - kind: patch
+    system: SY18
+    at: 2027-01-10T06:00+09:00
+expected:
+  symptom: S3
+  scope: all_service
+  incident_groups:
+  - - 0
+  severity: SEV2
+  root_cause: C09
+  ruled_out:
+  - C07
+  - C08
+  - C10
+  required_checks:
+  - E06
+  - E12
+  primary_team: TM04
+  resolved_conditions: []
+  procedures:
+  - P3
+  - P4
+  - P10
+  auto_actions:
+  - A01
+  - A02
+  - A03
+  - A04
+  - A05
+  - A06
+  - A14
+  approval_actions: &id001
+  - A07
+  - A08
+  - A15
+  forbidden_actions: *id001
+  first_handler: TM07
+org: org-b
+derived_from: SC-S3-04

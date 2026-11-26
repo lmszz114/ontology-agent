@@ -16,7 +16,7 @@ from pathlib import Path
 import yaml
 
 from common.rules.severity import LEVELS
-from eval.labels import label_groups, label_incidents
+from eval.labels import label_groups, label_incidents, scenario_org
 from eval.lock import lock_errors
 from ontology.conditions import (
     CONFIRM,
@@ -50,6 +50,7 @@ SAME_IN_FOLDER = ("config", "org", "mode", "split", "models", "prompt_version", 
 STAGES = (
     ("symptom", "분류: 증상"),
     ("grouping", "분류: 묶음"),
+    ("first_handler", "배정: 1차 처리"),
     ("severity", "분류: 심각도"),
     ("top1", "원인: Top-1"),
     ("team", "팀: 1차 담당"),
@@ -255,7 +256,8 @@ def match_incidents(labels: list[dict], indexes: list[list[int]]) -> list[int | 
 
 
 # 사건마다 맞음 여부를 내는 지표. 시나리오는 모든 사건이 맞아야 맞다. 사건이 없는 시나리오(범위 밖)는 해당 없음(None)이다
-INCIDENT_KEYS = ("severity", "severity_within1", "top1", "top3", "pre_rank_top1", "team", "procedures")
+# first_handler(조직 설정 반영)는 1차 처리 팀 라벨이 있는 사건(T7)만 채점하고 나머지는 해당 없음이다
+INCIDENT_KEYS = ("severity", "severity_within1", "top1", "top3", "pre_rank_top1", "team", "procedures", "first_handler")
 
 
 def _grade_incident(label: dict, out: dict | None, causes: dict, intake: str) -> dict:
@@ -268,10 +270,13 @@ def _grade_incident(label: dict, out: dict | None, causes: dict, intake: str) ->
     root_refs = required_checks(causes[root]) if root else []
     need = list(label.get("approval_actions") or [])
     g: dict = {"required": {"total": len(root_refs), "covered": 0}, "exploratory": 0, "approval_need": len(need)}
+    handler = label.get("first_handler")
     if out is None:
         g.update({key: False for key in INCIDENT_KEYS}, approval_missing=need, ranking=[])
         if root is None:
             g["pre_rank_top1"] = None
+        if handler is None:
+            g["first_handler"] = None
         return g
     calls = _check_calls(out)
     done = [(c["check_id"], c["args"]) for c in calls if not c["is_error"]]
@@ -306,6 +311,8 @@ def _grade_incident(label: dict, out: dict | None, causes: dict, intake: str) ->
         # 접수(P1, 시드 rules.yaml)는 모든 사건에서 열어 라벨에 넣지 않는다 (4단계 5-1 절차 일치율)
         procedures=set(out["procedures"]) - {intake} == set(label["procedures"]),
         approval_missing=sorted(set(need) - requested),
+        # 조직 설정 반영 (4단계 5-1): 사건을 연 제보의 채널로 조회한 1차 처리 팀이 그 조직의 배정과 같은지
+        first_handler=None if handler is None else (out.get("first_handler") or {}).get("team_id") == handler,
     )
     return g
 
@@ -409,6 +416,7 @@ RATE_KEYS = (
     ("severity", "심각도 정확도"),
     ("severity_within1", "심각도 1단계 이내"),
     ("procedures", "절차 일치율"),
+    ("first_handler", "조직 설정 반영률"),
 )
 
 
@@ -463,6 +471,10 @@ def grade_folder(folder: Path, seed: dict | None = None) -> dict:
     for name, results in reps:
         for r in results:
             check_basis(r, seed)
+            # 시나리오는 적힌 조직 설정으로만 채점한다. 다른 조직으로 돈 결과는 1차 처리 팀의 기준이 다르다 (M6)
+            org = scenario_org(load_scenario(r["run"]["split"], r["run"]["scenario"]))
+            if org != r["run"]["org"]:
+                raise GradeError(f"{folder}/{name}/{r['run']['scenario']}: 시나리오는 {org} 설정인데 {r['run']['org']}로 돌았다")
         # C-ext는 반복 안의 시나리오가 모두 같은 그래프로 돌아야 한다
         graphs = {(r["run"].get("knowledge_graph") or {}).get("hash") for r in results}
         if len(graphs) > 1:

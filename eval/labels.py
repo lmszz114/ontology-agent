@@ -10,13 +10,23 @@
 
 두 형식 모두 분류하지 않을 제보는 expected.unclassified에 적는다.
 원인이 확정되지 않아야 정답인 사건은 root_cause와 primary_team을 비워(null) 둔다 (T5, 2026-11-25)
+조직 설정 변경 시나리오(T7)는 사건마다 1차 처리 팀(first_handler)을 더 적는다 (M6, 2026-11-26)
 """
 
 # 사건 하나의 라벨 이름. 사건 여럿 형식의 각 항목도 같은 이름을 쓴다
 INCIDENT_FIELDS = (
     "symptom", "scope", "severity", "escalated", "root_cause", "ruled_out", "required_checks", "primary_team",
-    "resolved_conditions", "procedures", "auto_actions", "approval_actions", "forbidden_actions",
+    "resolved_conditions", "procedures", "auto_actions", "approval_actions", "forbidden_actions", "first_handler",
 )
+
+
+# 시나리오에 조직(org)을 적지 않으면 가상 회사 A 설정으로 돈다. T7만 다른 조직을 적는다 (M6)
+DEFAULT_ORG = "org-a"
+
+
+def scenario_org(scenario: dict) -> str:
+    """시나리오를 돌릴 조직 설정 (배포 패키지 id)."""
+    return scenario.get("org") or DEFAULT_ORG
 
 
 def is_multi(expected: dict) -> bool:
