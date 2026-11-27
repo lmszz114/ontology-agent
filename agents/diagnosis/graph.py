@@ -523,10 +523,11 @@ def build_graph(deps: Deps):
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
 
-        unreadable = None
+        unreadable, restored = None, False
         if not answered and first_answer is not None:
-            # 다시 묻는 사이에 도구 호출 한도에 닿았다. 처음 답을 쓴다. 필수 근거가 없으므로 아래에서 불명확이 된다 (M6 점검)
-            data, answered = first_answer, True
+            # 다시 묻는 사이에 도구 호출 한도에 닿았다. 처음 답을 쓰되, 다시 물은 뒤의 조회 결과를 읽지 않은 답이라
+            # 확정이나 배제로 기록하지 않고 아래에서 불명확으로 둔다 (M6 점검, PR #40 리뷰)
+            data, answered, restored = first_answer, True, True
         if not problem and not answered:
             # 도구 호출만 이어가다 한도에 닿은 경우. 형식이 틀린 답이 아니라 답이 없는 것이라 출력 형식 오류로 세지 않는다 (PR #39 리뷰)
             problem = f"판정 근거 단계({cause_id})가 도구 호출 {MAX_TOOL_ROUNDS}회 안에 답하지 않았다"
@@ -546,6 +547,10 @@ def build_graph(deps: Deps):
             if missing and verdict["result"] != "inconclusive":
                 verdict = {**verdict, "result": "inconclusive",
                            "reason": f"필수 판정 근거 {missing}의 결과 없이 {data['result']}로 답했다. 답한 이유: {data['reason']}"}
+            elif restored and verdict["result"] != "inconclusive":
+                verdict = {**verdict, "result": "inconclusive",
+                           "reason": f"필수 판정 근거를 조회하기 전에 {data['result']}로 답했고, 다시 물은 뒤 도구 호출 "
+                                     f"{MAX_TOOL_ROUNDS}회 안에 답하지 않았다. 답한 이유: {data['reason']}"}
         status = {"confirm": "confirmed", "rule_out": "ruled_out", "inconclusive": "candidate"}[verdict["result"]]
         events.record_hypothesis(deps.driver, incident_id=diag["incident_id"], cause_id=cause_id,
                                  score=hypothesis["score"], rank=hypothesis["rank"], status=status)

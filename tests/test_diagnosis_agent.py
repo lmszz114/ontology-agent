@@ -1064,3 +1064,34 @@ def test_answer_on_the_last_round_is_not_reported_as_no_answer(db, seed):
     assert hyp["result"] == "inconclusive"
     assert not any(f"도구 호출 {MAX_TOOL_ROUNDS}회" in r for r in out["needs_human"])
     assert not any(OUTPUT_ERROR in r for r in out["needs_human"])
+
+
+def test_restored_answer_is_inconclusive_even_if_checks_were_called_after_the_retry(db, seed):
+    """다시 물은 뒤 필수 근거를 조회했지만 한도 안에 답하지 않으면, 조회 전에 한 처음 확정 답을 쓰지 않는다 (PR #40 리뷰)."""
+    from agents.diagnosis.graph import MAX_TOOL_ROUNDS, OUTPUT_ERROR
+
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    first = {}
+
+    def check(params):
+        content = params["messages"][0]["content"]
+        cause = re.search(r"확인할 원인 가설: (C\d+)", content).group(1)
+        first.setdefault("cause", cause)
+        if cause != first["cause"]:
+            return RuleModel.check(model, params)
+        if len(params["messages"]) == 1:
+            return text({"result": "confirm", "used_checks": [], "reused_results": [], "reason": "조회 전 답"})
+        checks = json.loads(content.split("판정 근거:\n", 1)[1].split("\n\n이미 조회한 결과", 1)[0])
+        uses = [{"type": "tool_use", "id": f"tu_{len(params['messages'])}_{i}", "name": c["tool"], "input": c["args"]}
+                for i, c in enumerate(checks) if c["required"]]
+        return message(uses, stop_reason="tool_use")
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    hyp = next(h for h in out["hypotheses"] if h["cause_id"] == first["cause"])
+    assert hyp["result"] == "inconclusive"
+    assert out["root_cause"] != first["cause"]
+    assert not any(OUTPUT_ERROR in r for r in out["needs_human"])
+    assert MAX_TOOL_ROUNDS > 2
