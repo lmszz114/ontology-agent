@@ -1095,3 +1095,212 @@ def test_restored_answer_is_inconclusive_even_if_checks_were_called_after_the_re
     assert out["root_cause"] != first["cause"]
     assert not any(OUTPUT_ERROR in r for r in out["needs_human"])
     assert MAX_TOOL_ROUNDS > 2
+
+
+# ---------- 데모 모드: 승인 대기와 반려 뒤 다시 고르기 (M7 PR 1) ----------
+
+
+def run_demo(db, seed, scenario: dict, model: RuleModel, verdicts: dict, decide, conditions=(), checkpointer=None):
+    """데모 모드로 돌린다. 멈출 때마다 decide(멈춘 내용) -> 승인 판단 목록으로 이어간다. (최종 상태, 멈춘 내용 목록)."""
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.types import Command
+
+    model.verdicts = verdicts
+    model.conditions = list(conditions)
+    tracer = MemoryTracer()
+    llm = LLM(load_model_config("org-a"), tracer, SimpleNamespace(messages=SimpleNamespace(create=model.create)))
+
+    async def go():
+        prepare_event_layer(db, scenario)
+        env = Environment(seed, scenario["environment"]["checks"])
+        async with Client(build_onto_server(db)) as onto, Client(build_mock_server(seed, env)) as mock:
+            listed = await mock.list_tools()
+            deps = Deps(
+                driver=db, llm=llm, tracer=tracer, knowledge=GraphKnowledge(onto, tracer), llm_results=[],
+                mock_client=mock, tool_checks=queries.get_evidence_tools(db),
+                mock_tools=[{"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
+                            for t in listed.tools],
+                symptoms=queries.get_symptom_types(db), systems=queries.get_systems(db), rules=rules_of(seed),
+                approval=True,
+            )
+            graph = build_graph(deps, checkpointer=checkpointer or InMemorySaver())
+            config = {"configurable": {"thread_id": scenario["id"]}, "recursion_limit": 200}
+            state = await graph.ainvoke(initial_state(scenario["reports"]), config=config)
+            paused = []
+            while state.get("__interrupt__"):
+                payload = state["__interrupt__"][0].value
+                paused.append(payload)
+                state = await graph.ainvoke(Command(resume=decide(payload)), config=config)
+            return state, paused
+
+    return asyncio.run(go())
+
+
+def approve_all(payload):
+    return [{"run_id": r["run_id"], "team_id": t, "decision": "approve"}
+            for r in payload["pending"] for t in r["required_approver_teams"] if t not in (r["approved_by_teams"] or [])]
+
+
+def test_demo_waits_for_approval_and_completes_approved_actions(db, seed):
+    """데모 모드는 고위험 조치에서 멈추고, 승인권자가 모두 승인하면 완료(시뮬레이션)로 남긴다."""
+    scenario = load("SC-S1-01")
+    state, paused = run_demo(db, seed, scenario, RuleModel(intake_of(scenario)), {"C02": "confirm"}, approve_all)
+    assert len(paused) == 1
+    assert sorted(r["action_id"] for r in paused[0]["pending"]) == scenario["expected"]["approval_actions"]
+    (out,) = state["outputs"]
+    high = [a for a in out["actions"] if a["action_id"] in scenario["expected"]["approval_actions"]]
+    assert {a["status"] for a in high} == {"done"}
+    assert {a["status"] for a in out["actions"] if a not in high} == {"auto_done"}
+    assert graph_count(db, "MATCH (r:ActionRun {status: 'done'}) RETURN count(r)") == len(high)
+
+
+def test_every_approver_must_approve_before_the_action_runs(db, seed):
+    """승인권자가 둘인 긴급 점검(A08)은 한 팀만 승인하면 다시 멈춘다."""
+    scenario = load("SC-S4-01")
+    seen = []
+
+    def one_team_at_a_time(payload):
+        seen.append({r["action_id"]: list(r["approved_by_teams"] or []) for r in payload["pending"]})
+        return [{"run_id": r["run_id"], "team_id": next(t for t in r["required_approver_teams"]
+                                                         if t not in (r["approved_by_teams"] or [])),
+                 "decision": "approve"} for r in payload["pending"]]
+
+    state, paused = run_demo(db, seed, scenario, RuleModel(intake_of(scenario, ("SY15",))), {"C11": "confirm"},
+                             one_team_at_a_time, conditions=["과지급"])
+    assert len(paused) == 2 and "A08" in seen[1] and len(seen[1]["A08"]) == 1
+    (out,) = state["outputs"]
+    assert next(a for a in out["actions"] if a["action_id"] == "A08")["status"] == "done"
+
+
+def test_rejection_without_alternative_goes_to_human(db, seed):
+    """반려된 조치의 절차를 빼고, 같은 원인의 다른 해결 절차가 없으면 LLM을 부르지 않고 사람에게 넘긴다 (R6)."""
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+
+    def reject_compensation(payload):
+        return [{"run_id": r["run_id"], "team_id": r["required_approver_teams"][0],
+                 "decision": "reject" if r["action_id"] == "A10" else "approve"} for r in payload["pending"]]
+
+    state, _ = run_demo(db, seed, scenario, model, {"C02": "confirm"}, reject_compensation)
+    (out,) = state["outputs"]
+    assert out["excluded_procedures"] == ["P6"]
+    assert next(a for a in out["actions"] if a["action_id"] == "A10")["status"] == "rejected"
+    assert any("사람이 대안을 정한다" in r for r in out["needs_human"])
+    assert model.calls.count("procedure") == 1  # 긴급 공지 P3은 SEV3이라 대안이 아니다
+
+
+def test_rejection_reselects_another_procedure_of_the_same_cause(db, seed):
+    """회수(P7)가 반려되면 같은 원인의 다른 해결 절차(보상 P6)를 다시 고르고, 새 조치도 승인을 기다린다 (R6)."""
+    scenario = load("SC-S4-01")
+    alt = text({"procedures": ["P6"], "resolved_conditions": ["미지급"],
+                "actions": [{"action_id": "A10", "mode": "approval"}], "reason": "회수 대신 보상"})
+    model = RuleModel(intake_of(scenario, ("SY15",)), overrides={"procedure": [lambda p: None, lambda p: alt]})
+    seen = []
+
+    def reject_recall(payload):
+        seen.append(sorted(r["action_id"] for r in payload["pending"]))
+        return [{"run_id": r["run_id"], "team_id": t, "decision": "reject" if r["action_id"] == "A11" else "approve"}
+                for r in payload["pending"] for t in r["required_approver_teams"]]
+
+    state, paused = run_demo(db, seed, scenario, model, {"C11": "confirm"}, reject_recall, conditions=["과지급"])
+    (out,) = state["outputs"]
+    assert model.calls.count("procedure") == 2
+    assert seen[-1] == ["A10"]
+    assert out["excluded_procedures"] == ["P7"]
+    assert "P6" in out["procedures"]
+    assert {a["action_id"]: a["status"] for a in out["actions"]}["A10"] == "done"
+
+
+def test_wrong_approver_is_reported_and_asked_again(db, seed):
+    scenario = load("SC-S1-01")
+    calls = []
+
+    def first_wrong(payload):
+        calls.append(payload)
+        if len(calls) == 1:
+            return [{"run_id": payload["pending"][0]["run_id"], "team_id": "TM12", "decision": "approve"}]
+        return approve_all(payload)
+
+    state, paused = run_demo(db, seed, scenario, RuleModel(intake_of(scenario)), {"C02": "confirm"}, first_wrong)
+    assert len(paused) == 2 and paused[1]["errors"] and not paused[0]["errors"]
+
+
+def test_demo_mode_needs_a_checkpointer():
+    deps = SimpleNamespace(approval=True)
+    with pytest.raises(ValueError, match="체크포인터"):
+        build_graph(deps)
+
+
+def test_paused_run_resumes_from_sqlite_in_a_new_graph(db, seed, tmp_path):
+    """멈춘 상태를 SQLite에 저장하면 다른 그래프 객체(프로세스가 다시 뜬 경우)에서 이어갈 수 있다."""
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+
+    scenario = load("SC-S1-01")
+    path = tmp_path / "checkpoints.sqlite"
+
+    # 첫 실행은 멈춘 채로 끝내고, 두 번째 그래프에서 같은 스레드를 이어간다
+    from langgraph.types import Command
+
+    model = RuleModel(intake_of(scenario))
+    model.verdicts = {"C02": "confirm"}
+    tracer = MemoryTracer()
+    llm = LLM(load_model_config("org-a"), tracer, SimpleNamespace(messages=SimpleNamespace(create=model.create)))
+    config = {"configurable": {"thread_id": "resume-test"}, "recursion_limit": 200}
+
+    async def graph_with(saver, onto, mock, listed):
+        deps = Deps(driver=db, llm=llm, tracer=tracer, knowledge=GraphKnowledge(onto, tracer), llm_results=[],
+                    mock_client=mock, tool_checks=queries.get_evidence_tools(db),
+                    mock_tools=[{"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
+                                for t in listed.tools],
+                    symptoms=queries.get_symptom_types(db), systems=queries.get_systems(db), rules=rules_of(seed),
+                    approval=True)
+        return build_graph(deps, checkpointer=saver)
+
+    async def go():
+        prepare_event_layer(db, scenario)
+        env = Environment(seed, scenario["environment"]["checks"])
+        async with Client(build_onto_server(db)) as onto, Client(build_mock_server(seed, env)) as mock:
+            listed = await mock.list_tools()
+            async with AsyncSqliteSaver.from_conn_string(str(path)) as saver:
+                first = await (await graph_with(saver, onto, mock, listed)).ainvoke(initial_state(scenario["reports"]),
+                                                                                   config=config)
+            payload = first["__interrupt__"][0].value
+            async with AsyncSqliteSaver.from_conn_string(str(path)) as saver:
+                return await (await graph_with(saver, onto, mock, listed)).ainvoke(
+                    Command(resume=approve_all(payload)), config=config)
+
+    state = asyncio.run(go())
+    (out,) = state["outputs"]
+    assert {a["status"] for a in out["actions"] if a["action_id"] in ("A10", "A15")} == {"done"}
+    assert model.calls.count("procedure") == 1  # 이어갈 때 앞 단계를 다시 돌지 않는다
+
+
+def test_demo_command_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypatch, capsys):
+    """데모 명령이 실제 MCP 서버 프로세스, SQLite 체크포인트, 승인 판단으로 끝까지 돈다. LLM만 규칙 모델로 바꾼다."""
+    from contextlib import contextmanager
+
+    from agents.diagnosis import demo
+    from tests.conftest import test_db_uri
+
+    monkeypatch.setenv("NEO4J_URI", test_db_uri())
+    path = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "dev" / "SC-S1-01.yaml"
+    scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
+    model = RuleModel(intake_of(scenario))
+    model.verdicts, model.conditions = {"C02": "confirm"}, []
+
+    @contextmanager
+    def test_driver():
+        yield db
+
+    monkeypatch.setattr(demo, "get_driver", test_driver)
+    monkeypatch.setattr(demo.Tracer, "from_env", classmethod(lambda cls: MemoryTracer()))
+    monkeypatch.setattr(demo, "make_anthropic_client", lambda: SimpleNamespace(messages=SimpleNamespace(create=model.create)))
+    result = asyncio.run(demo.run_demo(scenario, path, org="org-a", config="C", decide=approve_all,
+                                       checkpoints=tmp_path / "checkpoints.sqlite"))
+    (out,) = result["outputs"]
+    assert {a["action_id"]: a["status"] for a in out["actions"]}["A15"] == "done"
+    assert (tmp_path / "checkpoints.sqlite").exists()
+    # dev가 아닌 시나리오는 명령에서 거부한다
+    test_path = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "test" / "SC-T7-01.yaml"
+    assert demo.main(["--scenario", str(test_path), "--org", "org-b"]) == 1
+    assert "dev 시나리오만" in capsys.readouterr().err

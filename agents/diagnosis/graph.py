@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
 from mcp import Client
 from neo4j import Driver
 
@@ -70,6 +71,9 @@ class Deps:
     symptoms: list[dict[str, Any]]
     systems: list[dict[str, Any]]
     rules: Rules                           # 판단 규칙이 여는 절차와 긴급 등급 (시드 rules.yaml, M6)
+    # 데모 모드 (5단계 8-1, M7): 고위험 조치에서 멈추고(LangGraph interrupt) 승인권자의 승인, 반려를 받아 이어간다.
+    # 평가 모드와 회귀 테스트는 False로 승인 대기 상태만 기록한다. True면 그래프에 체크포인터가 있어야 한다
+    approval: bool = False
     now: Callable[[], datetime] = lambda: datetime.now(KST)
     llm_results: list[LLMResult] = field(default_factory=list)
 
@@ -196,7 +200,10 @@ def _schema(properties: dict, required: list[str] | None = None) -> dict:
 
 # --- 그래프 -------------------------------------------------------------------
 
-def build_graph(deps: Deps):
+def build_graph(deps: Deps, *, checkpointer=None):
+    """진단 그래프. 데모 모드(deps.approval)는 승인 대기에서 멈춘 상태를 저장할 체크포인터가 있어야 한다."""
+    if deps.approval and checkpointer is None:
+        raise ValueError("데모 모드(approval)는 멈춘 상태를 저장할 체크포인터가 있어야 한다")
     symptom_by_id = {s["id"]: s for s in deps.symptoms}
     system_ids = [s["id"] for s in deps.systems]
 
@@ -700,6 +707,7 @@ def build_graph(deps: Deps):
         sev = incident["severity"]
         confirmed = diag.get("confirmed")
         candidates: dict[str, dict] = {}
+        cause_procedures: list[str] = []   # 확정 원인의 해결 절차(RESOLVED_BY). 반려 뒤 대안을 여기서 찾는다 (R6)
 
         unavailable: list[str] = []
 
@@ -748,6 +756,7 @@ def build_graph(deps: Deps):
                 unavailable.append(f"{confirmed}가 여는 절차를 받지 못했다: {exc}")
             add(await known(rules.fix))
             for proc in found["resolved_by"]:
+                cause_procedures.append(proc["procedure_id"])
                 # 원인에 조건 없이 연결된 절차(보상, 회수, 확률 표기 정정 등)는 연다는 규칙이라 코드가 정한다
                 # (4단계 3-4, M3 점검). 긴급 공지와 긴급 점검은 등급 규칙(R3, R7)을, 롤백은 사람 결정을 따른다
                 if (not proc.get("condition") and not proc.get("human_only")
@@ -758,51 +767,7 @@ def build_graph(deps: Deps):
                 add(proc)
         # 원인이 확정되지 않으면 원인에 걸린 절차를 고를 근거가 없다. 접수, 상향, 등급 절차만 후보로 둔다
 
-        allowed_conditions = sorted({c for p in candidates.values() for c in p["conditions"]})
-        action_ids = sorted({a["action_id"] for p in candidates.values() for a in p["actions"]})
-        schema = _schema({
-            "procedures": {"type": "array", "items": {"type": "string", "enum": sorted(candidates)}},
-            "resolved_conditions": {"type": "array", "items": {"type": "string", "enum": allowed_conditions or [""]}},
-            "actions": {"type": "array", "items": _schema({
-                # 후보 절차에 조치가 없으면 빈 enum 대신 빈 문자열 하나를 둔다 (조건과 같은 방식). 검증이 거부한다
-                "action_id": {"type": "string", "enum": action_ids or [""]},
-                "mode": {"type": "string", "enum": ["auto", "approval"]},
-            })},
-            "reason": {"type": "string"},
-        })
-
-        def validate(data: dict) -> list[str]:
-            errors = []
-            chosen = data.get("procedures") or []
-            unknown = sorted(set(chosen) - set(candidates))
-            if unknown:
-                errors.append(f"후보에 없는 절차다: {unknown}")
-            human = sorted(p for p in chosen if candidates.get(p, {}).get("human_only"))
-            if human:
-                errors.append(f"사람만 여는 절차는 고르지 않는다: {human}")
-            missing = sorted(p for p, c in candidates.items() if c["always"] and p not in chosen)
-            if missing:
-                errors.append(f"항상 여는 절차가 빠졌다: {missing}")
-            in_chosen = {a["action_id"] for p in chosen if p in candidates for a in candidates[p]["actions"]}
-            requested = [a["action_id"] for a in data.get("actions") or []]
-            stray = sorted(set(requested) - in_chosen)
-            if stray:
-                errors.append(f"고른 절차에 없는 조치다: {stray}")
-            missing_actions = sorted(in_chosen - set(requested))
-            if missing_actions:
-                errors.append(f"고른 절차의 조치가 빠졌다: {missing_actions}")
-            duplicated = sorted({a for a in requested if requested.count(a) > 1})
-            if duplicated:
-                errors.append(f"같은 조치를 두 번 요청했다: {duplicated}")
-            reported = set(data.get("resolved_conditions") or [])
-            bad_cond = sorted(reported - set(allowed_conditions))
-            if bad_cond:
-                errors.append(f"후보 절차에 없는 조건이다: {bad_cond}")
-            unmet = sorted(p for p in chosen if candidates.get(p, {}).get("conditions")
-                           and not set(candidates[p]["conditions"]) & reported)
-            if unmet:
-                errors.append(f"조건이 붙은 절차인데 충족한 조건을 적지 않았다: {unmet}")
-            return errors
+        schema, validate = _procedure_contract(candidates)
 
         # 조건의 판정 근거는 판단이 아니라 조회라서 코드가 부른다. 조건이 맞는지는 LLM이 결과를 읽고 정한다
         # (접수 내역 조회 E15와 같은 방식, M3 점검). 같은 도구와 인자는 한 번만 부른다
@@ -834,14 +799,14 @@ def build_graph(deps: Deps):
                                    f"기대 결과 \"{check['expect']}\". 조회 결과: {text}")
 
         verdict = diag["verdicts"].get(confirmed, {}) if confirmed else {}
-        content = (
+        context = (
             f"사건: 증상 {incident['symptom_id']}, 심각도 {sev}, 등급 상향 {'예' if incident.get('escalated') else '아니오'}, "
             f"확정 원인 {confirmed or '없음'}"
             + (f" (판단 이유: {verdict.get('reason')})" if verdict else "")
             + "\n조회 결과:\n" + "\n".join(f"- {c['tool']}: {c['text']}" for c in diag["tool_calls"] if not c["is_error"])
             + ("\n\n조건 판정 근거 조회:\n" + "\n".join(condition_lines) if condition_lines else "")
-            + f"\n\n후보 절차:\n{json.dumps(list(candidates.values()), ensure_ascii=False, indent=1)}"
         )
+        content = context + f"\n\n후보 절차:\n{json.dumps(list(candidates.values()), ensure_ascii=False, indent=1)}"
         needs_human = list(diag["needs_human"]) + unavailable
         if not candidates:
             # 고를 절차가 하나도 없으면 묻지 않는다. 선택지가 빈 스키마를 API에 보내지 않는다
@@ -858,16 +823,17 @@ def build_graph(deps: Deps):
         if data is None:
             data = {"procedures": [], "resolved_conditions": [], "actions": [], "reason": None}
         diag |= {"procedure_choice": data, "candidate_procedures": sorted(candidates), "needs_human": needs_human,
-                 "tool_calls": list(diag["tool_calls"]) + condition_calls}
+                 "tool_calls": list(diag["tool_calls"]) + condition_calls,
+                 # 반려 뒤 절차 다시 고르기(R6)에 쓴다. 데모 모드에서만 읽는다
+                 "candidates": candidates, "cause_procedures": cause_procedures, "procedure_context": context,
+                 "excluded_procedures": [], "handled_rejections": []}
         return {"diag": diag}
 
-    # 10 승인 게이트 (코드, R6)
-    async def approval_gate(state: State) -> State:
-        diag = dict(state["diag"])
-        incident = state["incidents"][diag["incident_id"]]
+    def gate_requests(diag: dict, incident: dict, requests: list[dict]) -> list[dict]:
+        """조치 요청을 승인 게이트에 넘기고 실행 기록 요약을 돌려준다."""
         urgent = incident["severity"] in deps.rules.urgent_levels
         runs = []
-        for request in diag["procedure_choice"]["actions"]:
+        for request in requests:
             condition = FIX_TIMING[urgent] if request["action_id"] == CAUSE_FIX_ACTION else None
             try:
                 run = gate.request_action(
@@ -876,11 +842,115 @@ def build_graph(deps: Deps):
                     condition=condition,
                 )
                 runs.append({"action_id": run["action_id"], "requested_mode": run["requested_mode"],
-                             "status": run["status"], "gate_blocked": run["gate_blocked"], "run_id": run["run_id"]})
+                             "status": run["status"], "gate_blocked": run["gate_blocked"], "run_id": run["run_id"],
+                             "required_approver_teams": run["required_approver_teams"]})
             except GateError as exc:
                 runs.append({"action_id": request["action_id"], "requested_mode": request["mode"],
                              "status": "refused", "error": str(exc)})
-        diag["runs"] = runs
+        return runs
+
+    # 10 승인 게이트 (코드, R6)
+    async def approval_gate(state: State) -> State:
+        diag = dict(state["diag"])
+        incident = state["incidents"][diag["incident_id"]]
+        diag["runs"] = gate_requests(diag, incident, diag["procedure_choice"]["actions"])
+        return {"diag": diag}
+
+    def after_gate(state: State) -> str:
+        # 평가 모드는 승인 대기 상태만 기록하고 넘어간다 (5단계 8-1)
+        return "await_approval" if deps.approval else "record"
+
+    # 10-1 승인 대기 (데모 모드, M7). 승인권자의 판단을 받을 때까지 멈춘다 (LangGraph interrupt)
+    async def await_approval(state: State) -> State:
+        diag = dict(state["diag"])
+        pending = [r for r in diag["runs"] if r["status"] == "pending_approval"]
+        if not pending:
+            return {}
+        # interrupt에서 이어가면 이 노드를 처음부터 다시 돈다. 그래서 interrupt 앞에는 읽기만 둔다
+        decisions = interrupt({
+            "incident_id": diag["incident_id"],
+            "pending": [{k: r.get(k) for k in ("run_id", "action_id", "required_approver_teams", "approved_by_teams")}
+                        for r in pending],
+            "errors": diag.get("approval_errors") or [],
+        })
+        runs = {r.get("run_id"): dict(r) for r in diag["runs"]}
+        errors = []
+        for d in decisions if isinstance(decisions, list) else [decisions]:
+            run_id, team_id, decision = (d or {}).get("run_id"), (d or {}).get("team_id"), (d or {}).get("decision")
+            if run_id not in runs or decision not in ("approve", "reject"):
+                errors.append(f"알 수 없는 승인 판단이다: {d}")
+                continue
+            try:
+                if decision == "approve":
+                    run = gate.approve(deps.driver, tracer=deps.tracer, run_id=run_id, team_id=team_id, now=deps.now())
+                    if run["status"] == "approved":
+                        # 대응 조치 실행은 시뮬레이션이라 승인되면 바로 완료로 남긴다 (3단계 R6)
+                        run = gate.mark_done(deps.driver, tracer=deps.tracer, run_id=run_id, now=deps.now())
+                else:
+                    run = gate.reject(deps.driver, tracer=deps.tracer, run_id=run_id, team_id=team_id, now=deps.now())
+            except GateError as exc:
+                errors.append(str(exc))
+                continue
+            runs[run_id] |= {"status": run["status"], "approved_by_teams": run["approved_by_teams"],
+                             "rejected_by_team": run.get("rejected_by_team")}
+        diag |= {"runs": list(runs.values()), "approval_errors": errors}
+        return {"diag": diag}
+
+    def after_approval(state: State) -> str:
+        diag = state["diag"]
+        if any(r["status"] == "pending_approval" for r in diag["runs"]):
+            return "await_approval"
+        if any(r["status"] == "rejected" and r["run_id"] not in diag["handled_rejections"] for r in diag["runs"]):
+            return "reselect"
+        return "record"
+
+    # 10-2 반려 뒤 절차 다시 고르기 (R6, M7). 반려된 조치의 절차는 이 사건에서 빼고, 같은 원인의 다른 해결 절차가
+    # 남아 있을 때만 LLM이 다시 고른다. 남은 대안이 없으면 사람에게 넘긴다 (2026-11-27 사용자 결정)
+    async def reselect(state: State) -> State:
+        diag = dict(state["diag"])
+        incident = state["incidents"][diag["incident_id"]]
+        candidates = diag["candidates"]
+        rejected = [r for r in diag["runs"] if r["status"] == "rejected" and r["run_id"] not in diag["handled_rejections"]]
+        rejected_actions = {r["action_id"] for r in rejected}
+        chosen = set(diag["procedure_choice"]["procedures"])
+        rejected_procs = sorted((p for p in chosen if p in candidates
+                                 and rejected_actions & {a["action_id"] for a in candidates[p]["actions"]}), key=_number)
+        excluded = sorted(set(diag["excluded_procedures"]) | set(rejected_procs), key=_number)
+        # 심각도 규칙이 여는 절차(긴급 공지, 긴급 점검)는 등급 규칙을 따르므로 대안으로 열지 않는다. 사람만 여는 절차도
+        # 마찬가지다. 시나리오 검증기의 정답 절차 계산과 같은 기준이다 (eval/validate.expected_procedures)
+        alternatives = {p: {**candidates[p], "always": False} for p in diag["cause_procedures"]
+                        if p in candidates and p not in chosen and p not in excluded
+                        and p not in deps.rules.by_severity and not candidates[p].get("human_only")}
+        needs_human = list(diag["needs_human"])
+        diag |= {"excluded_procedures": excluded,
+                 "handled_rejections": list(diag["handled_rejections"]) + [r["run_id"] for r in rejected]}
+        label = ", ".join(f"{r['action_id']}({r.get('rejected_by_team')} 반려)" for r in rejected)
+        if not alternatives:
+            needs_human.append(f"반려된 조치 {label}: 절차 {rejected_procs}에서 빼고, 같은 원인의 다른 해결 절차가 "
+                               "없어 사람이 대안을 정한다 (R6)")
+            diag["needs_human"] = needs_human
+            return {"diag": diag}
+        schema, validate = _procedure_contract(alternatives)
+        content = (diag["procedure_context"]
+                   + f"\n\n반려: 승인권자가 {label}를 반려했다. 절차 {rejected_procs}는 이 사건에서 뺀다. 아래 대안 중 열 "
+                   "절차를 다시 고른다. 열 절차가 없으면 빈 목록으로 답한다"
+                   + f"\n\n후보 절차:\n{json.dumps(list(alternatives.values()), ensure_ascii=False, indent=1)}")
+        data, errors = _ask_json(deps, task="diagnosis", name="10.reselect", system=prompts.PROCEDURE,
+                                 content=content, schema=schema, validate=validate)
+        if data is None:
+            needs_human.append(f"반려 뒤 절차 다시 고르기 {OUTPUT_ERROR}: {errors}")
+        elif not data["procedures"]:
+            needs_human.append(f"반려된 조치 {label}: 대안 절차 {sorted(alternatives, key=_number)}를 고르지 않아 "
+                               "사람이 대안을 정한다 (R6)")
+        else:
+            already = {r["action_id"] for r in diag["runs"]}
+            new = [a for a in data["actions"] if a["action_id"] not in already]
+            choice = dict(diag["procedure_choice"])
+            choice |= {"procedures": sorted(set(choice["procedures"]) | set(data["procedures"]), key=_number),
+                       "resolved_conditions": sorted(set(choice["resolved_conditions"]) | set(data["resolved_conditions"])),
+                       "actions": list(choice["actions"]) + new}
+            diag |= {"procedure_choice": choice, "runs": list(diag["runs"]) + gate_requests(diag, incident, new)}
+        diag["needs_human"] = needs_human
         return {"diag": diag}
 
     # 11 기록, 출력 (코드). 사건 계층은 앞 단계에서 기록했다. 여기서는 구조화 출력을 만든다 (4단계 3-3)
@@ -916,6 +986,8 @@ def build_graph(deps: Deps):
             "procedures": sorted(diag["procedure_choice"]["procedures"], key=lambda p: int(p[1:])),
             "resolved_conditions": diag["procedure_choice"]["resolved_conditions"],
             "actions": diag["runs"],
+            # 데모 모드에서 반려로 이 사건에서 뺀 절차 (R6). 평가 모드는 반려가 없어 비어 있다
+            "excluded_procedures": diag.get("excluded_procedures") or [],
             "merge_replies": incident.get("merge_replies", []),
             # 접수 정리의 접수 내역 조회(1단계)와 판정 근거 조회(7단계)를 단계와 함께 남긴다
             "tool_calls": [{k: c[k] for k in ("step", "cause_id", "tool", "check_id", "args", "is_error")}
@@ -933,7 +1005,8 @@ def build_graph(deps: Deps):
         ("intake", intake), ("first_handler", first_handler), ("duplicate_candidates", duplicate_candidates),
         ("duplicate_judge", duplicate_judge), ("severity", severity), ("next_incident", next_incident),
         ("rank", rank), ("check", check), ("owner", owner), ("procedures", procedures),
-        ("approval_gate", approval_gate), ("record", record),
+        ("approval_gate", approval_gate), ("await_approval", await_approval), ("reselect", reselect),
+        ("record", record),
     ]:
         graph.add_node(name, fn)
     graph.add_edge(START, "intake")
@@ -947,9 +1020,62 @@ def build_graph(deps: Deps):
     graph.add_conditional_edges("check", after_check, ["check", "owner"])
     graph.add_edge("owner", "procedures")
     graph.add_edge("procedures", "approval_gate")
-    graph.add_edge("approval_gate", "record")
+    graph.add_conditional_edges("approval_gate", after_gate, ["await_approval", "record"])
+    graph.add_conditional_edges("await_approval", after_approval, ["await_approval", "reselect", "record"])
+    graph.add_edge("reselect", "await_approval")
     graph.add_edge("record", "next_incident")
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)
+
+
+def _procedure_contract(candidates: dict[str, dict]):
+    """절차, 조치 선택(9단계)과 반려 뒤 다시 고르기(R6)의 답 형식과 검증. 후보 절차로 정한다."""
+    allowed_conditions = sorted({c for p in candidates.values() for c in p["conditions"]})
+    action_ids = sorted({a["action_id"] for p in candidates.values() for a in p["actions"]})
+    schema = _schema({
+        "procedures": {"type": "array", "items": {"type": "string", "enum": sorted(candidates)}},
+        "resolved_conditions": {"type": "array", "items": {"type": "string", "enum": allowed_conditions or [""]}},
+        "actions": {"type": "array", "items": _schema({
+            # 후보 절차에 조치가 없으면 빈 enum 대신 빈 문자열 하나를 둔다 (조건과 같은 방식). 검증이 거부한다
+            "action_id": {"type": "string", "enum": action_ids or [""]},
+            "mode": {"type": "string", "enum": ["auto", "approval"]},
+        })},
+        "reason": {"type": "string"},
+    })
+
+    def validate(data: dict) -> list[str]:
+        errors = []
+        chosen = data.get("procedures") or []
+        unknown = sorted(set(chosen) - set(candidates))
+        if unknown:
+            errors.append(f"후보에 없는 절차다: {unknown}")
+        human = sorted(p for p in chosen if candidates.get(p, {}).get("human_only"))
+        if human:
+            errors.append(f"사람만 여는 절차는 고르지 않는다: {human}")
+        missing = sorted(p for p, c in candidates.items() if c["always"] and p not in chosen)
+        if missing:
+            errors.append(f"항상 여는 절차가 빠졌다: {missing}")
+        in_chosen = {a["action_id"] for p in chosen if p in candidates for a in candidates[p]["actions"]}
+        requested = [a["action_id"] for a in data.get("actions") or []]
+        stray = sorted(set(requested) - in_chosen)
+        if stray:
+            errors.append(f"고른 절차에 없는 조치다: {stray}")
+        missing_actions = sorted(in_chosen - set(requested))
+        if missing_actions:
+            errors.append(f"고른 절차의 조치가 빠졌다: {missing_actions}")
+        duplicated = sorted({a for a in requested if requested.count(a) > 1})
+        if duplicated:
+            errors.append(f"같은 조치를 두 번 요청했다: {duplicated}")
+        reported = set(data.get("resolved_conditions") or [])
+        bad_cond = sorted(reported - set(allowed_conditions))
+        if bad_cond:
+            errors.append(f"후보 절차에 없는 조건이다: {bad_cond}")
+        unmet = sorted(p for p in chosen if candidates.get(p, {}).get("conditions")
+                       and not set(candidates[p]["conditions"]) & reported)
+        if unmet:
+            errors.append(f"조건이 붙은 절차인데 충족한 조건을 적지 않았다: {unmet}")
+        return errors
+
+    return schema, validate
 
 
 def _unchecked(data, schema: dict, required: list[str], called: list[dict], tool_results: dict,
