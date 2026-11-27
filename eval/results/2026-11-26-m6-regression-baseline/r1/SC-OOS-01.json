@@ -1,0 +1,78 @@
+{
+  "run": {
+    "scenario": "SC-OOS-01",
+    "split": "dev",
+    "config": "C",
+    "org": "org-a",
+    "mode": "eval",
+    "started_at": "2026-11-26T15:51:36.487038+09:00",
+    "finished_at": "2026-11-26T15:51:39.790570+09:00",
+    "seconds": 3.3,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "prompt_version": "diagnosis-v7",
+    "trace_id": "0f9faf870f2c879f7e4f38397a5bd1c1",
+    "llm_calls": 1,
+    "usage": {
+      "input": 2351,
+      "output": 443,
+      "cache_read": 0,
+      "cache_write_5m": 0,
+      "cache_write_1h": 0
+    },
+    "cost_usd": 0.00045660000000000004,
+    "knowledge_errors": [],
+    "knowledge_prompt_version": null,
+    "search_settings": null,
+    "voyage_usage": null,
+    "package": {
+      "id": "org-a",
+      "version": 1
+    },
+    "git_commit": "f800e0ee7ff20744f0841d5096aaaf5a8eb16ce8",
+    "git_dirty": false,
+    "prices": {
+      "checked": "2026-11-24",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "models": {
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "cache_write_5m": 0.125,
+          "cache_write_1h": 0.2,
+          "cache_read": 0.01,
+          "long_prompt": {
+            "threshold": 100000,
+            "input": 0.5,
+            "output": 2.5,
+            "cache_write_5m": 0.625,
+            "cache_write_1h": 1.0,
+            "cache_read": 0.05
+          }
+        }
+      }
+    },
+    "seed_hash": "7d356fcaf58412ff42d1a716bfc7abd1dcc4dde0a5d18635d280b16a46b18d13",
+    "scenario_hash": "2a1d44a4b5a2517384d58d4ab5b85bd4f757965e312a18050cb287f8d9e368e9"
+  },
+  "outputs": [],
+  "unclassified": [
+    {
+      "report_id": "RP-7b5836a282f1",
+      "report_index": 0,
+      "symptom": "none",
+      "first_handler": {
+        "channel_id": "CH01",
+        "channel_name": "공식 커뮤니티 게시글",
+        "role_id": "RL01",
+        "role_name": "CM",
+        "team_id": "TM07",
+        "team_name": "게임서비스팀"
+      },
+      "needs_human": [
+        "증상 8개에 해당하지 않아 사람에게 넘긴다"
+      ]
+    }
+  ]
+}

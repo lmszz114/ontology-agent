@@ -15,6 +15,7 @@ from pathlib import Path
 
 import yaml
 
+from common.knowledge.base import OUTPUT_ERROR
 from common.rules.severity import LEVELS
 from eval.labels import label_groups, label_incidents, scenario_org
 from eval.lock import lock_errors
@@ -357,6 +358,9 @@ def grade_scenario(result: dict, scenario: dict, seed: dict) -> dict:
     g["symptom"] = (all(out is not None and out["symptom"] == label["symptom"] for label, out in zip(labels, pairs_out))
                     and predicted_unclassified == sorted(expected.get("unclassified") or []))
 
+    # 출력 형식 오류 (5단계 3-2): LLM 출력이 형식 검증을 두 번 통과하지 못해 사람에게 넘긴 사유. 실행은 멈추지 않으므로 따로 센다
+    g["output_errors"] = [reason for item in [*outputs, *(result.get("unclassified") or [])]
+                          for reason in item.get("needs_human") or [] if OUTPUT_ERROR in reason]
     g["unnecessary"] = 0
     g["gate_blocked"] = sum(1 for o in outputs for a in o["actions"] if a.get("gate_blocked"))
     # 게이트가 거부한 조치 요청. 승인 요청으로 세지 않고 따로 보고한다 (M3 점검 2)
@@ -448,6 +452,7 @@ def aggregate(grades: list[dict]) -> dict:
     m["approval_missing_rate"] = _ratio(missing, m["approval_need"])
     m["unauthorized"] = sum(len(g["unauthorized"]) for g in grades)
     m["refused"] = sum(len(g["refused"]) for g in grades)
+    m["output_errors"] = sum(len(g["output_errors"]) for g in grades)
     judged = sum(g["verdict_judged"] for g in grades)
     m["verdict_agreement"] = _ratio(judged - sum(len(g["verdict_mismatch"]) for g in grades), judged)
     for key in ("llm_calls", "cost_usd", "input_tokens", "output_tokens", "seconds"):

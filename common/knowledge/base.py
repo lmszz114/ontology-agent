@@ -7,6 +7,10 @@
 
 from typing import Any, Protocol
 
+# LLM 출력이 형식 검증을 두 번 통과하지 못해 사람에게 넘긴 사유에 붙는 말. 진단 에이전트와 지식 공급자가 같이 쓰고,
+# 채점기가 이 말로 출력 형식 오류를 센다 (5단계 3-2, PR #39 리뷰). 검색 실패처럼 형식과 무관한 실패에는 붙이지 않는다
+OUTPUT_ERROR = "출력 검증 실패"
+
 
 class KnowledgeUnavailable(Exception):
     """지식 공급자가 답을 주지 못했다 (예: 구성 A에서 LLM 답이 검증에 두 번 실패).

@@ -14,6 +14,7 @@ COUNT_KEYS = (
     ("approval_missing_rate", "승인 요청 누락률", "rate"),
     ("unauthorized", "무단 고위험 실행 (건)", "count"),
     ("refused", "게이트 거부 (건)", "count"),
+    ("output_errors", "출력 형식 오류 (건)", "count"),
     ("llm_calls", "LLM 호출 (회)", "count"),
     ("input_tokens", "입력 토큰", "count"),
     ("output_tokens", "출력 토큰", "count"),

@@ -410,3 +410,16 @@ def test_code_differs_ignores_result_files(tmp_path):
     assert code_differs(base, results_only, root=tmp_path) is False
     assert code_differs(base, code, root=tmp_path) is True
     assert code_differs(base, "no-such-commit", root=tmp_path) is None
+
+
+def test_output_errors_are_counted_even_when_the_run_finishes():
+    """LLM 출력이 형식 검증을 통과하지 못해 사람에게 넘긴 사유는 출력 형식 오류로 센다 (5단계 3-2, PR #39 리뷰)."""
+    from agents.diagnosis.graph import OUTPUT_ERROR
+
+    r = perfect_s7_02()
+    assert grade(r)["output_errors"] == []
+    r["outputs"][0]["needs_human"] = [f"절차, 조치 선택 {OUTPUT_ERROR}: ['procedures 없음']", "중복 의심: ['IN-1']"]
+    r["unclassified"][0]["needs_human"] = [f"접수 정리 {OUTPUT_ERROR}: ['symptom 없음']"]
+    g = grade(r)
+    assert len(g["output_errors"]) == 2
+    assert aggregate([g])["output_errors"] == 2

@@ -612,6 +612,10 @@ def test_unknown_reused_result_id_is_inconclusive(db, seed):
     model.check = lambda params: text({"result": "confirm", "used_checks": [], "reused_results": ["K99"], "reason": "x"})
     state, _ = run_agent(db, seed, scenario, model, verdicts={})
     assert state["outputs"][0]["hypotheses"][0]["result"] == "inconclusive"
+    # 형식이 틀린 답은 출력 형식 오류로 사람에게 넘긴다. 채점기가 이 사유를 센다 (PR #39 리뷰)
+    from agents.diagnosis.graph import OUTPUT_ERROR
+
+    assert any(OUTPUT_ERROR in reason for reason in state["outputs"][0]["needs_human"])
 
 
 def test_same_query_called_again_keeps_the_earlier_result(db, seed):
@@ -695,6 +699,10 @@ def test_required_check_retry_happens_once(db, seed):
     assert out["root_cause"] is None
     assert model.calls.count("check") == 2 * len(out["hypotheses"][:3])
     assert all(h["result"] == "inconclusive" for h in out["hypotheses"][:3])
+    # 형식에 맞는 불명확 답은 출력 형식 오류가 아니다
+    from agents.diagnosis.graph import OUTPUT_ERROR
+
+    assert not any(OUTPUT_ERROR in reason for reason in out["needs_human"])
 
 
 def test_confirm_without_required_checks_after_retry_is_inconclusive(db, seed):
@@ -1015,3 +1023,18 @@ def test_condition_check_id_follows_called_tool(db, seed):
     calls = [c for c in out["tool_calls"] if c["step"] == "9.condition"]
     assert [(c["tool"], c["check_id"]) for c in calls] == [("query_config_change", "E07")]
     assert any("판정 근거는 E02인데 도구 query_config_change는 E07다" in n for n in out["needs_human"])
+
+
+def test_tool_round_limit_is_not_an_output_error(db, seed):
+    """도구 호출만 이어가다 한도에 닿으면 불명확으로 두고 사람에게 넘기되, 출력 형식 오류로 세지 않는다 (PR #39 리뷰)."""
+    from agents.diagnosis.graph import MAX_TOOL_ROUNDS, OUTPUT_ERROR
+
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    model.check = lambda params: message(
+        [{"type": "tool_use", "id": "tu_pay", "name": "query_payment_record", "input": {}}], stop_reason="tool_use")
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    assert out["hypotheses"][0]["result"] == "inconclusive"
+    assert any(f"도구 호출 {MAX_TOOL_ROUNDS}회" in reason for reason in out["needs_human"])
+    assert not any(OUTPUT_ERROR in reason for reason in out["needs_human"])

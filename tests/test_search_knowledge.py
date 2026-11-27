@@ -42,8 +42,12 @@ def provider(script, monkeypatch, rows=ROWS, fail=False):
 
 def test_b_does_not_answer_before_its_incident_search(monkeypatch):
     k, _ = provider(Script(), monkeypatch)
-    with pytest.raises(KnowledgeUnavailable, match="검색 결과가 없다"):
+    with pytest.raises(KnowledgeUnavailable, match="검색 결과가 없다") as raised:
         asyncio.run(k.rank_causes("S1", "2026-12-03T20:14:00+09:00"))
+    # 검색 실패는 출력 형식 오류가 아니다 (PR #39 리뷰)
+    from common.knowledge.base import OUTPUT_ERROR
+
+    assert OUTPUT_ERROR not in str(raised.value)
 
 
 def test_search_uses_report_text_and_settings_and_feeds_only_retrieved_chunks(monkeypatch):

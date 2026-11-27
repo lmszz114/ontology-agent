@@ -24,6 +24,7 @@ from agents.diagnosis import prompts
 from common.gate import gate
 from common.gate.gate import GateError
 from common.knowledge import KnowledgeProvider, KnowledgeUnavailable
+from common.knowledge.base import OUTPUT_ERROR  # 사람 확인 사유에 붙는 출력 형식 오류 표시. 채점기도 쓴다
 from common.models import LLM, LLMResult
 from common.rules.severity import ESCALATION_COUNT, ESCALATION_WINDOW, SCOPES, base_severity, escalate
 from common.tool_calls import call_tool
@@ -248,7 +249,7 @@ def build_graph(deps: Deps):
         }
         if data is None:
             work |= {"symptom_id": None, "scope": None, "system_ids": [], "intake_reason": None}
-            work["needs_human"].append(f"접수 정리 출력 검증 실패: {errors}")
+            work["needs_human"].append(f"접수 정리 {OUTPUT_ERROR}: {errors}")
         else:
             symptom = None if data["symptom_id"] == "none" else data["symptom_id"]
             work |= {
@@ -324,7 +325,7 @@ def build_graph(deps: Deps):
         )
         if data is None:
             work |= {"decision": "ambiguous", "targets": ids}
-            work["needs_human"].append(f"중복 판정 출력 검증 실패: {errors}")
+            work["needs_human"].append(f"중복 판정 {OUTPUT_ERROR}: {errors}")
             return {"report": work}
         same = [j["incident_id"] for j in data["judgments"] if j["verdict"] == "same"]
         ambiguous = [j["incident_id"] for j in data["judgments"] if j["verdict"] == "ambiguous"]
@@ -480,7 +481,7 @@ def build_graph(deps: Deps):
             "reason": {"type": "string"},
         })
         messages: list[dict] = [{"role": "user", "content": content}]
-        data, called, retried = None, [], False
+        data, called, retried, answered = None, [], False, False
         required = [(c["check_id"], c["args"]) for c in checks if c["required"]]
         for _ in range(0 if problem else MAX_TOOL_ROUNDS):
             result = deps.llm.call(
@@ -506,6 +507,7 @@ def build_graph(deps: Deps):
                                "reused_results로 인용한 뒤 다시 답한다")})
                     data = None
                     continue
+                answered = True
                 break
             messages.append({"role": "assistant", "content": [b.model_dump(mode="json", exclude_none=True)
                                                               for b in result.message.content]})
@@ -521,11 +523,17 @@ def build_graph(deps: Deps):
                 answers.append({"type": "tool_result", "tool_use_id": use.id, "content": out.text, "is_error": out.is_error})
             messages.append({"role": "user", "content": answers})
 
+        unreadable = None
+        if not problem and not answered:
+            # 도구 호출만 이어가다 한도에 닿은 경우. 형식이 틀린 답이 아니라 답이 없는 것이라 출력 형식 오류로 세지 않는다 (PR #39 리뷰)
+            problem = f"판정 근거 단계({cause_id})가 도구 호출 {MAX_TOOL_ROUNDS}회 안에 답하지 않았다"
         if problem:
             verdict = {"result": "inconclusive", "reason": problem, "used_checks": [], "reused_results": []}
         elif (data is None or _structure_errors(data, schema)
                 or data["result"] not in ("confirm", "rule_out", "inconclusive")
                 or not set(data["reused_results"]) <= prior_ids):
+            # 형식이 틀린 답은 불명확으로 두되, 정상적인 불명확 답과 구분해 출력 형식 오류로 사람에게 넘긴다 (PR #39 리뷰)
+            unreadable = f"판정 근거 단계({cause_id}) {OUTPUT_ERROR}: 답을 읽을 수 없다"
             verdict = {"result": "inconclusive", "reason": "판정 근거 단계의 답을 읽을 수 없다",
                        "used_checks": [], "reused_results": []}
         else:
@@ -568,8 +576,8 @@ def build_graph(deps: Deps):
         if verdict["result"] == "confirm":
             diag["confirmed"] = cause_id
         diag["hyp_index"] += 1
-        if problem:
-            return {"diag": diag, "incidents": _flag(state, diag["incident_id"], problem)}
+        if problem or unreadable:
+            return {"diag": diag, "incidents": _flag(state, diag["incident_id"], problem or unreadable)}
         return {"diag": diag}
 
     def after_check(state: State) -> str:
@@ -634,7 +642,7 @@ def build_graph(deps: Deps):
                     if set(d.get("apply", [])) - set(ids) else [],
                 )
                 if data is None:
-                    needs_human.append(f"조건부 협업 판단 출력 검증 실패: {errors}")
+                    needs_human.append(f"조건부 협업 판단 {OUTPUT_ERROR}: {errors}")
                 else:
                     collaborators += [{"team_id": t, "why": "조건부 협업", "reason": data["reason"]} for t in data["apply"]]
             next_check = None
@@ -838,7 +846,7 @@ def build_graph(deps: Deps):
                 schema=schema, validate=validate,
             )
             if data is None:
-                needs_human.append(f"절차, 조치 선택 출력 검증 실패: {errors}")
+                needs_human.append(f"절차, 조치 선택 {OUTPUT_ERROR}: {errors}")
         if data is None:
             data = {"procedures": [], "resolved_conditions": [], "actions": [], "reason": None}
         diag |= {"procedure_choice": data, "candidate_procedures": sorted(candidates), "needs_human": needs_human,
