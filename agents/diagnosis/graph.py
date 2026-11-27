@@ -879,10 +879,12 @@ def build_graph(deps: Deps, *, checkpointer=None):
 
     async def await_approval(state: State) -> State:
         diag = dict(state["diag"])
-        runs = {r.get("run_id"): dict(r) for r in diag["runs"]}
+        # 게이트가 거부한 요청(refused)은 실행 기록 ID가 없다. 목록 순서를 그대로 두고 ID가 있는 것만 찾아 쓴다 (PR #41 리뷰)
+        runs = [dict(r) for r in diag["runs"]]
+        index = {r["run_id"]: r for r in runs if r.get("run_id")}
         # interrupt에서 이어가면 이 노드를 처음부터 다시 돈다. interrupt 앞의 일(DB와 맞추기)은 여러 번 해도 같다
-        sync_runs(runs)
-        diag["runs"] = list(runs.values())
+        sync_runs(index)
+        diag["runs"] = runs
         pending = [r for r in diag["runs"] if r["status"] == "pending_approval"]
         if not pending:
             return {"diag": diag}
@@ -899,10 +901,10 @@ def build_graph(deps: Deps, *, checkpointer=None):
                 errors.append(f"승인 판단은 run_id, team_id, decision 문자열을 담은 묶음이어야 한다: {d!r}")
                 continue
             run_id, team_id, decision = d["run_id"], d["team_id"], d["decision"]
-            if run_id not in runs or decision not in ("approve", "reject"):
+            if run_id not in index or decision not in ("approve", "reject"):
                 errors.append(f"알 수 없는 승인 판단이다: {d}")
                 continue
-            if runs[run_id]["status"] != "pending_approval":
+            if index[run_id]["status"] != "pending_approval":
                 continue  # 이미 반영된 판단 (DB와 맞추면서 완료, 반려로 바뀐 실행)
             try:
                 if decision == "approve":
@@ -915,9 +917,9 @@ def build_graph(deps: Deps, *, checkpointer=None):
             except GateError as exc:
                 errors.append(str(exc))
                 continue
-            runs[run_id] |= {"status": run["status"], "approved_by_teams": run["approved_by_teams"],
+            index[run_id] |= {"status": run["status"], "approved_by_teams": run["approved_by_teams"],
                              "rejected_by_team": run.get("rejected_by_team")}
-        diag |= {"runs": list(runs.values()), "approval_errors": errors}
+        diag |= {"runs": runs, "approval_errors": errors}
         return {"diag": diag}
 
     def after_approval(state: State) -> str:

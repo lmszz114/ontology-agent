@@ -1344,3 +1344,24 @@ def test_malformed_decisions_are_reported_not_raised(db, seed, bad):
     assert len(paused) == 2 and paused[1]["errors"]
     (out,) = state["outputs"]
     assert {a["status"] for a in out["actions"] if a["action_id"] in ("A10", "A15")} == {"done"}
+
+
+def test_refused_requests_are_kept_in_demo_output(db, seed, monkeypatch):
+    """게이트가 거부한 요청은 실행 기록 ID가 없다. 둘 이상이어도 승인 대기를 거친 출력에 모두 남는다 (PR #41 리뷰)."""
+    from common.gate import gate
+    from common.gate.gate import GateError
+
+    original = gate.request_action
+
+    def refuse_some(driver, **kwargs):
+        if kwargs["action_id"] in ("A01", "A02"):
+            raise GateError(f"테스트 거부 {kwargs['action_id']}")
+        return original(driver, **kwargs)
+
+    monkeypatch.setattr(gate, "request_action", refuse_some)
+    scenario = load("SC-S1-01")
+    state, _ = run_demo(db, seed, scenario, RuleModel(intake_of(scenario)), {"C02": "confirm"}, approve_all)
+    (out,) = state["outputs"]
+    refused = sorted(a["action_id"] for a in out["actions"] if a["status"] == "refused")
+    assert refused == ["A01", "A02"]
+    assert {a["status"] for a in out["actions"] if a["action_id"] in ("A10", "A15")} == {"done"}
