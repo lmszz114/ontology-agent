@@ -6,15 +6,19 @@
 interrupt) 승인권자의 승인, 반려를 받아 이어간다. 반려되면 같은 원인의 다른 해결 절차를 다시 고르고, 대안이 없으면
 사람에게 넘긴다 (3단계 R6). 멈춘 상태는 SQLite 파일(.cache/demo/checkpoints.sqlite)에 남는다.
 
-이 명령은 승인을 터미널에서 받는다. 슬랙 승인 버튼(M7 PR 2)과 JSM 접수(M7 PR 3)는 같은 그래프를 다른 입력으로 쓴다.
+승인은 터미널(기본) 또는 슬랙 승인 버튼(--approve slack, apps/slack_app, M7 PR 2)으로 받는다. 둘 다 같은 그래프에
+승인 판단 목록을 넘긴다. 슬랙은 SLACK_BOT_TOKEN, SLACK_APP_TOKEN, SLACK_APPROVAL_CHANNEL 환경 변수가 필요하다.
+JSM 접수(M7 PR 3)도 같은 그래프를 다른 입력으로 쓴다.
 지금은 모의 도구가 시나리오 파일의 environment로 답한다. 데모용 가상 데이터는 M7 PR 3에서 만든다.
 LLM을 부르므로 비용이 든다. test 세트는 돌릴 수 없다 (4단계 4-2).
 """
 
 import argparse
 import asyncio
+import inspect
 import json
 import sys
+from contextlib import AsyncExitStack
 from datetime import datetime
 from pathlib import Path
 
@@ -24,6 +28,7 @@ from langgraph.types import Command
 
 from agents.diagnosis.graph import KST, build_graph, initial_state
 from agents.diagnosis.prompts import PROMPT_VERSION
+from apps.slack_app.approver import SlackConfigError, read_settings, slack_approver
 from agents.diagnosis.run import KNOWLEDGE, agent_deps, prepare_event_layer, prompt_uses
 from common.models import LLM, load_model_config, make_anthropic_client
 from common.packages import PackageError, load_package
@@ -40,6 +45,7 @@ def parse_args(argv=None) -> argparse.Namespace:
     p.add_argument("--scenario", required=True, help="제보와 environment가 있는 dev 시나리오 파일")
     p.add_argument("--org", default="org-a")
     p.add_argument("--config", default="C", choices=sorted(KNOWLEDGE))
+    p.add_argument("--approve", default="terminal", choices=["terminal", "slack"], help="승인을 받는 곳")
     return p.parse_args(argv)
 
 
@@ -60,9 +66,21 @@ def ask_terminal(payload: dict) -> list[dict]:
     return decisions
 
 
-async def run_demo(scenario: dict, scenario_path: Path, *, org: str, config: str, decide=ask_terminal,
-                   checkpoints: Path = CHECKPOINTS) -> dict:
+def load_names(driver) -> dict:
+    """승인 메시지에 쓸 이름 (ID -> 이름). 팀, 조치, 원인, 절차, 증상."""
+    records = driver.execute_query(
+        "MATCH (n) WHERE n:Team OR n:Action OR n:Cause OR n:Procedure OR n:SymptomType "
+        "RETURN n.id AS id, n.name AS name").records
+    return {r["id"]: r["name"] for r in records if r["id"] and r["name"]}
+
+
+async def run_demo(scenario: dict, scenario_path: Path, *, org: str, config: str, decide=None,
+                   approve: str = "terminal", checkpoints: Path = CHECKPOINTS) -> dict:
+    """decide(멈춘 내용) -> 승인 판단 목록. 주지 않으면 approve에 따라 터미널이나 슬랙에서 받는다."""
     load_package(org, uses=prompt_uses(config))
+    if decide is None and approve == "slack":
+        # 연결을 열기 전에 본다. 열린 뒤에 나면 MCP 연결의 작업 묶음에 싸여 이유가 가려진다
+        read_settings()
     tracer = Tracer.from_env()
     llm = LLM(load_model_config(org), tracer, make_anthropic_client())
     thread = f"{scenario['id']}-{datetime.now(KST):%Y%m%d-%H%M%S}"
@@ -72,7 +90,12 @@ async def run_demo(scenario: dict, scenario_path: Path, *, org: str, config: str
             prepare_event_layer(driver, scenario)
             async with agent_deps(scenario_path, config=config, org=org, tracer=tracer, llm=llm, driver=driver,
                                   approval=True) as deps, \
-                    AsyncSqliteSaver.from_conn_string(str(checkpoints)) as saver:
+                    AsyncSqliteSaver.from_conn_string(str(checkpoints)) as saver, AsyncExitStack() as stack:
+                approver = None
+                if decide is None and approve == "slack":
+                    approver = await stack.enter_async_context(slack_approver(load_names(driver)))
+                    decide = approver.decide
+                decide = decide or ask_terminal
                 graph = build_graph(deps, checkpointer=saver)
                 run_config = {"configurable": {"thread_id": thread}, "recursion_limit": 200}
                 with tracer.run("diagnosis", session_id=thread, tags=[f"config:{config}", "mode:demo"],
@@ -82,7 +105,12 @@ async def run_demo(scenario: dict, scenario_path: Path, *, org: str, config: str
                     while state.get("__interrupt__"):
                         payload = state["__interrupt__"][0].value
                         print(f"\n승인 대기: 사건 {payload['incident_id']}")
-                        state = await graph.ainvoke(Command(resume=decide(payload)), config=run_config)
+                        decisions = decide(payload)
+                        if inspect.isawaitable(decisions):
+                            decisions = await decisions
+                        state = await graph.ainvoke(Command(resume=decisions), config=run_config)
+                    if approver is not None:
+                        await approver.finish()
                 cost = sum(r.cost["total"] for r in deps.llm_results)
     finally:
         tracer.flush()
@@ -101,9 +129,12 @@ def main(argv=None) -> int:
         print(f"실행할 수 없다: 시나리오의 조직({scenario_org(scenario)})과 --org가 다르다", file=sys.stderr)
         return 1
     try:
-        result = asyncio.run(run_demo(scenario, path, org=args.org, config=args.config))
+        result = asyncio.run(run_demo(scenario, path, org=args.org, config=args.config, approve=args.approve))
     except PackageError as exc:
         print(f"실행할 수 없다: 배포 패키지를 쓸 수 없다: {exc}", file=sys.stderr)
+        return 1
+    except SlackConfigError as exc:
+        print(f"실행할 수 없다: {exc}", file=sys.stderr)
         return 1
     for out in result["outputs"]:
         print(f"\n사건 {out['incident_id']}: 원인 {out['root_cause']}, 담당 {out['primary_team']}, 절차 {out['procedures']}")

@@ -888,8 +888,13 @@ def build_graph(deps: Deps, *, checkpointer=None):
         pending = [r for r in diag["runs"] if r["status"] == "pending_approval"]
         if not pending:
             return {"diag": diag}
+        incident = state["incidents"][diag["incident_id"]]
         decisions = interrupt({
             "incident_id": diag["incident_id"],
+            # 승인권자가 무엇을 승인하는지 알 수 있게 진단 요약을 함께 내놓는다 (슬랙 승인 메시지, M7 PR 2)
+            "summary": {"symptom": incident["symptom_id"], "severity": incident["severity"],
+                        "root_cause": diag.get("confirmed"), "primary_team": diag["primary_team"],
+                        "procedures": sorted(diag["procedure_choice"]["procedures"], key=lambda p: int(p[1:]))},
             "pending": [{k: r.get(k) for k in ("run_id", "action_id", "required_approver_teams", "approved_by_teams")}
                         for r in pending],
             "errors": diag.get("approval_errors") or [],
