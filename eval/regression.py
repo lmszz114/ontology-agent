@@ -2,6 +2,8 @@
 
 실행:
   python -m eval.regression paths              # 돌릴 시나리오 파일 경로 (실행기 --scenario에 넘긴다)
+  python -m eval.regression config             # 실행할 구성 (실행기 --config에 넘긴다)
+  python -m eval.regression org                # 조직 설정 (시드 적재와 실행기 --org에 넘긴다)
   python -m eval.regression check 결과폴더      # 채점한 결과(grades.json)가 통과 기준을 넘는지. 못 넘으면 1
   python -m eval.regression baseline 결과폴더   # 그 결과를 기준 값으로 eval/regression.yaml에 쓴다
 
@@ -117,7 +119,8 @@ def write_baseline(grades: dict, path: Path | None = None) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="배포 전 회귀 테스트 (5단계 3-2)")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("paths")
+    for name in ("paths", "config", "org"):
+        sub.add_parser(name)
     for name in ("check", "baseline"):
         sub.add_parser(name).add_argument("folder")
     args = parser.parse_args(argv)
@@ -126,6 +129,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "paths":
             print(" ".join(p.relative_to(Path.cwd()).as_posix() if p.is_relative_to(Path.cwd()) else str(p)
                            for p in scenario_paths(config)))
+            return 0
+        if args.command in ("config", "org"):
+            # 워크플로가 이 값을 실행기와 시드 적재에 넘긴다. 설정 파일 하나로 실행과 판정의 조건을 맞춘다 (M6 점검)
+            print(config[args.command])
             return 0
         grades = _grades(Path(args.folder), config)
         if args.command == "baseline":

@@ -101,3 +101,9 @@ def test_bad_result_is_not_written_as_baseline(tmp_path, grades, message):
     with pytest.raises(RegressionError, match=message):
         write_baseline(grades, path)
     assert path.read_text(encoding="utf-8") == before
+
+
+def test_config_and_org_commands_print_the_run_settings(capsys):
+    """워크플로가 실행기와 시드 적재에 넘길 구성과 조직을 설정 파일에서 읽는다 (M6 점검)."""
+    assert regression.main(["config"]) == 0 and regression.main(["org"]) == 0
+    assert capsys.readouterr().out.split() == [CONFIG["config"], CONFIG["org"]]

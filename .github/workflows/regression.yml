@@ -7,6 +7,8 @@ name: 회귀 테스트
 
 on:
   pull_request:
+    # main으로 가는 PR만 돈다. 다른 브랜치로 가는 PR에 비용을 쓰지 않는다 (M6 점검)
+    branches: [main]
     paths:
       - "agents/**"
       - "common/**"
@@ -16,6 +18,8 @@ on:
       - "eval/runner/**"
       - "eval/grader/**"
       - "eval/labels.py"
+      - "eval/validate.py"
+      - "eval/lock.py"
       - "eval/regression.py"
       - "eval/regression.yaml"
       - "eval/scenarios/dev/**"
@@ -76,12 +80,19 @@ jobs:
         run: pip install uv
       - name: 의존성 설치
         run: uv sync --frozen
+      # 구성과 조직은 eval/regression.yaml에서 읽는다. 판정(check)도 같은 파일로 조건을 본다 (M6 점검)
+      - name: 회귀 설정 읽기
+        run: |
+          config=$(uv run python -m eval.regression config)
+          org=$(uv run python -m eval.regression org)
+          scenarios=$(uv run python -m eval.regression paths)
+          { echo "CONFIG=$config"; echo "ORG=$org"; echo "SCENARIOS=$scenarios"; } >> "$GITHUB_ENV"
       - name: 스키마 적용과 시드 적재
         run: |
           uv run python -m ontology.apply_schema
-          uv run python -m ontology.load
-      - name: 시나리오 실행 (구성 C, 1회)
-        run: uv run python -m eval.runner --config C --scenario $(uv run python -m eval.regression paths) --out "$OUT"
+          uv run python -m ontology.load "$ORG"
+      - name: 시나리오 실행 (1회)
+        run: uv run python -m eval.runner --config "$CONFIG" --org "$ORG" --scenario $SCENARIOS --out "$OUT"
       - name: 채점
         run: uv run python -m eval.grader "$OUT"
       - name: 통과 기준 확인

@@ -203,3 +203,21 @@ def test_grader_refuses_result_run_under_another_org(tmp_path):
     (tmp_path / "SC-T7-01.json").write_text(json.dumps(result), encoding="utf-8")
     with pytest.raises(GradeError, match="org-b 설정인데 org-a로 돌았다"):
         grade_folder(tmp_path)
+
+
+def test_boolean_version_is_refused(tmp_path, monkeypatch):
+    """bool은 int의 하위 타입이라 version: true가 1로 통과하지 않게 막는다 (M6 점검)."""
+    import shutil
+
+    import yaml
+
+    from common.packages import loader
+
+    shutil.copytree(loader.PACKAGES_DIR / "org-a", tmp_path / "org-a")
+    path = tmp_path / "org-a" / "package.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    data["package"]["version"] = True
+    path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    monkeypatch.setattr(loader, "PACKAGES_DIR", tmp_path)
+    with pytest.raises(PackageError, match="version"):
+        load_package("org-a")

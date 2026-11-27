@@ -1038,3 +1038,29 @@ def test_tool_round_limit_is_not_an_output_error(db, seed):
     assert out["hypotheses"][0]["result"] == "inconclusive"
     assert any(f"도구 호출 {MAX_TOOL_ROUNDS}회" in reason for reason in out["needs_human"])
     assert not any(OUTPUT_ERROR in reason for reason in out["needs_human"])
+
+
+def test_answer_on_the_last_round_is_not_reported_as_no_answer(db, seed):
+    """마지막 회차에 답했는데 필수 근거가 없어 다시 묻게 되면, 답이 없었다고 하지 않고 처음 답을 불명확으로 쓴다 (M6 점검)."""
+    from agents.diagnosis.graph import MAX_TOOL_ROUNDS, OUTPUT_ERROR
+
+    scenario = load("SC-S1-01")
+    model = RuleModel(intake_of(scenario))
+    first = {}
+
+    def check(params):
+        cause = re.search(r"확인할 원인 가설: (C\d+)", params["messages"][0]["content"]).group(1)
+        first.setdefault("cause", cause)
+        rounds = (len(params["messages"]) + 1) // 2
+        if cause == first["cause"] and rounds < MAX_TOOL_ROUNDS:
+            return message([{"type": "tool_use", "id": f"tu_{rounds}", "name": "query_deploy_history",
+                             "input": {"system": "SY10"}}], stop_reason="tool_use")
+        return text({"result": "confirm", "used_checks": [], "reused_results": [], "reason": "조회 없이 답함"})
+
+    model.check = check
+    state, _ = run_agent(db, seed, scenario, model, verdicts={})
+    (out,) = state["outputs"]
+    hyp = next(h for h in out["hypotheses"] if h["cause_id"] == first["cause"])
+    assert hyp["result"] == "inconclusive"
+    assert not any(f"도구 호출 {MAX_TOOL_ROUNDS}회" in r for r in out["needs_human"])
+    assert not any(OUTPUT_ERROR in r for r in out["needs_human"])

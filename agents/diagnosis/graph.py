@@ -481,7 +481,7 @@ def build_graph(deps: Deps):
             "reason": {"type": "string"},
         })
         messages: list[dict] = [{"role": "user", "content": content}]
-        data, called, retried, answered = None, [], False, False
+        data, called, retried, answered, first_answer = None, [], False, False, None
         required = [(c["check_id"], c["args"]) for c in checks if c["required"]]
         for _ in range(0 if problem else MAX_TOOL_ROUNDS):
             result = deps.llm.call(
@@ -500,7 +500,7 @@ def build_graph(deps: Deps):
                 # 다시 물을 때 앞 답의 도구 호출 블록은 뺀다. 결과 없는 도구 호출 뒤에 글을 붙이면 API가 거부한다
                 said = [b.model_dump(mode="json", exclude_none=True) for b in result.message.content if b.type != "tool_use"]
                 if missing and not retried and said:
-                    retried = True
+                    retried, first_answer = True, data
                     messages.append({"role": "assistant", "content": said})
                     messages.append({"role": "user", "content": prompts.RETRY.format(
                         errors=f"- 필수 판정 근거 {missing}를 조회하지 않고 답했다. 조회하거나 이미 조회한 결과를 "
@@ -524,6 +524,9 @@ def build_graph(deps: Deps):
             messages.append({"role": "user", "content": answers})
 
         unreadable = None
+        if not answered and first_answer is not None:
+            # 다시 묻는 사이에 도구 호출 한도에 닿았다. 처음 답을 쓴다. 필수 근거가 없으므로 아래에서 불명확이 된다 (M6 점검)
+            data, answered = first_answer, True
         if not problem and not answered:
             # 도구 호출만 이어가다 한도에 닿은 경우. 형식이 틀린 답이 아니라 답이 없는 것이라 출력 형식 오류로 세지 않는다 (PR #39 리뷰)
             problem = f"판정 근거 단계({cause_id})가 도구 호출 {MAX_TOOL_ROUNDS}회 안에 답하지 않았다"

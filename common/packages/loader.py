@@ -49,7 +49,8 @@ def load_package(org: str, *, uses: dict[str, str] | None = None) -> Package:
     meta = data.get("package") or {}
     if meta.get("id") != org:
         raise PackageError(f"{path}: package.id({meta.get('id')})가 폴더 이름({org})과 다르다")
-    if not isinstance(meta.get("version"), int) or meta["version"] < 1:
+    # bool은 int의 하위 타입이라 true가 1로 통과하지 않게 따로 막는다 (M6 점검)
+    if not isinstance(meta.get("version"), int) or isinstance(meta["version"], bool) or meta["version"] < 1:
         raise PackageError(f"{path}: package.version은 1 이상의 정수다: {meta.get('version')}")
     prompts = data.get("prompts") or {}
     if set(prompts) != set(PROMPT_KEYS):
