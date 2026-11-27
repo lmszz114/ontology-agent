@@ -120,12 +120,15 @@ def prepare_event_layer(driver, scenario: dict) -> None:
         )
 
 
-async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org: str, tracer: Tracer, llm: LLM,
-                       driver, neo4j_uri: str | None = None) -> dict:
-    """neo4j_uri를 주면 온톨로지 조회 서버가 그 DB를 읽는다. driver도 같은 DB에 연결돼 있어야 한다 (C-ext)."""
+@asynccontextmanager
+async def agent_deps(scenario_path: Path, *, config: str, org: str, tracer: Tracer, llm: LLM, driver,
+                     neo4j_uri: str | None = None, approval: bool = False):
+    """MCP 서버(온톨로지 조회, 모의 도구, 문서 검색)를 띄우고 진단 그래프의 의존 객체를 만든다.
+
+    평가 실행(run_scenario)과 데모 실행(agents.diagnosis.demo)이 같이 쓴다. 모의 도구는 scenario_path의 environment로 답한다
+    """
     if config not in KNOWLEDGE:
         raise ValueError(f"등록되지 않은 구성이다: {config} (구성: {sorted(KNOWLEDGE)})")
-    prepare_event_layer(driver, scenario)
     onto_params = _server("mcp_servers.ontology_query.server",
                           {"ORG": org} | ({"NEO4J_URI": neo4j_uri} if neo4j_uri else {}))
     mock_params = _server("mcp_servers.mock_tools.server", {"ORG": org, "MOCK_ENV_FILE": str(scenario_path.resolve())})
@@ -139,12 +142,23 @@ async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org:
         results: list[LLMResult] = []
         knowledge = KNOWLEDGE[config](KnowledgeContext(onto=onto, tracer=tracer, llm=llm, driver=driver, org=org,
                                                        results=results, docs=docs))
-        deps = Deps(
+        yield Deps(
             driver=driver, llm=llm, tracer=tracer, knowledge=knowledge, llm_results=results,
             mock_client=mock, mock_tools=mock_tools, tool_checks=queries.get_evidence_tools(driver),
             symptoms=queries.get_symptom_types(driver), systems=queries.get_systems(driver),
-            rules=rules_of(load_seed(org)),
+            rules=rules_of(load_seed(org)), approval=approval,
         )
+
+
+async def run_scenario(scenario: dict, scenario_path: Path, *, config: str, org: str, tracer: Tracer, llm: LLM,
+                       driver, neo4j_uri: str | None = None) -> dict:
+    """neo4j_uri를 주면 온톨로지 조회 서버가 그 DB를 읽는다. driver도 같은 DB에 연결돼 있어야 한다 (C-ext)."""
+    if config not in KNOWLEDGE:
+        raise ValueError(f"등록되지 않은 구성이다: {config} (구성: {sorted(KNOWLEDGE)})")
+    prepare_event_layer(driver, scenario)
+    async with agent_deps(scenario_path, config=config, org=org, tracer=tracer, llm=llm, driver=driver,
+                          neo4j_uri=neo4j_uri) as deps:
+        knowledge = deps.knowledge
         graph = build_graph(deps)
         started = datetime.now(KST)
         with tracer.run(
