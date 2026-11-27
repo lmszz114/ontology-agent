@@ -1349,10 +1349,15 @@ def test_demo_command_with_slack_approval(db, seed, tmp_path, monkeypatch, capsy
     (out,) = result["outputs"]
     assert {a["action_id"]: a["status"] for a in out["actions"]}["A15"] == "done"
     requests = [p for p in made["slack"].posted if buttons(p)]
-    assert requests and all("원인 수정" in p["text"] and out["incident_id"] in p["text"] for p in requests)
+    head = made["slack"].posted[0]
+    assert out["incident_id"] in head["text"] and "원인: " in head["text"] and "(C02)" in head["text"]
+    assert any("원인 수정" in p["text"] for p in requests) and all(p["thread_ts"] == head["ts"] for p in requests)
     team = requests[0]["text"].split("승인권자: ")[1].split("\n")[0]
     assert "(TM" in team and not team.startswith("TM")  # 팀 이름 (팀 ID)
-    assert len(made["slack"].updated) == len(requests) and not made["approver"].open
+    # 요청마다 버튼을 뗀 수정 1번, 끝난 뒤 사건 요약에 결과를 붙인 수정 1번
+    assert len(made["slack"].updated) == len(requests) + 1 and not made["approver"].open
+    assert "승인되어 완료" in made["slack"].updated[-1]["text"] and made["slack"].updated[-1]["ts"] == head["ts"]
+    assert "승인을 기다리는 팀" in capsys.readouterr().out
     # 슬랙 설정이 없으면 LLM을 부르기 전에 이유를 남기고 끝낸다
     monkeypatch.undo()
     for name in ("SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_APPROVAL_CHANNEL"):

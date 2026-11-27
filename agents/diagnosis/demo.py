@@ -105,12 +105,16 @@ async def run_demo(scenario: dict, scenario_path: Path, *, org: str, config: str
                     while state.get("__interrupt__"):
                         payload = state["__interrupt__"][0].value
                         print(f"\n승인 대기: 사건 {payload['incident_id']}")
+                        for run in payload["pending"]:
+                            waiting = [t for t in run["required_approver_teams"]
+                                       if t not in (run.get("approved_by_teams") or [])]
+                            print(f"  {run['action_id']} ({run['run_id']}): 승인을 기다리는 팀 {waiting}", flush=True)
                         decisions = decide(payload)
                         if inspect.isawaitable(decisions):
                             decisions = await decisions
                         state = await graph.ainvoke(Command(resume=decisions), config=run_config)
                     if approver is not None:
-                        await approver.finish()
+                        await approver.finish(state.get("outputs") or [])
                 cost = sum(r.cost["total"] for r in deps.llm_results)
     finally:
         tracer.flush()

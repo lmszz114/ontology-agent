@@ -52,8 +52,13 @@ def buttons(post) -> list[dict]:
 def test_request_message_names_what_is_approved_and_carries_the_decision_target():
     text = messages.request_text(payload(), run(teams=("TM05", "TM09")), "TM05", NAMES)
     assert "보상 지급 (A10)" in text and "승인권자: 게임사업PM팀 (TM05)" in text
-    assert "INC-1" in text and "SEV2" in text and "원인 이름 (C02)" in text and "보상 지급 절차 (P6)" in text
-    assert "함께 승인해야 하는 팀: 인프라운영팀 (TM09)" in text and "AR-1" in text
+    assert "함께 승인해야 하는 팀: 인프라운영팀 (TM09)" in text
+    # 사건 정보는 요약 메시지에만 쓴다
+    assert "INC-1" not in text and "SEV2" not in text
+    summary = messages.summary_text(payload(), NAMES)
+    assert "INC-1" in summary and "SEV2" in summary and "원인 이름 (C02)" in summary
+    assert "보상 지급 절차 (P6)" in summary and "게임사업PM팀 (TM05)" in summary
+    assert "INC-1" in messages.summary_text({"incident_id": "INC-1"}, {})
     approve, reject = buttons({"blocks": messages.request_blocks(payload(), run(), "TM05", NAMES)})
     assert (approve["action_id"], reject["action_id"]) == (messages.APPROVE, messages.REJECT)
     assert json.loads(approve["value"]) == json.loads(reject["value"]) == {"run_id": "AR-1", "team_id": "TM05"}
@@ -79,16 +84,20 @@ def test_posts_one_request_per_approver_team_and_returns_the_clicked_decision():
                                                               run("AR-2", teams=("TM05", "TM09")))))
         await asyncio.sleep(0)
         # 이미 승인한 팀(AR-1의 TM09)에는 올리지 않는다
-        assert [json.loads(buttons(p)[0]["value"]) for p in slack.posted] == [
+        # 사건 요약을 먼저 올리고 요청은 그 스레드에 올린다
+        head, *requests = slack.posted
+        assert "INC-1" in head["text"] and not buttons(head) and "thread_ts" not in head
+        assert [json.loads(buttons(p)[0]["value"]) for p in requests] == [
             {"run_id": "AR-1", "team_id": "TM05"}, {"run_id": "AR-2", "team_id": "TM05"},
             {"run_id": "AR-2", "team_id": "TM09"}]
+        assert all(p["thread_ts"] == head["ts"] for p in requests)
         assert all(p["channel"] == "C123" for p in slack.posted)
         assert await approver.handle(click("AR-2", "TM09", messages.REJECT, user="U7"))
         decisions = await waiting
         assert decisions == [{"run_id": "AR-2", "team_id": "TM09", "decision": "reject"}]
         # 누른 메시지는 버튼이 사라지고 누가 무엇을 했는지 남는다
         (update,) = slack.updated
-        assert update["ts"] == "3.000" and not buttons(update)
+        assert update["ts"] == "4.000" and not buttons(update)
         assert "인프라운영팀 (TM09) 반려" in update["text"] and "<@U7>" in update["text"]
         # 같은 버튼을 다시 누르거나 모르는 요청을 누르면 판단이 되지 않는다
         assert not await approver.handle(click("AR-2", "TM09"))
@@ -111,9 +120,12 @@ def test_next_pause_keeps_open_requests_closes_stale_ones_and_reports_errors():
         # TM09가 반려해 AR-1은 끝났고, 다시 고른 조치 AR-2가 승인 대기다. 앞 판단 오류도 함께 온다
         second = asyncio.create_task(approver.decide(payload(run("AR-2"), errors=["승인권자가 아니다"])))
         await asyncio.sleep(0)
-        assert "앞 판단을 처리하지 못했다: 승인권자가 아니다" in slack.posted[2]["text"]
+        # 같은 사건이면 요약을 다시 올리지 않고, 오류도 스레드에 올린다
+        assert sum("승인 요청*" in p["text"] and "thread_ts" not in p for p in slack.posted) == 1
+        error = next(p for p in slack.posted if "앞 판단을 처리하지 못했다: 승인권자가 아니다" in p["text"])
+        assert error["thread_ts"] == slack.posted[0]["ts"]
         stale = slack.updated[-1]
-        assert stale["ts"] == "1.000" and "더 받지 않는다" in stale["text"] and not buttons(stale)
+        assert stale["ts"] == "2.000" and "더 받지 않는다" in stale["text"] and not buttons(stale)
         assert set(approver.open) == {("AR-2", "TM05")}
         await approver.handle(click("AR-2", "TM05"))
         assert await second == [{"run_id": "AR-2", "team_id": "TM05", "decision": "approve"}]
@@ -127,8 +139,17 @@ def test_next_pause_keeps_open_requests_closes_stale_ones_and_reports_errors():
         await asyncio.sleep(0)
         assert len(slack.posted) == count and set(approver.open) == {("AR-3", "TM09")}
         fourth.cancel()
-        await approver.finish()
-        assert not approver.open and "더 받지 않는다" in slack.updated[-1]["text"]
+        output = {"incident_id": "INC-1", "needs_human": ["대안을 사람이 정한다"], "actions": [
+            {"action_id": "A01", "status": "auto_done", "required_approver_teams": []},
+            {"action_id": "A10", "status": "rejected", "required_approver_teams": ["TM05"]},
+            {"action_id": "A15", "status": "done", "required_approver_teams": ["TM02"]}]}
+        await approver.finish([output, {"incident_id": "INC-없음", "actions": [], "needs_human": []}])
+        assert not approver.open and "더 받지 않는다" in slack.updated[-2]["text"]
+        # 끝나면 사건 요약에 승인이 필요했던 조치의 결과와 사람 확인 사유를 붙인다. 올린 적 없는 사건은 건너뛴다
+        result = slack.updated[-1]
+        assert result["ts"] == slack.posted[0]["ts"] and "INC-1" in result["text"]
+        assert "보상 지급 (A10): 반려" in result["text"] and "A15: 승인되어 완료" in result["text"]
+        assert "A01" not in result["text"] and "사람 확인: 대안을 사람이 정한다" in result["text"]
 
     asyncio.run(go())
 

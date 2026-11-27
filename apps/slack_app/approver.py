@@ -30,11 +30,19 @@ class SlackApprover:
         self.clicks: asyncio.Queue = asyncio.Queue()
         # 버튼이 살아 있는 요청. (실행 기록 ID, 팀 ID) -> 메시지 시각(ts)과 본문
         self.open: dict[tuple[str, str], dict] = {}
+        # 사건마다 채널에 올린 요약 메시지. 사건 ID -> 메시지 시각(ts)과 본문. 요청은 이 메시지의 스레드에 올린다
+        self.threads: dict[str, dict] = {}
 
     async def decide(self, payload: dict) -> list[dict]:
         """멈춘 내용(interrupt)을 받아 승인 판단 목록을 돌려준다. 판단이 하나 이상 올 때까지 기다린다."""
+        thread = self.threads.get(payload["incident_id"])
+        if thread is None:
+            text = messages.summary_text(payload, self.names)
+            sent = await self.client.chat_postMessage(channel=self.channel, text=text)
+            thread = self.threads[payload["incident_id"]] = {"ts": sent["ts"], "text": text}
         for error in payload.get("errors") or []:
-            await self.client.chat_postMessage(channel=self.channel, text=f"앞 판단을 처리하지 못했다: {error}")
+            await self.client.chat_postMessage(channel=self.channel, thread_ts=thread["ts"],
+                                               text=f"앞 판단을 처리하지 못했다: {error}")
         wanted = {(run["run_id"], team): run for run in payload["pending"]
                   for team in run["required_approver_teams"] if team not in (run.get("approved_by_teams") or [])}
         # 더 받을 필요가 없어진 요청(다른 팀이 반려한 조치 등)은 버튼을 뗀다
@@ -45,7 +53,8 @@ class SlackApprover:
                 continue
             text = messages.request_text(payload, run, key[1], self.names)
             sent = await self.client.chat_postMessage(
-                channel=self.channel, text=text, blocks=messages.request_blocks(payload, run, key[1], self.names))
+                channel=self.channel, thread_ts=thread["ts"], text=text,
+                blocks=messages.request_blocks(payload, run, key[1], self.names))
             self.open[key] = {"ts": sent["ts"], "text": text}
         decisions = [await self.clicks.get()]
         while not self.clicks.empty():
@@ -64,10 +73,17 @@ class SlackApprover:
         await self.clicks.put({k: click[k] for k in ("run_id", "team_id", "decision")})
         return True
 
-    async def finish(self) -> None:
-        """진단이 끝났다. 남은 요청의 버튼을 뗀다."""
+    async def finish(self, outputs=()) -> None:
+        """진단이 끝났다. 남은 요청의 버튼을 떼고, 사건 요약 메시지에 처리 결과를 붙인다."""
         for key in list(self.open):
             await self._close(key, "더 받지 않는다. 조치가 이미 반려되었거나 끝났다")
+        for output in outputs:
+            thread = self.threads.get(output.get("incident_id"))
+            if thread is None:
+                continue  # 승인 대기 없이 끝난 사건은 채널에 올린 것이 없다
+            await self.client.chat_update(
+                channel=self.channel, ts=thread["ts"],
+                text=f"{thread['text']}\n\n{messages.result_text(output, self.names)}")
 
     async def _close(self, key: tuple[str, str], note: str) -> None:
         message = self.open.pop(key)
