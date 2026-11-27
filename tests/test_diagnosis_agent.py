@@ -1306,6 +1306,67 @@ def test_demo_command_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypa
     assert "dev 시나리오만" in capsys.readouterr().err
 
 
+def test_demo_command_with_slack_approval(db, seed, tmp_path, monkeypatch, capsys):
+    """데모 명령이 슬랙 승인으로 끝까지 돈다 (M7 PR 2). 슬랙 연결만 가짜로 바꾸고, 올라온 요청의 버튼을 눌러 준다.
+    A15는 승인, 완료까지 가고 메시지에는 조치와 팀의 이름이 들어간다."""
+    from contextlib import asynccontextmanager, contextmanager
+
+    from agents.diagnosis import demo
+    from apps.slack_app.approver import SlackApprover
+    from tests.conftest import test_db_uri
+    from tests.test_slack_app import FakeSlack, buttons
+
+    monkeypatch.setenv("NEO4J_URI", test_db_uri())
+    path = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "dev" / "SC-S1-01.yaml"
+    scenario = yaml.safe_load(path.read_text(encoding="utf-8"))
+    model = RuleModel(intake_of(scenario))
+    model.verdicts, model.conditions = {"C02": "confirm"}, []
+    made = {}
+
+    @asynccontextmanager
+    async def fake_slack(names, env=None):
+        def press(post):
+            if buttons(post):
+                body = {"user": {"id": "U1"}, "actions": [buttons(post)[0]]}
+                asyncio.get_running_loop().call_soon(lambda: asyncio.ensure_future(made["approver"].handle(body)))
+
+        made["slack"] = FakeSlack(on_post=press)
+        made["approver"] = SlackApprover(made["slack"], "C123", names)
+        yield made["approver"]
+
+    @contextmanager
+    def test_driver():
+        yield db
+
+    monkeypatch.setattr(demo, "get_driver", test_driver)
+    monkeypatch.setattr(demo, "slack_approver", fake_slack)
+    for name in ("SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_APPROVAL_CHANNEL"):
+        monkeypatch.setenv(name, "test")
+    monkeypatch.setattr(demo.Tracer, "from_env", classmethod(lambda cls: MemoryTracer()))
+    monkeypatch.setattr(demo, "make_anthropic_client", lambda: SimpleNamespace(messages=SimpleNamespace(create=model.create)))
+    result = asyncio.run(demo.run_demo(scenario, path, org="org-a", config="C", approve="slack",
+                                       checkpoints=tmp_path / "checkpoints.sqlite"))
+    (out,) = result["outputs"]
+    assert {a["action_id"]: a["status"] for a in out["actions"]}["A15"] == "done"
+    requests = [p for p in made["slack"].posted if buttons(p)]
+    head = made["slack"].posted[0]
+    assert out["incident_id"] in head["text"] and "원인: " in head["text"] and "(C02)" in head["text"]
+    assert any("원인 수정" in p["text"] for p in requests) and all(p["thread_ts"] == head["ts"] for p in requests)
+    team = requests[0]["text"].split("승인권자: ")[1].split("\n")[0]
+    assert "(TM" in team and not team.startswith("TM")  # 팀 이름 (팀 ID)
+    # 요청마다 버튼을 뗀 수정 1번, 끝난 뒤 사건 요약에 결과를 붙인 수정 1번
+    assert len(made["slack"].updated) == len(requests) + 1 and not made["approver"].open
+    assert "승인되어 완료" in made["slack"].updated[-1]["text"] and made["slack"].updated[-1]["ts"] == head["ts"]
+    assert "승인을 기다리는 팀" in capsys.readouterr().out
+    # 슬랙 설정이 없으면 LLM을 부르기 전에 이유를 남기고 끝낸다
+    monkeypatch.undo()
+    for name in ("SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_APPROVAL_CHANNEL"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(demo, "get_driver", lambda: pytest.fail("설정을 보기 전에 DB를 열었다"))
+    assert demo.main(["--scenario", str(path), "--approve", "slack"]) == 1
+    assert "슬랙 설정이 없다" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("applied", ["approved", "done"])
 def test_resume_after_decisions_were_already_written_to_the_db(db, seed, applied):
     """판단을 DB에 반영한 뒤 체크포인트 저장 전에 끝난 경우 (PR #41 리뷰). 이어갈 때 DB 상태와 맞춰 같은 조치를
