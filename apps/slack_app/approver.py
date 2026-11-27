@@ -9,11 +9,14 @@ SLACK_APPROVAL_CHANNEL(채널 ID). 저장소와 문서에 값을 적지 않는�
 """
 
 import asyncio
+import logging
 import os
 import re
 from contextlib import asynccontextmanager
 
 from apps.slack_app import messages
+
+log = logging.getLogger(__name__)
 
 ENV_NAMES = ("SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_APPROVAL_CHANNEL")
 
@@ -69,8 +72,11 @@ class SlackApprover:
         key = (click["run_id"], click["team_id"])
         if key not in self.open:
             return False  # 이미 처리한 요청을 다시 눌렀거나 이 실행의 요청이 아니다
-        await self._close(key, messages.decision_note(click["decision"], click["team_id"], click["user_id"], self.names))
+        # 판단을 먼저 넘긴다. 메시지 고치기가 실패해도 판단을 잃지 않는다. 요청은 여기서 닫혀 중복 누름을 막는다 (PR #42 리뷰)
+        message = self.open.pop(key)
         await self.clicks.put({k: click[k] for k in ("run_id", "team_id", "decision")})
+        await self._mark(message, messages.decision_note(click["decision"], click["team_id"], click["user_id"],
+                                                         self.names))
         return True
 
     async def finish(self, outputs=()) -> None:
@@ -81,14 +87,26 @@ class SlackApprover:
             thread = self.threads.get(output.get("incident_id"))
             if thread is None:
                 continue  # 승인 대기 없이 끝난 사건은 채널에 올린 것이 없다
-            await self.client.chat_update(
-                channel=self.channel, ts=thread["ts"],
-                text=f"{thread['text']}\n\n{messages.result_text(output, self.names)}")
+            try:
+                await self.client.chat_update(
+                    channel=self.channel, ts=thread["ts"],
+                    text=f"{thread['text']}\n\n{messages.result_text(output, self.names)}")
+            except Exception:
+                log.warning("슬랙 사건 요약에 결과를 붙이지 못했다 (ts %s)", thread["ts"], exc_info=True)
 
     async def _close(self, key: tuple[str, str], note: str) -> None:
-        message = self.open.pop(key)
-        await self.client.chat_update(channel=self.channel, ts=message["ts"], text=f"{message['text']}\n{note}",
-                                      blocks=messages.closed_blocks(message["text"], note))
+        message = self.open.pop(key, None)
+        if message is None:
+            return  # 메시지 고치기를 기다리는 사이에 버튼 누름이 먼저 닫았다 (PR #42 리뷰)
+        await self._mark(message, note)
+
+    async def _mark(self, message: dict, note: str) -> None:
+        """닫힌 요청의 메시지에서 버튼을 떼고 결과를 붙인다. 화면 표시일 뿐이라 실패해도 진행을 막지 않는다."""
+        try:
+            await self.client.chat_update(channel=self.channel, ts=message["ts"], text=f"{message['text']}\n{note}",
+                                          blocks=messages.closed_blocks(message["text"], note))
+        except Exception:
+            log.warning("슬랙 메시지를 고치지 못했다 (ts %s)", message["ts"], exc_info=True)
 
 
 def read_settings(env=None) -> dict:

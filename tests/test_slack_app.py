@@ -176,3 +176,44 @@ def test_missing_settings_are_named_without_values():
         read_settings({"SLACK_BOT_TOKEN": "x"})
     assert set(read_settings({"SLACK_BOT_TOKEN": "a", "SLACK_APP_TOKEN": "b", "SLACK_APPROVAL_CHANNEL": "c"})) == {
         "SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_APPROVAL_CHANNEL"}
+
+
+def test_decision_is_kept_when_the_message_update_fails():
+    """버튼 누름 뒤 메시지 고치기가 실패해도 판단은 넘긴다. 잃으면 같은 버튼을 다시 눌러도 받지 않아 계속 기다린다 (PR #42 리뷰)."""
+    class UpdateFails(FakeSlack):
+        async def chat_update(self, **kwargs):
+            raise RuntimeError("슬랙 오류")
+
+    async def go():
+        approver = SlackApprover(UpdateFails(), "C123", NAMES)
+        waiting = asyncio.create_task(approver.decide(payload(run())))
+        await asyncio.sleep(0)
+        assert await approver.handle(click("AR-1", "TM05"))
+        assert await asyncio.wait_for(waiting, 1) == [{"run_id": "AR-1", "team_id": "TM05", "decision": "approve"}]
+        assert not await approver.handle(click("AR-1", "TM05"))  # 같은 요청의 중복 판단은 여전히 막는다
+        await approver.finish([{"incident_id": "INC-1", "actions": [], "needs_human": []}])  # 결과 붙이기가 실패해도 끝낸다
+
+    asyncio.run(go())
+
+
+def test_closing_a_request_that_a_click_already_closed_is_skipped():
+    """남은 요청을 닫는 도중(메시지 고치기를 기다리는 사이) 다른 요청의 버튼이 눌려 먼저 닫힌 경우 (PR #42 리뷰)."""
+    async def go():
+        slack = FakeSlack()
+        approver = SlackApprover(slack, "C123", NAMES)
+        first = asyncio.create_task(approver.decide(payload(run("AR-1"), run("AR-2"))))
+        await asyncio.sleep(0)
+        update = slack.chat_update
+
+        async def click_while_closing(**kwargs):
+            slack.chat_update = update
+            await approver.handle(click("AR-2", "TM05"))  # AR-1을 닫는 사이에 AR-2가 눌린다
+            return await update(**kwargs)
+
+        slack.chat_update = click_while_closing
+        await approver.finish()
+        assert not approver.open
+        assert sorted(u["ts"] for u in slack.updated) == ["2.000", "3.000"]  # 요청마다 한 번씩만 고친다
+        first.cancel()
+
+    asyncio.run(go())
