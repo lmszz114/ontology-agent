@@ -861,25 +861,49 @@ def build_graph(deps: Deps, *, checkpointer=None):
         return "await_approval" if deps.approval else "record"
 
     # 10-1 승인 대기 (데모 모드, M7). 승인권자의 판단을 받을 때까지 멈춘다 (LangGraph interrupt)
+    def sync_runs(runs: dict[str, dict]) -> None:
+        """승인 대기였던 실행 기록을 DB의 지금 상태로 맞춘다. 승인까지 됐으면 완료로 남긴다.
+
+        판단을 DB에 반영한 뒤 체크포인트를 저장하기 전에 프로세스가 끝나면, 체크포인트는 승인 대기인데 DB는 승인이나
+        완료다. 그대로 두면 같은 조치를 계속 묻고, 다시 승인하면 게이트가 거부해 빠져나올 수 없다 (PR #41 리뷰).
+        이 함수는 여러 번 불러도 결과가 같다
+        """
+        for run_id, run in runs.items():
+            if run.get("status") not in ("pending_approval", "approved"):
+                continue
+            now = gate.read_run(deps.driver, run_id)
+            if now["status"] == "approved":
+                now = gate.mark_done(deps.driver, tracer=deps.tracer, run_id=run_id, now=deps.now())
+            run |= {"status": now["status"], "approved_by_teams": now["approved_by_teams"],
+                    "rejected_by_team": now.get("rejected_by_team")}
+
     async def await_approval(state: State) -> State:
         diag = dict(state["diag"])
+        runs = {r.get("run_id"): dict(r) for r in diag["runs"]}
+        # interrupt에서 이어가면 이 노드를 처음부터 다시 돈다. interrupt 앞의 일(DB와 맞추기)은 여러 번 해도 같다
+        sync_runs(runs)
+        diag["runs"] = list(runs.values())
         pending = [r for r in diag["runs"] if r["status"] == "pending_approval"]
         if not pending:
-            return {}
-        # interrupt에서 이어가면 이 노드를 처음부터 다시 돈다. 그래서 interrupt 앞에는 읽기만 둔다
+            return {"diag": diag}
         decisions = interrupt({
             "incident_id": diag["incident_id"],
             "pending": [{k: r.get(k) for k in ("run_id", "action_id", "required_approver_teams", "approved_by_teams")}
                         for r in pending],
             "errors": diag.get("approval_errors") or [],
         })
-        runs = {r.get("run_id"): dict(r) for r in diag["runs"]}
         errors = []
         for d in decisions if isinstance(decisions, list) else [decisions]:
-            run_id, team_id, decision = (d or {}).get("run_id"), (d or {}).get("team_id"), (d or {}).get("decision")
+            # 판단은 바깥(터미널, 슬랙)에서 온다. 모양이 틀리면 예외로 멈추지 않고 다음 멈춤에 오류로 돌려준다 (PR #41 리뷰)
+            if not isinstance(d, dict) or not all(isinstance(d.get(k), str) for k in ("run_id", "team_id", "decision")):
+                errors.append(f"승인 판단은 run_id, team_id, decision 문자열을 담은 묶음이어야 한다: {d!r}")
+                continue
+            run_id, team_id, decision = d["run_id"], d["team_id"], d["decision"]
             if run_id not in runs or decision not in ("approve", "reject"):
                 errors.append(f"알 수 없는 승인 판단이다: {d}")
                 continue
+            if runs[run_id]["status"] != "pending_approval":
+                continue  # 이미 반영된 판단 (DB와 맞추면서 완료, 반려로 바뀐 실행)
             try:
                 if decision == "approve":
                     run = gate.approve(deps.driver, tracer=deps.tracer, run_id=run_id, team_id=team_id, now=deps.now())

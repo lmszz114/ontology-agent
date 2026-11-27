@@ -1304,3 +1304,43 @@ def test_demo_command_end_to_end_with_mcp_processes(db, seed, tmp_path, monkeypa
     test_path = Path(__file__).resolve().parents[1] / "eval" / "scenarios" / "test" / "SC-T7-01.yaml"
     assert demo.main(["--scenario", str(test_path), "--org", "org-b"]) == 1
     assert "dev 시나리오만" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("applied", ["approved", "done"])
+def test_resume_after_decisions_were_already_written_to_the_db(db, seed, applied):
+    """판단을 DB에 반영한 뒤 체크포인트 저장 전에 끝난 경우 (PR #41 리뷰). 이어갈 때 DB 상태와 맞춰 같은 조치를
+    다시 묻지 않고 끝난다. 승인까지 된 실행은 완료로 남긴다."""
+    from common.gate import gate
+
+    scenario = load("SC-S1-01")
+    tracer = MemoryTracer()
+
+    def written_then_crashed(payload):
+        for r in payload["pending"]:
+            for team in r["required_approver_teams"]:
+                gate.approve(db, tracer=tracer, run_id=r["run_id"], team_id=team, now=datetime.now(timezone.utc))
+            if applied == "done":
+                gate.mark_done(db, tracer=tracer, run_id=r["run_id"], now=datetime.now(timezone.utc))
+        return approve_all(payload)  # 같은 판단이 다시 들어온다
+
+    state, paused = run_demo(db, seed, scenario, RuleModel(intake_of(scenario)), {"C02": "confirm"}, written_then_crashed)
+    assert len(paused) == 1
+    (out,) = state["outputs"]
+    assert {a["status"] for a in out["actions"] if a["action_id"] in ("A10", "A15")} == {"done"}
+
+
+@pytest.mark.parametrize("bad", ["approve", ["approve"], {"run_id": ["x"], "team_id": "TM06", "decision": "approve"},
+                                 {"run_id": "x"}, [None, 3]])
+def test_malformed_decisions_are_reported_not_raised(db, seed, bad):
+    """판단의 모양이 틀려도 예외로 멈추지 않고 다음 멈춤에 오류로 돌려준다 (PR #41 리뷰)."""
+    scenario = load("SC-S1-01")
+    calls = []
+
+    def bad_first(payload):
+        calls.append(payload)
+        return bad if len(calls) == 1 else approve_all(payload)
+
+    state, paused = run_demo(db, seed, scenario, RuleModel(intake_of(scenario)), {"C02": "confirm"}, bad_first)
+    assert len(paused) == 2 and paused[1]["errors"]
+    (out,) = state["outputs"]
+    assert {a["status"] for a in out["actions"] if a["action_id"] in ("A10", "A15")} == {"done"}

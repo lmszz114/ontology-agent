@@ -258,6 +258,11 @@ def reject(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
     return _traced(tracer, "gate.reject", _reject, driver=driver, **kwargs)
 
 
+def read_run(driver: Driver, run_id: str) -> dict:
+    """실행 기록 하나의 지금 상태. 읽기만 한다. 승인 대기에서 이어갈 때 그래프 상태를 DB와 맞추는 데 쓴다 (M7)."""
+    return _read_run(driver, run_id)
+
+
 def mark_done(driver: Driver, *, tracer: Tracer, **kwargs) -> dict:
     """승인된 조치의 실행 완료를 기록한다. 인자는 _mark_done과 같다."""
     return _traced(tracer, "gate.mark_done", _mark_done, driver=driver, **kwargs)
